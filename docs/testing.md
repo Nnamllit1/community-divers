@@ -6,11 +6,12 @@ CTest runs these suites:
 - `core_tests`: Valve KeyValues, installation discovery, endpoint parsing,
   settings persistence/recovery, manifest validation and launch readiness.
 - `platform_tests` (Windows): real loopback HTTP requests, base-path handling,
-  redirects, HTTP errors, invalid JSON and response limits.
+  redirects, HTTP errors, invalid JSON, response limits and SHA-256 fingerprints.
 - `ui_tests` (Windows): the actual launcher views in an offscreen ImGui context.
   Input events exercise section shortcuts, text focus, manual game paths,
   community forms and checks, mod checkboxes and profiles, restart persistence,
-  stale network responses and the minimum-window footer/navigation layout.
+  stale network responses, asynchronous client inspection and the minimum-window
+  footer/navigation layout.
 
 The widget suite uses a repository-owned driver through the pinned ImGui test
 hooks. It runs without a GPU and keeps fixtures in a uniquely named temporary

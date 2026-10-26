@@ -1,5 +1,6 @@
 #include "http_fixture.hpp"
 #include <iostream>
+#include <fstream>
 using namespace cd;
 using cd::test::Server;
 
@@ -25,6 +26,26 @@ int main(int argc, char **argv) {
             std::cout << "PASS real HTTPS service-status exchange\n";
             WSACleanup();
             return 0;
+        }
+        {
+            auto file =
+                fs::temp_directory_path() /
+                ("community-divers-sha-" +
+                 std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
+                 ".txt");
+            {
+                std::ofstream out(file, std::ios::binary);
+                out << "abc";
+            }
+            auto fingerprint = fingerprint_file(file, "fixture");
+            fs::remove(file);
+            require(fingerprint.error.empty() && fingerprint.bytes == 3 &&
+                        fingerprint.sha256 ==
+                            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+                    "SHA-256 fingerprint failed");
+            require(!fingerprint_file(file, "missing").error.empty(),
+                    "Missing file was silently fingerprinted");
+            std::cout << "PASS native client-file fingerprinting\n";
         }
         {
             Server server(

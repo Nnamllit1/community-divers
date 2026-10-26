@@ -10,6 +10,8 @@ struct App {
     std::vector<Mod> mods;
     std::optional<ServiceStatus> service;
     std::future<ProbeResult> pending;
+    std::future<ClientIdentity> pending_identity;
+    std::string identity_for_path, identity_summary;
     std::string pending_id, pending_url, connected_id, notice, settings_warning;
     int page = 0;
     bool notice_error = false;

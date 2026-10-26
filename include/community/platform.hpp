@@ -16,4 +16,7 @@ struct ProbeResult {
     std::string error;
 };
 std::future<ProbeResult> probe_service(std::string url);
+FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path);
+ClientIdentity inspect_client(const fs::path &path);
+std::future<ClientIdentity> inspect_client_async(fs::path path);
 } // namespace cd

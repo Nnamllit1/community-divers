@@ -129,6 +129,36 @@ int main() {
                     "Remote status bypassed local adapter requirement");
             rejects([] { parse_status(R"({"protocol":2})"); });
         });
+        test("exact client fingerprint catalog never grants integration", [] {
+            ClientIdentity identity;
+            identity.installation.valid = true;
+            identity.installation.build = "12345";
+            json files = json::object();
+            for (auto path : client_binary_paths) {
+                FileFingerprint f;
+                f.path = std::string(path);
+                f.sha256 = std::string(64, 'a');
+                f.bytes = 10;
+                identity.files.push_back(f);
+                files[f.path] = {{"sha256", f.sha256}, {"bytes", f.bytes}};
+            }
+            json catalog = {{"schema", 1},
+                            {"profiles", json::array({{{"id", "test-build"},
+                                                       {"steam_build", "12345"},
+                                                       {"files", files},
+                                                       {"integration_status", "supported"},
+                                                       {"available", true}}})}};
+            auto report = identity_report(identity, catalog);
+            require(report["identity"]["known"] == true &&
+                        report["integration"]["available"] == false,
+                    "An observed identity granted game launch");
+            identity.files[0].sha256 = std::string(64, 'b');
+            require(identity_report(identity, catalog)["identity"]["known"] == false,
+                    "Build ID alone matched changed client files");
+            identity.files.pop_back();
+            require(identity_report(identity, catalog)["identity"]["known"] == false,
+                    "Incomplete client inspection matched a profile");
+        });
         fs::remove_all(root);
         std::cout << passed << " core checks passed\n";
         return 0;

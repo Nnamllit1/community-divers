@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <set>
 namespace cd {
 namespace {
@@ -90,6 +91,8 @@ App::App(fs::path data_path) : data(std::move(data_path)) {
     scan();
 }
 void App::scan() {
+    if (identity_for_path != settings.game_path)
+        identity_summary.clear();
     try {
         if (settings.game_path.empty()) {
             auto found = discover_steam(steam_roots());
@@ -136,6 +139,36 @@ void App::tick() {
             connected_id = service ? selected->id : "";
             notice_error = !service;
             notice = service ? "Connected to " + service->name + "." : result.error;
+        }
+    }
+    if (pending_identity.valid() &&
+        pending_identity.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        try {
+            auto identity = pending_identity.get();
+            if (settings.game_path == identity_for_path) {
+                json catalog = {{"schema", 1}, {"profiles", json::array()}};
+                auto path = executable_directory() / "compatibility/client-builds.json";
+                if (fs::exists(path))
+                    catalog = json::parse(read_text(path));
+                auto report = identity_report(identity, catalog);
+                std::ofstream file(data / "client-inspection.json", std::ios::binary);
+                file.exceptions(std::ios::failbit | std::ios::badbit);
+                file << report.dump(2) << '\n';
+                file.close();
+                bool errors = std::any_of(identity.files.begin(), identity.files.end(),
+                                          [](const auto &f) { return !f.error.empty(); });
+                identity_summary = errors ? "Inspection recorded missing or unreadable files."
+                                   : report["identity"]["known"].get<bool>()
+                                       ? "Client fingerprints match an observed build. Game "
+                                         "integration is not implemented."
+                                       : "Client fingerprints recorded; this build is not in the "
+                                         "identity catalog.";
+                notice = identity_summary + " Report saved as client-inspection.json.";
+                notice_error = errors;
+            }
+        } catch (const std::exception &e) {
+            notice = e.what();
+            notice_error = true;
         }
     }
 }
@@ -498,6 +531,21 @@ void App::draw(void *owner) {
         }
         gap(8);
         wrap(game.detail);
+        gap(18);
+        section_head("Client compatibility");
+        ImGui::BeginDisabled(!game.valid || pending_identity.valid());
+        if (ImGui::Button(pending_identity.valid() ? "Inspecting client..."
+                                                   : "Inspect client files")) {
+            identity_for_path = settings.game_path;
+            identity_summary.clear();
+            pending_identity = inspect_client_async(game.root);
+            notice = "Inspecting executable, engine and network-library fingerprints...";
+            notice_error = false;
+        }
+        ImGui::EndDisabled();
+        subdued(identity_summary.empty()
+                    ? "Create a read-only file-identity report for client integration analysis."
+                    : identity_summary);
         gap(18);
         section_head("Launcher data");
         text(path_text(data));

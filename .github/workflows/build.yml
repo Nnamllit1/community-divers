@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build launcher and test core
+      - name: Build launcher and run native checks
         shell: cmd
         run: Build.cmd
       - name: Prepare portable directory

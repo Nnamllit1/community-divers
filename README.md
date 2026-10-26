@@ -35,6 +35,7 @@ kept separate from Windows integration. It does not require a webview, Python or
 - Save community HTTPS endpoints and check their protocol/build advertisements.
 - Inspect local mod manifests and save selections in named profiles.
 - Recover settings without silently discarding a malformed original file.
+- Export read-only client fingerprints for exact-build integration analysis.
 
 Run `out/windows-dev/CommunityDivers.exe` after building, or use the executable
 in a portable package. Launcher data lives in `%LOCALAPPDATA%/CommunityDivers`.
@@ -43,6 +44,8 @@ unavailable until the isolated current-client adapter has been implemented.
 
 See [service status](docs/service-contract.md) and
 [mod manifests](docs/mod-manifests.md) for the current contracts.
+[Client inspection](docs/client-integration.md) describes the build catalog and
+unimplemented game-adapter gates.
 
 ## Development
 

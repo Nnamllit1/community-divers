@@ -1,5 +1,8 @@
 #pragma once
 #include <filesystem>
+#include <array>
+#include <cstdint>
+#include <string_view>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -25,6 +28,18 @@ struct Installation {
 };
 Installation inspect_installation(const fs::path &root);
 std::vector<Installation> discover_steam(const std::vector<fs::path> &steam_roots);
+inline constexpr std::array<std::string_view, 4> client_binary_paths{
+    "bin/helldivers2.exe", "data/game/game.dll", "bin/PartyWin.dll",
+    "bin/PlayFabMultiplayerWin.dll"};
+struct FileFingerprint {
+    std::string path, sha256, error;
+    uint64_t bytes = 0;
+};
+struct ClientIdentity {
+    Installation installation;
+    std::vector<FileFingerprint> files;
+};
+json identity_report(const ClientIdentity &identity, const json &catalog);
 struct Endpoint {
     std::string canonical, host, path;
     unsigned short port = 443;

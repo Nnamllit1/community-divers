@@ -44,7 +44,7 @@ objective can stay stable while the roadmap evolves.
 - [x] Steam library discovery and manual installation selection work.
 - [ ] Verify native Win32 input, the folder picker and DPI transitions on desktop.
 - [x] Display detected game build and actionable readiness information.
-- [ ] Community endpoints can be added, selected, saved and checked over HTTPS.
+- [x] Community endpoints can be added, selected, saved and checked over HTTPS.
 - [x] Local mod manifests can be inspected and enabled per profile; deployment
   state is explicit and no untrusted mod code runs during discovery.
 - [x] Settings survive restarts and invalid settings do not erase recoverable data.
@@ -53,6 +53,8 @@ objective can stay stable while the roadmap evolves.
 - [ ] The first public release has a verified portable Windows artifact.
 
 ### 2. Isolated current-client integration
+
+- [x] Add read-only client fingerprint inspection and an observed-build catalog.
 
 - [ ] Establish an exact-build integration contract and compatibility manifest.
 - [ ] Create and verify an isolated current-game installation and user data.

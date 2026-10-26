@@ -38,6 +38,9 @@ struct Workspace {
         cd::fs::create_directories(game / "data");
         write(root / "steamapps/appmanifest_553850.acf",
               "AppState { appid 553850 buildid 12345 installdir \"Game-\xc3\x9c\" }");
+        write(game / "data/game/game.dll", "engine fixture");
+        write(game / "bin/PartyWin.dll", "party fixture");
+        write(game / "bin/PlayFabMultiplayerWin.dll", "lobby fixture");
         cd::Settings settings;
         settings.game_path = cd::path_text(root / "missing");
         cd::save_settings(data / "launcher.json", settings);
@@ -225,6 +228,18 @@ int main() {
                     "Unicode game directory was not preserved");
             require(ui.app->game.build == "12345", "Unicode game directory lost its Steam build");
             std::cout << "PASS manual installation entry and build identification\n";
+            ui.click("Inspect client files");
+            auto inspection_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(4);
+            while (ui.app->pending_identity.valid() &&
+                   std::chrono::steady_clock::now() < inspection_deadline) {
+                ui.frame();
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+            require(!ui.app->pending_identity.valid(), "Client inspection did not finish");
+            auto identity = cd::json::parse(cd::read_text(fixture.data / "client-inspection.json"));
+            require(identity["files"].size() == 4 && identity["integration"]["available"] == false,
+                    "Client inspection report is incomplete or grants launch");
+            std::cout << "PASS asynchronous client inspection and report export\n";
             ui.page(2);
             ui.type("##name", "Local widget test");
             auto &io = ImGui::GetIO();

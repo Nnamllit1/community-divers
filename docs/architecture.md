@@ -6,8 +6,9 @@ community service. [PROJECT.md](../PROJECT.md) defines their milestones.
 ## Launcher
 
 - `community_core`: installation metadata, Valve KeyValues parsing, settings,
-  server endpoints, service status, mod profiles and launch-readiness decisions.
-- `community_platform`: Windows Steam discovery, HTTPS requests and desktop paths.
+  server endpoints, service status, mod profiles, exact-file identity matching and
+  launch-readiness decisions.
+- `community_platform`: Windows Steam discovery, HTTPS requests, read-only BCrypt file hashing and desktop paths.
 - `CommunityDivers`: Win32/Direct3D 11 desktop application and Dear ImGui views.
 
 The launcher displays actual detected and configured state. There is no built-in
@@ -38,3 +39,6 @@ are separate transport options with different integration and latency costs.
 
 Mod support does not imply every mod combination is network-compatible. Lobbies
 will advertise their required client and gameplay mod profile before joining.
+
+The [client inspection contract](client-integration.md) separates observed binary
+identity from adapter availability. Identity reports never grant game launch.
