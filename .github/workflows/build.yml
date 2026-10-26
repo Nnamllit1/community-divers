@@ -1,0 +1,25 @@
+name: Build and test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build launcher and test core
+        shell: cmd
+        run: Build.cmd
+      - name: Prepare portable directory
+        run: cmake --install out/windows-dev --prefix dist/CommunityDivers
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CommunityDivers-windows-x64
+          path: dist/CommunityDivers/
+  linux-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset linux-dev
+      - run: cmake --build --preset linux-dev
+      - run: ctest --preset linux-dev

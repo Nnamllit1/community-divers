@@ -1,0 +1,9 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {"name":"windows-dev","generator":"Ninja","binaryDir":"${sourceDir}/out/windows-dev","cacheVariables":{"CMAKE_BUILD_TYPE":"RelWithDebInfo","BUILD_TESTING":"ON"}},
+    {"name":"linux-dev","generator":"Ninja","binaryDir":"${sourceDir}/out/linux-dev","cacheVariables":{"CMAKE_BUILD_TYPE":"Debug","BUILD_TESTING":"ON","COMMUNITY_BUILD_LAUNCHER":"OFF"}}
+  ],
+  "buildPresets":[{"name":"windows-dev","configurePreset":"windows-dev"},{"name":"linux-dev","configurePreset":"linux-dev"}],
+  "testPresets":[{"name":"windows-dev","configurePreset":"windows-dev","output":{"outputOnFailure":true}},{"name":"linux-dev","configurePreset":"linux-dev","output":{"outputOnFailure":true}}]
+}
