@@ -13,10 +13,6 @@ HELLDIVERS 2 wars.
 > profiles are available. Game integration, campaign services and community co-op
 > are under development. This preview cannot launch a community game session.
 
-> **AI disclosure:** Most of this project's code and artwork is AI-generated.
-> Review and validation are ongoing; current capabilities and limits are described
-> below and in the project roadmap.
-
 Community Divers is being built for players who want to share a persistent war,
 run their own progression and choose their mods together. Each community can
 operate its own campaign service, while players' machines run individual missions
