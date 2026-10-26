@@ -327,7 +327,7 @@ int main() {
             std::cout << "PASS form text entry and endpoint errors\n";
             cd::test::Server server(
                 200,
-                R"({"protocol":1,"id":"widget-test","name":"Widget service","game_builds":["12345"]})");
+                R"({"protocol":1,"id":"widget-test","name":"Widget service","game_builds":["12345"],"required_release_set":"widget-campaign","required_launcher_release":"widget-preview+12345678"})");
             ui.type("##url", server.url());
             ui.click("Add community");
             require(ui.app->settings.communities.size() == 1, "Add community button failed");
@@ -337,6 +337,9 @@ int main() {
             ui.wait_for_probe();
             require(ui.app->service && ui.app->service->name == "Widget service",
                     "Service result did not reach the UI");
+            require(ui.app->service->required_release_set == "widget-campaign" &&
+                        ui.app->service->required_launcher_release == "widget-preview+12345678",
+                    "Community version requirements did not reach the launcher view");
             std::cout << "PASS add, save and check community through widgets\n";
             ui.page(3);
             ui.type("##profile", "Solo");

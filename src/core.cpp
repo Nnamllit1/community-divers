@@ -1,4 +1,5 @@
 #include "community/core.hpp"
+#include "community/version.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -475,6 +476,19 @@ ServiceStatus parse_status(const std::string &body) {
         if (build.empty() || build.size() > 32 ||
             build.find_first_not_of("0123456789") != std::string::npos)
             throw std::runtime_error("Invalid game build ID");
+    auto release_identifier = [&](const char *key) {
+        if (!j.contains(key))
+            return std::string{};
+        auto value = checked_string(j, key, 128);
+        if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c) {
+                return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                       c == '.' || c == '-' || c == '_' || c == '+';
+            }))
+            throw std::runtime_error("Invalid community release requirement");
+        return value;
+    };
+    s.required_release_set = release_identifier("required_release_set");
+    s.required_launcher_release = release_identifier("required_launcher_release");
     if (j.contains("campaign"))
         s.campaign = checked_string(j.at("campaign"), "name", 128);
     return s;
@@ -489,6 +503,10 @@ std::string launch_blocker(const Installation &game, const ServiceStatus *servic
     if (std::find(service->game_builds.begin(), service->game_builds.end(), game.build) ==
         service->game_builds.end())
         return "This community does not advertise your installed game build.";
+    if (!service->required_launcher_release.empty() &&
+        service->required_launcher_release != version::release_id)
+        return "This community requires launcher release " + service->required_launcher_release +
+               ". Update the launcher before joining.";
     return "Community game launch is not available yet. The isolated client adapter is still in "
            "development.";
 }

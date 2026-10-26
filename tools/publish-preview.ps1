@@ -61,7 +61,16 @@ if (-not $tagRef) {
     $tagRef = Api-Get ($base + '/git/ref/tags/' + $tag)
 }
 if ($tagRef.object.type -ne 'commit' -or $tagRef.object.sha -ne $source) { throw 'Release tag points to a different source revision.' }
-$existing = Api-Get ($base + '/releases/tags/' + $tag)
+function Find-Release {
+    $found = Api-Get ($base + '/releases/tags/' + $tag)
+    if ($found) { return $found }
+    # GitHub's release-by-tag endpoint omits unpublished drafts. Resolve those from the authorized list.
+    $drafts = @(Api-Get ($base + '/releases?per_page=100') | Where-Object { $_.tag_name -eq $tag })
+    if ($drafts.Count -gt 1) { throw 'More than one release draft uses this source tag.' }
+    if ($drafts.Count -eq 1) { return $drafts[0] }
+    return $null
+}
+$existing = Find-Release
 $notesPath = Join-Path $work 'release-notes.md'
 $notes = @"
 Native Windows x64 launcher preview from source revision $source.
@@ -73,7 +82,8 @@ Download the ZIP and its SHA-256 file. See the README and update documentation f
 [IO.File]::WriteAllText($notesPath, $notes, [Text.UTF8Encoding]::new($false))
 if (-not $existing) {
     & gh release create $tag --repo $repo --verify-tag --target $source --draft --prerelease --title ('Launcher preview ' + $source.Substring(0, 8)) --notes-file $notesPath; Assert-Native
-    $existing = Api-Get ($base + '/releases/tags/' + $tag)
+    $existing = Find-Release
+    if (-not $existing) { throw 'Cannot resolve the newly created release draft.' }
 }
 $tagRef = Api-Get ($base + '/git/ref/tags/' + $tag)
 if ($tagRef.object.type -ne 'commit' -or $tagRef.object.sha -ne $source) { throw 'Release tag points to a different source revision.' }
@@ -94,7 +104,11 @@ if ($existing.draft) {
 # Confirm public availability and digest before promoting the channel.
 $publishedRelease = Api-Get ($base + '/releases/tags/' + $tag)
 $publicAsset = @($publishedRelease.assets | Where-Object { $_.name -eq $zip.Name })
-if ($publishedRelease.draft -or $publicAsset.Count -ne 1 -or $publicAsset[0].digest -ne ('sha256:' + $digest)) { throw 'Public release package verification failed.' }
+if ($publishedRelease.draft -or $publicAsset.Count -ne 1 -or
+    ($publicAsset[0].digest -and $publicAsset[0].digest -ne ('sha256:' + $digest))) { throw 'Public release package verification failed.' }
+$publicZip = Join-Path $work 'public-package.zip'
+Invoke-WebRequest -Uri $payload.url -OutFile $publicZip
+if ((Get-FileHash -LiteralPath $publicZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) { throw 'Public package download differs from the tested artifact.' }
 $feedBytes = [IO.File]::ReadAllBytes($feedPath)
 for ($attempt = 0; $attempt -lt 3; $attempt++) {
     $current = Api-Get ($base + '/contents/updates/preview.json?ref=main')

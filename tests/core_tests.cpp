@@ -1,4 +1,5 @@
 #include "community/core.hpp"
+#include "community/version.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -128,6 +129,29 @@ int main() {
             require(launch_blocker(game, &service).find("adapter") != std::string::npos,
                     "Remote status bypassed local adapter requirement");
             rejects([] { parse_status(R"({"protocol":2})"); });
+        });
+        test("community release requirements are bounded and preserve the adapter gate", [] {
+            json j{{"protocol", 1},
+                   {"id", "test"},
+                   {"name", "Test"},
+                   {"game_builds", {"12345"}},
+                   {"required_release_set", "campaign-preview-1"},
+                   {"required_launcher_release", "future+abcdef12"}};
+            auto status = parse_status(j.dump());
+            require(status.required_release_set == "campaign-preview-1",
+                    "Community release set lost");
+            Installation game{{}, "12345", true, {}};
+            require(launch_blocker(game, &status).find("Update the launcher") != std::string::npos,
+                    "Mismatched launcher release was ignored");
+            j["required_launcher_release"] = std::string(version::release_id);
+            status = parse_status(j.dump());
+            require(launch_blocker(game, &status).find("adapter") != std::string::npos,
+                    "Matching launcher release enabled the unfinished adapter");
+            for (const auto &value : {std::string{}, std::string(129, 'x'), std::string("bad/name"),
+                                      std::string("line\nbreak")}) {
+                j["required_release_set"] = value;
+                rejects([&] { parse_status(j.dump()); });
+            }
         });
         test("exact client fingerprint catalog never grants integration", [] {
             ClientIdentity identity;

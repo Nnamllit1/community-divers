@@ -391,6 +391,11 @@ void App::draw(void *owner) {
         ImGui::EndDisabled();
         gap(8);
         text(service ? "Service: " + service->name : "Service connection: not checked");
+        if (service && !service->required_launcher_release.empty())
+            wrap("Required launcher: " + service->required_launcher_release);
+        if (service && !service->required_release_set.empty())
+            wrap("Community release set: " + service->required_release_set);
+
         ImGui::EndChild();
     } else if (page == 1) {
         section_head("Campaign connection");

@@ -73,7 +73,7 @@ struct Mod {
 };
 std::vector<Mod> discover_mods(const fs::path &directory);
 struct ServiceStatus {
-    std::string id, name, campaign;
+    std::string id, name, campaign, required_release_set, required_launcher_release;
     std::vector<std::string> game_builds;
 };
 ServiceStatus parse_status(const std::string &body);
