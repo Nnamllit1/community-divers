@@ -1,0 +1,5 @@
+#pragma once
+#include <string_view>
+namespace cd::update_trust {
+inline constexpr std::string_view publisher_key = "@CD_UPDATE_PUBLIC_KEY@";
+}

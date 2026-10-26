@@ -7,8 +7,8 @@ community service. [PROJECT.md](../PROJECT.md) defines their milestones.
 
 - `community_core`: installation metadata, Valve KeyValues parsing, settings,
   server endpoints, service status, mod profiles, exact-file identity matching and
-  launch-readiness decisions.
-- `community_platform`: Windows Steam discovery, HTTPS requests, read-only BCrypt file hashing and desktop paths.
+  launch-readiness decisions and update manifest validation.
+- `community_platform`: Windows Steam discovery, HTTPS requests, read-only BCrypt file hashing, ECDSA publisher verification, streamed update staging and desktop paths.
 - `CommunityDivers`: Win32/Direct3D 11 desktop application and Dear ImGui views.
 
 The launcher displays actual detected and configured state. There is no built-in
@@ -47,4 +47,6 @@ identity from adapter availability. Identity reports never grant game launch.
 
 The [update design](updates.md) links CI publication to immutable client/server
 release sets, admission checks, idle-point installation and operator-controlled
-server rollout. Automatic updating is planned; current preview packages are manual.
+server rollout. Source builds check a signed feed and stage verified downloads.
+Installation and server coordination remain pending. The update trust root is
+compiled into the launcher rather than provided by a community endpoint.

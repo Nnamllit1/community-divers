@@ -78,7 +78,7 @@ struct UI {
             cfg.SizePixels = size;
             return io.Fonts->AddFontDefault(&cfg);
         };
-        app = std::make_unique<cd::App>(data);
+        app = std::make_unique<cd::App>(data, false);
         app->body = font(L"segoeui.ttf", 18);
         app->heading = font(L"bahnschrift.ttf", 28);
         app->title = font(L"bahnschrift.ttf", 36);
@@ -240,6 +240,48 @@ int main() {
             require(identity["files"].size() == 4 && identity["integration"]["available"] == false,
                     "Client inspection report is incomplete or grants launch");
             std::cout << "PASS asynchronous client inspection and report export\n";
+            ui.page(5);
+            ui.click("Check for updates automatically");
+            require(!ui.app->settings.check_updates &&
+                        !cd::load_settings(fixture.data / "launcher.json").value.check_updates,
+                    "Update-check preference was not persisted");
+            ui.app->update_checker = [] {
+                std::promise<cd::UpdateCheck> promise;
+                cd::UpdateRelease release;
+                release.release_id = "1.0.0-preview.1+aaaaaaaa";
+                release.source_commit = std::string(40, 'a');
+                release.revision = UINT64_MAX;
+                release.bytes = 1234;
+                promise.set_value({release, {}});
+                return promise.get_future();
+            };
+            ui.click("Check for updates");
+            ui.frame();
+            require(ui.app->update_release && !ui.app->update_error,
+                    "Verified update did not reach the view");
+            require(!ui.find("Download verified package").disabled,
+                    "Available verified package cannot be downloaded");
+            ui.app->update_downloader = [&](cd::UpdateRelease, cd::fs::path directory) {
+                require(directory == fixture.data / "updates",
+                        "Update staging escaped launcher data");
+                std::promise<cd::UpdateDownload> promise;
+                promise.set_value({directory / "verified.zip", {}});
+                return promise.get_future();
+            };
+            ui.click("Download verified package");
+            ui.frame();
+            require(!ui.app->downloaded_update.empty() && !ui.app->update_error,
+                    "Staged update result was not displayed");
+            ui.app->update_checker = [] {
+                std::promise<cd::UpdateCheck> promise;
+                promise.set_value({{}, "Signature test failure"});
+                return promise.get_future();
+            };
+            ui.click("Check for updates");
+            ui.frame();
+            require(ui.app->update_error && ui.app->update_message == "Signature test failure",
+                    "Update authentication error was hidden");
+            std::cout << "PASS signed-update view, download and persisted check preference\n";
             ui.page(2);
             ui.type("##name", "Local widget test");
             auto &io = ImGui::GetIO();

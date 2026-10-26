@@ -84,12 +84,23 @@ void theme() {
     c[ImGuiCol_NavCursor] = accent;
     c[ImGuiCol_SliderGrab] = accent;
 }
-App::App(fs::path data_path) : data(std::move(data_path)) {
+App::App(fs::path data_path, bool allow_background_updates)
+    : data(std::move(data_path)), background_updates(allow_background_updates) {
     auto loaded = load_settings(data / "launcher.json");
     settings = std::move(loaded.value);
     settings_warning = loaded.error;
     fs::create_directories(data / "mods");
     scan();
+    if (background_updates && settings.check_updates)
+        check_for_updates();
+}
+void App::check_for_updates() {
+    if (pending_update.valid())
+        return;
+    update_message = "Checking the signed preview channel...";
+    update_error = false;
+    next_update_check = std::chrono::steady_clock::now() + std::chrono::hours(1);
+    pending_update = update_checker();
 }
 void App::scan() {
     if (identity_for_path != settings.game_path)
@@ -132,6 +143,52 @@ Profile &App::profile() {
     return i == settings.profiles.end() ? settings.profiles.front() : *i;
 }
 void App::tick() {
+    const auto ready = [](auto &future) {
+        return future.valid() &&
+               future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+    };
+    if (ready(pending_update)) {
+        try {
+            auto result = pending_update.get();
+            update_error = !result.release;
+            if (result.release) {
+                update_release = std::move(result.release);
+                auto relation = compare_update(*update_release, version::source_commit,
+                                               version::source_revision);
+                update_message =
+                    relation == UpdateRelation::current ? "You have the published release."
+                    : relation == UpdateRelation::local_newer
+                        ? "This development build is newer than the published release."
+                    : relation == UpdateRelation::available
+                        ? "A newer verified release is available."
+                        : "A verified release is available; this build's ordering is unknown.";
+            } else
+                update_message = result.error;
+        } catch (const std::exception &e) {
+            update_message = e.what();
+            update_error = true;
+        }
+    }
+    if (ready(pending_download)) {
+        try {
+            auto result = pending_download.get();
+            update_error = !result.error.empty();
+            if (update_error)
+                update_message = result.error;
+            else {
+                downloaded_update = std::move(result.package);
+                update_message = "Package downloaded and SHA-256 verified. Automatic installation "
+                                 "is not implemented yet.";
+            }
+        } catch (const std::exception &e) {
+            update_message = e.what();
+            update_error = true;
+        }
+    }
+    if (background_updates && settings.check_updates && !pending_update.valid() &&
+        !pending_download.valid() && std::chrono::steady_clock::now() >= next_update_check)
+        check_for_updates();
+
     if (pending.valid() && pending.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
         auto result = pending.get();
         auto selected = community();
@@ -559,6 +616,45 @@ void App::draw(void *owner) {
         subdued("Installation discovery reads game files and Steam metadata. Launcher settings and "
                 "mod profiles are stored separately from the game.");
     } else if (page == 5) {
+        section_head("Launcher updates");
+        if (ImGui::Checkbox("Check for updates automatically", &settings.check_updates)) {
+            save();
+            if (settings.check_updates && background_updates)
+                check_for_updates();
+        }
+        ImGui::BeginDisabled(pending_update.valid() || pending_download.valid());
+        if (ImGui::Button(pending_update.valid() ? "Checking updates..." : "Check for updates"))
+            check_for_updates();
+        ImGui::EndDisabled();
+        if (update_error)
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{1, .58f, .48f, 1});
+        wrap(update_message);
+        if (update_error)
+            ImGui::PopStyleColor();
+        if (update_release) {
+            subdued("Published " + update_release->release_id + " / " +
+                    std::to_string(update_release->bytes / 1024) + " KiB");
+            auto relation =
+                compare_update(*update_release, version::source_commit, version::source_revision);
+            ImGui::BeginDisabled(pending_download.valid() || pending_update.valid() ||
+                                 relation == UpdateRelation::current ||
+                                 relation == UpdateRelation::local_newer);
+            if (ImGui::Button(pending_download.valid() ? "Downloading update..."
+                                                       : "Download verified package")) {
+                downloaded_update.clear();
+                update_error = false;
+                update_message = "Downloading the signed release package...";
+                pending_download = update_downloader(*update_release, data / "updates");
+            }
+            ImGui::EndDisabled();
+        }
+        if (!downloaded_update.empty()) {
+            if (ImGui::Button("Open downloaded package folder"))
+                open_folder(downloaded_update.parent_path());
+        }
+        subdued("Preview channel. Downloads are authenticated and staged separately. The launcher "
+                "does not replace running files yet.");
+        gap(18);
         section_head("COMMUNITY DIVERS");
         text("Launcher preview " CD_VERSION);
         subdued("Release " + std::string(version::release_id));

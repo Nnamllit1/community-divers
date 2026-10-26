@@ -5,13 +5,19 @@ CTest runs these suites:
 
 - `core_tests`: Valve KeyValues, installation discovery, endpoint parsing,
   settings persistence/recovery, manifest validation and launch readiness.
+- `update_core_tests`: signed-payload fields, package bounds, release URL/path
+  constraints, known/unknown revision ordering and compatible settings migration.
+- `update_tests` (Windows): real CNG signatures with generated fixture keys,
+  tampering/wrong-key rejection, transport URL policy, streamed Unicode staging,
+  verified cache reuse/repair and failed-transfer cleanup.
 - `platform_tests` (Windows): real loopback HTTP requests, base-path handling,
   redirects, HTTP errors, invalid JSON, response limits and SHA-256 fingerprints.
 - `ui_tests` (Windows): the actual launcher views in an offscreen ImGui context.
   Input events exercise section shortcuts, text focus, manual game paths,
   community forms and checks, mod checkboxes and profiles, restart persistence,
   stale network responses, asynchronous client inspection and the minimum-window
-  footer/navigation layout.
+  footer/navigation layout, update-check preferences, verified-release display,
+  staged-download results and authentication errors.
 
 The widget suite uses a repository-owned driver through the pinned ImGui test
 hooks. It runs without a GPU and keeps fixtures in a uniquely named temporary
@@ -42,3 +48,16 @@ CommunityDivers.exe --data-dir captures/qa-data --page 0 --window-size 1040 730 
 Pages are Deployment (0), Campaign (1), Communities (2), Mods (3), Settings (4)
 and About (5). Use a separate data directory for test captures. A render capture
 establishes appearance and startup; widget and desktop checks establish input.
+
+## Optional public update smoke check
+
+```console
+out/windows-dev/CommunityDiversUpdate.exe --check
+out/windows-dev/CommunityDiversUpdate.exe --download captures/update-download
+```
+
+The first command fetches and authenticates the public preview feed. The second
+also follows the public release asset redirect and verifies the downloaded ZIP.
+Both require Internet access and are separate from offline CTest. Neither installs
+or executes the download. Signing tests exercise native cryptography; this public
+check verifies the actual published feed/key/package combination.

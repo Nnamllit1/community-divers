@@ -40,6 +40,10 @@ and verify it with the accompanying SHA-256 file.
 - Recover settings without silently discarding a malformed original file.
 - Export read-only client fingerprints for exact-build integration analysis.
 
+Current source builds also check a signed preview update feed and stage verified
+package downloads. Automatic installation is still pending; the first binary
+preview predates this update functionality.
+
 Run `out/windows-dev/CommunityDivers.exe` after building, or use the executable
 in a portable package. Launcher data lives in `%LOCALAPPDATA%/CommunityDivers`.
 A server connection does not establish game-client compatibility. Launch remains
@@ -80,8 +84,8 @@ cpack --config out/windows-dev/CPackConfig.cmake -B dist
 ```
 
 Packages include `build-info.json` with the exact source revision and release ID.
-The [automatic-update design](docs/updates.md) defines future channel publication,
-client/server release-set checks and rollback; automatic updating is not yet implemented.
+The [update documentation](docs/updates.md) covers signed preview checks and verified
+downloads, plus planned CI publication, client/server release-set checks and rollback.
 
 For the portable core on Linux:
 

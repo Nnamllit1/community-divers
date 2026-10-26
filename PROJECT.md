@@ -39,7 +39,7 @@ objective can stay stable while the roadmap evolves.
 
 ## Milestones and acceptance criteria
 
-### 1. Native launcher foundation — active
+### 1. Native launcher foundation â€” active
 
 - [x] CMake builds the launcher and portable core with pinned dependencies.
 - [ ] Visual design is coherent, resizable and keyboard navigable.
@@ -98,6 +98,7 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [ ] Install/update/remove mods transactionally in the isolated game copy.
 - [ ] Detect incompatible profiles before joining rather than during gameplay.
 - [ ] Provide optional progression snapshot import with a preview and field mapping.
+- [x] Authenticate a signed update channel and stage size/hash-verified package downloads.
 - [ ] Publish immutable update bundles and a signed channel manifest after successful CI.
 - [ ] Check for launcher/client updates at startup and before joining a community.
 - [ ] Enforce the server's required release set, including adapter and game build.
@@ -105,7 +106,7 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [ ] Provide a server update agent that drains active missions before switching versions.
 - [ ] Preserve profiles, campaign data and mods across client/server updates.
 - [ ] Finish repair, uninstall and release packaging.
-- [ ] Verify the complete install → join → mission → progression → restart flow.
+- [ ] Verify the complete install â†’ join â†’ mission â†’ progression â†’ restart flow.
 
 ## Working order
 

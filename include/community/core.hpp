@@ -54,6 +54,7 @@ struct Profile {
     std::vector<std::string> enabled_mods;
 };
 struct Settings {
+    bool check_updates = true;
     std::string game_path, selected_community, selected_profile = "default";
     std::vector<Community> communities;
     std::vector<Profile> profiles{Profile{}};

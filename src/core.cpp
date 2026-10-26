@@ -318,6 +318,7 @@ Endpoint parse_endpoint(std::string s) {
 }
 json encode_settings(const Settings &s) {
     json j = {{"schema", 1},
+              {"check_updates", s.check_updates},
               {"game_path", s.game_path},
               {"selected_community", s.selected_community},
               {"selected_profile", s.selected_profile},
@@ -333,6 +334,7 @@ Settings decode_settings(const json &j) {
     if (j.at("schema") != 1)
         throw std::runtime_error("Unsupported settings schema");
     Settings s;
+    s.check_updates = j.value("check_updates", true);
     s.game_path = checked_string(j, "game_path", 4096);
     s.selected_community = checked_string(j, "selected_community");
     s.selected_profile = checked_string(j, "selected_profile");

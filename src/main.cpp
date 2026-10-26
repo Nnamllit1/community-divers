@@ -217,7 +217,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.IniFilename = nullptr;
         cd::theme();
-        cd::App app(data);
+        cd::App app(data, capture_path.empty());
         app.page = page;
         wchar_t windows[32768]{};
         GetWindowsDirectoryW(windows, 32768);

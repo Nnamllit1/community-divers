@@ -1,0 +1,6 @@
+{
+  "algorithm": "ecdsa-p256-sha256",
+  "payload": "{\r\n  \"schema\": 1,\r\n  \"channel\": \"preview\",\r\n  \"platform\": \"windows-x64\",\r\n  \"release_id\": \"0.1.0-preview.1+bc910be2\",\r\n  \"source_commit\": \"bc910be240e3d2be1e033f01176242e85468ebc1\",\r\n  \"source_revision\": 6,\r\n  \"service_protocol\": 1,\r\n  \"bytes\": 3870974,\r\n  \"sha256\": \"b032bee92b20d8b0e7997d9183425b407125d64b95e2c226987104cdf10c4977\",\r\n  \"filename\": \"CommunityDivers-0.1.0-preview.1-bc910be2-windows-x64.zip\",\r\n  \"url\": \"https://github.com/Nnamllit1/community-divers/releases/download/v0.1.0-preview.1/CommunityDivers-0.1.0-preview.1-bc910be2-windows-x64.zip\"\r\n}\r\n",
+  "schema": 1,
+  "signature": "cbf62d2b067c2f8f53979824ae18a1207c4639f4bdca89b93d488048c3d8ee363f53cad3f5613d74ca769542daeb7522bc615114936790acbd515cd321527b74"
+}

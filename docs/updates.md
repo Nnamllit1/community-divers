@@ -1,7 +1,13 @@
 # Automatic updates and release compatibility
 
-Automatic updating is part of the project scope. The updater and server update
-agent are not implemented yet. The build/release pipeline is their foundation.
+Automatic updating is part of the project scope. Current source builds check the
+signed preview feed at startup and hourly, with an opt-out setting under About.
+They can download and verify a package into launcher data without changing the
+installed launcher. Automatic installation, CI feed publication, server admission
+checks and the server update agent remain unimplemented.
+
+The first downloadable preview predates the update checker. Build current source
+to use this functionality until a newer binary release is published.
 
 ## From a push to an update
 
@@ -72,3 +78,56 @@ migration requires it. Operators can pin, defer or roll back a release.
 
 This preserves the no-player-port-forwarding design. Update downloads use outbound
 HTTPS; gameplay transport and campaign service hosting remain separate concerns.
+
+## Current channel format and tools
+
+`updates/preview.json` is an ECDSA-P256/SHA-256 signed envelope. Its `payload` is
+a UTF-8 JSON string; the signature covers those exact bytes, including whitespace.
+The signature is the 64-byte IEEE P1363 representation encoded as lowercase hex.
+The public Windows CNG ECC blob in `updates/publisher-key.txt` is compiled into
+the launcher; a community response cannot replace that trust root. A changed
+payload, signature or key fails before any release is offered.
+
+The payload contains schema 1, preview channel, Windows x64 platform, release ID,
+full source commit, first-parent source revision, service protocol, package name,
+release URL, byte count and SHA-256. Revision ordering applies to this repository's
+main history; unknown/divergent ordering is reported rather than inferred. Game
+adapter/service release-set enforcement is still a separate milestone.
+
+Manifest responses are limited to 64 KiB and packages to 512 MiB. The production
+transport requires HTTPS with normal Windows certificate validation, disables
+cookies and authentication, and follows at most four redirects within an explicit
+GitHub release/CDN host list. Downloads stream to a unique `.partial` file; size
+and SHA-256 must match before it becomes a digest-named cached ZIP. A cache hit
+is rehashed before reuse. Failed transfers preserve prior packages. Staging does
+not extract or execute package contents. An abrupt process exit may leave an
+unused partial file; completed cache files remain separately identifiable.
+
+After building on Windows:
+
+```console
+out/windows-dev/CommunityDiversUpdate.exe --check
+out/windows-dev/CommunityDiversUpdate.exe --download staging
+```
+
+The CLI uses the same pinned key, transport and staging code as the launcher.
+About also provides Check for updates and Download verified package. The latter
+stays unavailable when the published release matches or predates a known local
+build. Settings, mod profiles and the game directory are untouched by staging.
+
+Maintainers can generate a key pair and sign a payload using the native tool:
+
+```console
+CommunityDiversUpdate.exe --generate-key .local/keys/update-publisher
+CommunityDiversUpdate.exe --sign payload.json .local/keys/update-publisher.private signed-feed.json
+```
+
+Generation and signing refuse existing output paths. Store the private key in
+ignored local storage and an appropriate secret backup; never publish it. The
+initial channel was signed manually. CI secret provisioning and automatic
+promotion remain pending. Trust-root rotation and persisted replay protection
+must be completed before automatic installation is enabled; the current checker
+never installs or rolls back an application on its own.
+
+Native implementation references: [Windows signature verification](https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptverifysignature)
+and [WinHTTP response headers](https://learn.microsoft.com/en-us/windows/win32/api/winhttp/nf-winhttp-winhttpqueryheaders).
