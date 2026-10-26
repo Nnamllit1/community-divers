@@ -17,6 +17,9 @@ objective can stay stable while the roadmap evolves.
   where practical. Windows/Steam is the first supported target.
 - A current-game client integration, isolated installation and separate profiles.
   The pre-EAC game is reference material, not the target implementation.
+- Automatic, CI-gated launcher/client updates after publishing a pushed revision.
+  Each community pins a release set so players update before joining.
+  Include an operator-controlled server update agent with graceful mission drain.
 - A self-hostable service with persistent player progression, mission results,
   a shared war, community decisions and configurable campaign events.
 - Community multiplayer: server discovery, lobbies, invitations, compatible mod
@@ -92,7 +95,13 @@ objective can stay stable while the roadmap evolves.
 - [ ] Install/update/remove mods transactionally in the isolated game copy.
 - [ ] Detect incompatible profiles before joining rather than during gameplay.
 - [ ] Provide optional progression snapshot import with a preview and field mapping.
-- [ ] Finish launcher updates, repair, uninstall and release packaging.
+- [ ] Publish immutable update bundles and a signed channel manifest after successful CI.
+- [ ] Check for launcher/client updates at startup and before joining a community.
+- [ ] Enforce the server's required release set, including adapter and game build.
+- [ ] Stage updates, apply them at a safe idle point, verify startup and roll back failures.
+- [ ] Provide a server update agent that drains active missions before switching versions.
+- [ ] Preserve profiles, campaign data and mods across client/server updates.
+- [ ] Finish repair, uninstall and release packaging.
 - [ ] Verify the complete install → join → mission → progression → restart flow.
 
 ## Working order
@@ -116,5 +125,7 @@ and scratch material in the ignored `.local/` directory.
 A new player can build or download the launcher, use an owned supported current
 game copy, choose a community service, configure a compatible mod profile, join
 another community player, complete a mission and see their independent personal
-and shared campaign progress persist after restart. Operators can host, manage
+and shared campaign progress persist after restart. Published updates reach clients
+and server operators through compatible release sets and recoverable installation.
+Operators can host, manage
 and back up the service with documented requirements and tested recovery.

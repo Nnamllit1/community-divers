@@ -70,6 +70,16 @@ To prepare a portable directory:
 cmake --install out/windows-dev --prefix dist/CommunityDivers
 ```
 
+To produce a versioned ZIP and SHA-256 file:
+
+```console
+cpack --config out/windows-dev/CPackConfig.cmake -B dist
+```
+
+Packages include `build-info.json` with the exact source revision and release ID.
+The [automatic-update design](docs/updates.md) defines future channel publication,
+client/server release-set checks and rollback; automatic updating is not yet implemented.
+
 For the portable core on Linux:
 
 ```console

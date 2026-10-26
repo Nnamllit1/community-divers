@@ -42,3 +42,9 @@ will advertise their required client and gameplay mod profile before joining.
 
 The [client inspection contract](client-integration.md) separates observed binary
 identity from adapter availability. Identity reports never grant game launch.
+
+## Updates
+
+The [update design](updates.md) links CI publication to immutable client/server
+release sets, admission checks, idle-point installation and operator-controlled
+server rollout. Automatic updating is planned; current preview packages are manual.

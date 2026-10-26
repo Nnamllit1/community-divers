@@ -1,4 +1,5 @@
 #include "community/core.hpp"
+#include "community/version.hpp"
 #include <algorithm>
 #include <set>
 #include <stdexcept>
@@ -67,6 +68,7 @@ json identity_report(const ClientIdentity &identity, const json &catalog) {
             item["error"] = file.error;
         out["files"].push_back(std::move(item));
     }
+    out["launcher_release"] = std::string(version::release_id);
     out["identity"] = {{"known", false}, {"profile", ""}};
     try {
         auto profile = match(identity, catalog);

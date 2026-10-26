@@ -10,12 +10,14 @@ jobs:
       - name: Build launcher and run native checks
         shell: cmd
         run: Build.cmd
-      - name: Prepare portable directory
-        run: cmake --install out/windows-dev --prefix dist/CommunityDivers
+      - name: Package versioned portable ZIP
+        run: cpack --config out/windows-dev/CPackConfig.cmake -B dist
       - uses: actions/upload-artifact@v4
         with:
           name: CommunityDivers-windows-x64
-          path: dist/CommunityDivers/
+          path: |
+            dist/*.zip
+            dist/*.sha256
   linux-core:
     runs-on: ubuntu-latest
     steps:

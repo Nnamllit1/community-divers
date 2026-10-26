@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include "community/version.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -560,6 +561,9 @@ void App::draw(void *owner) {
     } else if (page == 5) {
         section_head("COMMUNITY DIVERS");
         text("Launcher preview " CD_VERSION);
+        subdued("Release " + std::string(version::release_id));
+        if (version::source_dirty)
+            subdued("Local development build with uncommitted changes.");
         gap(10);
         ImGui::TextColored(accent, "Mostly AI-generated project");
         wrap("Most of this project's code and artwork is AI-generated. Review and validation are "

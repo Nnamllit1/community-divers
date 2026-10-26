@@ -1,0 +1,7 @@
+#pragma once
+#include <string_view>
+namespace cd::version {
+inline constexpr std::string_view release_id = "@CD_RELEASE_ID@";
+inline constexpr std::string_view source_commit = "@CD_SOURCE_COMMIT@";
+inline constexpr bool source_dirty = @CD_SOURCE_DIRTY@;
+}
