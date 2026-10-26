@@ -80,35 +80,59 @@ Includes signed launcher update checks, managed-file installation, startup valid
 Download the ZIP and its SHA-256 file. See the README and update documentation for usage and current limits.
 "@
 [IO.File]::WriteAllText($notesPath, $notes, [Text.UTF8Encoding]::new($false))
-if (-not $existing) {
-    & gh release create $tag --repo $repo --verify-tag --target $source --draft --prerelease --title ('Launcher preview ' + $source.Substring(0, 8)) --notes-file $notesPath; Assert-Native
-    $existing = Find-Release
-    if (-not $existing) { throw 'Cannot resolve the newly created release draft.' }
+function Api-Json([string]$Url, [string]$Method, $Body) {
+    $encoded = [Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json -Depth 10))
+    try { return Invoke-RestMethod -Uri $Url -Headers $headers -Method $Method -ContentType 'application/json' -Body $encoded }
+    catch { throw 'GitHub release write failed; the previous channel is retained.' }
 }
-$tagRef = Api-Get ($base + '/git/ref/tags/' + $tag)
-if ($tagRef.object.type -ne 'commit' -or $tagRef.object.sha -ne $source) { throw 'Release tag points to a different source revision.' }
+if (-not $existing) {
+    # The create response is authoritative. A new draft may not be visible in tag/list queries yet.
+    $existing = Api-Json ($base + '/releases') 'Post' @{
+        tag_name=$tag; target_commitish=$source; draft=$true; prerelease=$true;
+        name=('Launcher preview ' + $source.Substring(0, 8)); body=$notes
+    }
+}
+if (-not $existing.id -or $existing.tag_name -ne $tag) { throw 'Release identity mismatch.' }
 if ($existing.draft) {
-    # Retrying an unpublished draft is safe; published assets are never overwritten.
-    & gh release upload $tag $zip.FullName $checksum $feedPath --repo $repo --clobber; Assert-Native
-    & gh release edit $tag --repo $repo --draft=false --prerelease; Assert-Native
+    $uploadBase = $existing.upload_url.Split('{')[0]
+    $expectedUpload = 'https://uploads.github.com/repos/' + $repo + '/releases/' + $existing.id + '/assets'
+    if ($uploadBase -ne $expectedUpload) { throw 'Unexpected GitHub asset upload endpoint.' }
+    $assets = @($existing.assets)
+    $allowed = @($zip.Name, [IO.Path]::GetFileName($checksum), 'preview.json')
+    if (@($assets | Where-Object { $_.name -notin $allowed }).Count) { throw 'Draft contains unexpected assets; refusing to publish them.' }
+    foreach ($file in @($zip.FullName, $checksum, $feedPath)) {
+        $name = [IO.Path]::GetFileName($file)
+        foreach ($asset in @($assets | Where-Object { $_.name -eq $name })) {
+            # Only unpublished draft assets can be replaced on a retry.
+            try { Invoke-RestMethod -Uri ($base + '/releases/assets/' + $asset.id) -Headers $headers -Method Delete | Out-Null }
+            catch { throw 'Cannot replace an unpublished draft asset.' }
+        }
+        $type = if ($name.EndsWith('.zip')) { 'application/zip' } elseif ($name.EndsWith('.json')) { 'application/json' } else { 'text/plain' }
+        try {
+            Invoke-RestMethod -Uri ($uploadBase + '?name=' + [Uri]::EscapeDataString($name)) -Headers $headers -Method Post -ContentType $type -InFile $file | Out-Null
+        } catch { throw 'Draft asset upload failed; no channel promotion occurred.' }
+    }
+    $existing = Api-Json ($base + '/releases/' + $existing.id) 'Patch' @{draft=$false;prerelease=$true}
 } else {
     $asset = @($existing.assets | Where-Object { $_.name -eq $zip.Name })
-    if ($asset.Count -ne 1 -or $asset[0].digest -ne ('sha256:' + $digest)) { throw 'Published package differs; refusing to overwrite it.' }
-    $published = Join-Path $work 'published'
-    & gh release download $tag --repo $repo --pattern 'preview.json' --dir $published; Assert-Native
-    $publishedFeed = Join-Path $published 'preview.json'
+    if ($asset.Count -ne 1 -or ($asset[0].digest -and $asset[0].digest -ne ('sha256:' + $digest))) { throw 'Published package differs; refusing to overwrite it.' }
+    $manifestAsset = @($existing.assets | Where-Object { $_.name -eq 'preview.json' })
+    if ($manifestAsset.Count -ne 1) { throw 'Published signed manifest is missing.' }
+    $publishedFeed = Join-Path $work 'published-preview.json'
+    Invoke-WebRequest -Uri $manifestAsset[0].browser_download_url -OutFile $publishedFeed
     $publishedPayload = (& $updater --inspect-feed $publishedFeed) | ConvertFrom-Json; Assert-Native
     if ($publishedPayload.source_commit -ne $source -or $publishedPayload.sha256 -ne $digest) { throw 'Published signed manifest differs from this package.' }
     $feedPath = $publishedFeed
 }
-# Confirm public availability and digest before promoting the channel.
-$publishedRelease = Api-Get ($base + '/releases/tags/' + $tag)
-$publicAsset = @($publishedRelease.assets | Where-Object { $_.name -eq $zip.Name })
-if ($publishedRelease.draft -or $publicAsset.Count -ne 1 -or
-    ($publicAsset[0].digest -and $publicAsset[0].digest -ne ('sha256:' + $digest))) { throw 'Public release package verification failed.' }
+# Public download verification does not send the repository token across CDN redirects.
+if ($existing.draft) { throw 'Release is still unpublished.' }
 $publicZip = Join-Path $work 'public-package.zip'
-Invoke-WebRequest -Uri $payload.url -OutFile $publicZip
-if ((Get-FileHash -LiteralPath $publicZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) { throw 'Public package download differs from the tested artifact.' }
+$downloaded = $false
+for ($attempt = 0; $attempt -lt 5; $attempt++) {
+    try { Invoke-WebRequest -Uri $payload.url -OutFile $publicZip; $downloaded = $true; break }
+    catch { if ($attempt -lt 4) { Start-Sleep -Seconds 2 } }
+}
+if (-not $downloaded -or (Get-FileHash -LiteralPath $publicZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) { throw 'Public package download differs from the tested artifact.' }
 $feedBytes = [IO.File]::ReadAllBytes($feedPath)
 for ($attempt = 0; $attempt -lt 3; $attempt++) {
     $current = Api-Get ($base + '/contents/updates/preview.json?ref=main')
