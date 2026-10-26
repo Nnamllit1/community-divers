@@ -153,6 +153,28 @@ int main() {
                 rejects([&] { parse_status(j.dump()); });
             }
         });
+        test("campaign snapshots enforce community identity and bounded content", [] {
+            json campaign{{"schema", 1},
+                          {"community_id", "test"},
+                          {"name", "War"},
+                          {"revision", 2u},
+                          {"epoch", 1u},
+                          {"planets", json::array({{{"id", "planet"},
+                                                    {"name", "Planet"},
+                                                    {"biome_id", "test-biome"},
+                                                    {"owner_faction", "terminid"},
+                                                    {"liberation", 500000u}}})},
+                          {"templates", json::array()}};
+            auto snapshot = parse_campaign(campaign.dump(), "test");
+            require(snapshot.planets.size() == 1 && snapshot.planets[0].liberation == 500000,
+                    "Campaign data lost");
+            rejects([&] { parse_campaign(campaign.dump(), "another"); });
+            campaign["planets"].push_back(campaign["planets"][0]);
+            rejects([&] { parse_campaign(campaign.dump(), "test"); });
+            campaign["planets"].erase(1);
+            campaign["planets"][0]["liberation"] = 1000001;
+            rejects([&] { parse_campaign(campaign.dump(), "test"); });
+        });
         test("exact client fingerprint catalog never grants integration", [] {
             ClientIdentity identity;
             identity.installation.valid = true;

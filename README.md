@@ -9,9 +9,9 @@ HELLDIVERS 2 wars.
 
 </div>
 
-> **Launcher preview.** Installation discovery, saved server connections and mod
-> profiles are available. Game integration, campaign services and community co-op
-> are under development. This preview cannot launch a community game session.
+> **Launcher preview.** Installation discovery, saved connections, mod profiles
+> and a persistent community service are available. Game integration and community
+> co-op are under development. This preview cannot launch a community game session.
 
 Community Divers is being built for players who want to share a persistent war,
 run their own progression and choose their mods together. Each community can
@@ -35,6 +35,7 @@ and verify it with the accompanying SHA-256 file.
 - Inspect local mod manifests and save selections in named profiles.
 - Recover settings without silently discarding a malformed original file.
 - Export read-only client fingerprints for exact-build integration analysis.
+- Display a connected community service's persisted campaign and mission templates.
 
 Current builds check a signed preview feed and stage verified downloads. Portable
 packages support Install and restart with startup checks, rollback and interrupted
@@ -51,6 +52,18 @@ See [service status](docs/service-contract.md) and
 [mod manifests](docs/mod-manifests.md) for the current contracts.
 [Client inspection](docs/client-integration.md) describes the build catalog and
 unimplemented game-adapter gates.
+
+## Community service
+
+The native C++ service persists independent community profiles, loadouts, configured
+planets/templates and mission results in SQLite. Operator credentials control
+campaign configuration; player credentials scope profile changes. Result receipts
+are deduplicated transactionally, and backups/restores use verified snapshots.
+The service binds to loopback behind an operator-managed HTTPS proxy.
+
+See [self-hosting](docs/self-hosting.md) and [the service contract](docs/service-contract.md).
+The game adapter, lobby transport, scheduling/voting and launcher account login
+remain in development. API mission results are not native gameplay verification.
 
 ## Development
 

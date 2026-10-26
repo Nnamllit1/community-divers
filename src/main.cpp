@@ -167,7 +167,7 @@ LRESULT WINAPI window_proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) 
 } // namespace
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
     cd::fs::path capture_path, data, install_package, install_manifest;
-    bool update_only = false;
+    bool update_only = false, check_selected = false;
     int page = 0;
     uintptr_t inherited_lock = 0, update_health = 0;
     int window_width = 1440, window_height = 900;
@@ -177,7 +177,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         auto args = CommandLineToArgvW(GetCommandLineW(), &count);
         for (int i = 1; i < count; ++i) {
             std::wstring arg = args[i];
-            if (arg == L"--update")
+            if (arg == L"--check-selected")
+                check_selected = true;
+            else if (arg == L"--update")
                 update_only = true;
             else if (arg == L"--install-update" && i + 2 < count) {
                 install_package = args[++i];
@@ -279,6 +281,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         cd::theme();
         cd::App app(data, capture_path.empty());
         app.page = page;
+        if (check_selected) {
+            if (auto selected = app.community()) {
+                app.pending_id = selected->id;
+                app.pending_url = selected->url;
+                app.pending = app.community_checker(selected->url);
+            }
+        }
+
         wchar_t windows[32768]{};
         GetWindowsDirectoryW(windows, 32768);
         auto fonts = cd::fs::path(windows) / L"Fonts";
@@ -337,7 +347,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             graphics_context->OMSetRenderTargets(1, &view, nullptr);
             graphics_context->ClearRenderTargetView(target.Get(), clear);
             ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-            if (!capture_path.empty() && ++frames >= 4) {
+            if (!capture_path.empty() && ++frames >= 4 &&
+                (!check_selected || !app.pending.valid())) {
                 capture(capture_path);
                 done = true;
             }

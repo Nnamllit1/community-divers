@@ -489,9 +489,67 @@ ServiceStatus parse_status(const std::string &body) {
     };
     s.required_release_set = release_identifier("required_release_set");
     s.required_launcher_release = release_identifier("required_launcher_release");
+    if (j.contains("capabilities")) {
+        s.capabilities = j.at("capabilities").get<std::vector<std::string>>();
+        if (s.capabilities.size() > 32)
+            throw std::runtime_error("Too many service capabilities");
+        for (const auto &capability : s.capabilities)
+            if (!identifier(capability) || capability.size() > 64)
+                throw std::runtime_error("Invalid service capability");
+    }
     if (j.contains("campaign"))
         s.campaign = checked_string(j.at("campaign"), "name", 128);
     return s;
+}
+CampaignSnapshot parse_campaign(const std::string &body, const std::string &community_id) {
+    if (body.size() > 1024 * 1024)
+        throw std::runtime_error("Campaign snapshot exceeds 1 MiB");
+    auto j = json::parse(body);
+    if (j.at("schema") != 1)
+        throw std::runtime_error("Unsupported campaign snapshot schema");
+    CampaignSnapshot c;
+    c.community_id = checked_string(j, "community_id", 96);
+    c.name = checked_string(j, "name", 128);
+    if (c.community_id != community_id || c.name.empty())
+        throw std::runtime_error("Campaign belongs to a different community");
+    auto number = [](const json &item, const char *key, uint64_t maximum) {
+        if (!item.at(key).is_number_unsigned())
+            throw std::runtime_error("Invalid campaign integer");
+        auto n = item.at(key).get<uint64_t>();
+        if (n > maximum)
+            throw std::runtime_error("Campaign integer is out of range");
+        return n;
+    };
+    c.revision = number(j, "revision", UINT64_MAX);
+    c.epoch = number(j, "epoch", UINT64_MAX);
+    if (!c.epoch || !j.at("planets").is_array() || !j.at("templates").is_array() ||
+        j["planets"].size() > 1024 || j["templates"].size() > 1024)
+        throw std::runtime_error("Invalid campaign collection size");
+    std::set<std::string> ids;
+    for (const auto &item : j["planets"]) {
+        CampaignPlanet p;
+        p.id = checked_string(item, "id", 96);
+        p.name = checked_string(item, "name", 128);
+        p.biome_id = checked_string(item, "biome_id", 96);
+        p.owner_faction = checked_string(item, "owner_faction", 96);
+        p.liberation = static_cast<uint32_t>(number(item, "liberation", 1000000));
+        if (!identifier(p.id) || !identifier(p.biome_id) || !identifier(p.owner_faction) ||
+            p.name.empty() || !ids.insert(p.id).second)
+            throw std::runtime_error("Invalid or duplicate campaign planet");
+        c.planets.push_back(std::move(p));
+    }
+    ids.clear();
+    for (const auto &item : j["templates"]) {
+        CampaignTemplate t;
+        t.id = checked_string(item, "id", 96);
+        t.name = checked_string(item, "name", 128);
+        t.reward_xp = static_cast<uint32_t>(number(item, "reward_xp", 1000000));
+        t.war_points = static_cast<uint32_t>(number(item, "war_points", 1000000));
+        if (!identifier(t.id) || t.name.empty() || !ids.insert(t.id).second)
+            throw std::runtime_error("Invalid or duplicate mission template");
+        c.templates.push_back(std::move(t));
+    }
+    return c;
 }
 std::string launch_blocker(const Installation &game, const ServiceStatus *service) {
     if (!game.valid)

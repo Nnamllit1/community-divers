@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "community/platform.hpp"
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <shellapi.h>
@@ -110,51 +111,67 @@ void http_check(BOOL ok) {
         throw std::runtime_error("Connection failed (Windows HTTP " +
                                  std::to_string(GetLastError()) + ")");
 }
+std::string get_json(const std::string &url, const std::string &suffix, size_t limit) {
+    auto e = parse_endpoint(url);
+    HttpHandle session(WinHttpOpen(L"CommunityDivers/0.1", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+                                   WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0));
+    http_check(WinHttpSetTimeouts(session, 1500, 2000, 2000, 2000));
+    HttpHandle connection(WinHttpConnect(session, wide(e.host).c_str(), e.port, 0));
+    auto path = wide(e.path + suffix);
+    HttpHandle query(WinHttpOpenRequest(connection, L"GET", path.c_str(), nullptr,
+                                        WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                        e.secure ? WINHTTP_FLAG_SECURE : 0));
+    DWORD disabled = WINHTTP_DISABLE_AUTHENTICATION | WINHTTP_DISABLE_COOKIES;
+    http_check(
+        WinHttpSetOption(query, WINHTTP_OPTION_DISABLE_FEATURE, &disabled, sizeof(disabled)));
+    DWORD redirect = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
+    http_check(
+        WinHttpSetOption(query, WINHTTP_OPTION_REDIRECT_POLICY, &redirect, sizeof(redirect)));
+    http_check(WinHttpSendRequest(query, L"Accept: application/json\r\n", static_cast<DWORD>(-1),
+                                  WINHTTP_NO_REQUEST_DATA, 0, 0, 0));
+    http_check(WinHttpReceiveResponse(query, nullptr));
+    DWORD status = 0, size = sizeof(status);
+    http_check(WinHttpQueryHeaders(query, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                   WINHTTP_HEADER_NAME_BY_INDEX, &status, &size,
+                                   WINHTTP_NO_HEADER_INDEX));
+    if (status != 200)
+        throw std::runtime_error("Community returned HTTP " + std::to_string(status));
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
+    std::string body;
+    char buffer[8192];
+    for (;;) {
+        if (std::chrono::steady_clock::now() > deadline)
+            throw std::runtime_error("Service response timed out");
+        DWORD received = 0;
+        http_check(WinHttpReadData(query, buffer, sizeof(buffer), &received));
+        if (!received)
+            break;
+        if (body.size() + received > limit)
+            throw std::runtime_error((limit == 262144 ? "Service response exceeds 256 KiB"
+                                                      : "Campaign response exceeds 1 MiB"));
+        body.append(buffer, received);
+    }
+    return body;
+}
 ProbeResult request(const std::string &url) {
     try {
-        auto e = parse_endpoint(url);
-        HttpHandle session(WinHttpOpen(L"CommunityDivers/0.1", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
-                                       WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0));
-        http_check(WinHttpSetTimeouts(session, 1500, 2000, 2000, 2000));
-        HttpHandle connection(WinHttpConnect(session, wide(e.host).c_str(), e.port, 0));
-        auto path = wide(e.path + "/v1/status");
-        HttpHandle query(WinHttpOpenRequest(connection, L"GET", path.c_str(), nullptr,
-                                            WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
-                                            e.secure ? WINHTTP_FLAG_SECURE : 0));
-        DWORD disabled = WINHTTP_DISABLE_AUTHENTICATION | WINHTTP_DISABLE_COOKIES;
-        http_check(
-            WinHttpSetOption(query, WINHTTP_OPTION_DISABLE_FEATURE, &disabled, sizeof(disabled)));
-        DWORD redirect = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
-        http_check(
-            WinHttpSetOption(query, WINHTTP_OPTION_REDIRECT_POLICY, &redirect, sizeof(redirect)));
-        http_check(WinHttpSendRequest(query, L"Accept: application/json\r\n",
-                                      static_cast<DWORD>(-1), WINHTTP_NO_REQUEST_DATA, 0, 0, 0));
-        http_check(WinHttpReceiveResponse(query, nullptr));
-        DWORD status = 0, size = sizeof(status);
-        http_check(WinHttpQueryHeaders(query, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-                                       WINHTTP_HEADER_NAME_BY_INDEX, &status, &size,
-                                       WINHTTP_NO_HEADER_INDEX));
-        if (status != 200)
-            throw std::runtime_error("Community returned HTTP " + std::to_string(status));
-        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
-        std::string body;
-        char buffer[8192];
-        for (;;) {
-            if (std::chrono::steady_clock::now() > deadline)
-                throw std::runtime_error("Service response timed out");
-            DWORD received = 0;
-            http_check(WinHttpReadData(query, buffer, sizeof(buffer), &received));
-            if (!received)
-                break;
-            if (body.size() + received > 262144)
-                throw std::runtime_error("Service response exceeds 256 KiB");
-            body.append(buffer, received);
+        auto status = parse_status(get_json(url, "/v1/status", 262144));
+        ProbeResult result{status, {}};
+        if (std::find(status.capabilities.begin(), status.capabilities.end(), "campaign.read") !=
+            status.capabilities.end()) {
+            try {
+                result.campaign =
+                    parse_campaign(get_json(url, "/v1/campaign", 1024 * 1024), status.id);
+            } catch (const std::exception &e) {
+                result.campaign_error = e.what();
+            }
         }
-        return {parse_status(body), {}};
+        return result;
     } catch (const std::exception &e) {
         return {{}, e.what()};
     }
 }
+
 } // namespace
 std::future<ProbeResult> probe_service(std::string url) {
     auto promise = std::make_shared<std::promise<ProbeResult>>();

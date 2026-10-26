@@ -14,6 +14,12 @@ CTest runs these suites:
 - `update_tests` (Windows): real CNG signatures with generated fixture keys,
   tampering/wrong-key rejection, transport URL policy, streamed Unicode staging,
   verified cache reuse/repair, failed-transfer cleanup and persisted replay rejection.
+- `service_tests` (Windows/Linux): real loopback HTTP, private state creation,
+  operator/player separation, persistent loadouts, declared-version admission,
+  snapshotted rewards, duplicate/conflicting results, cross-connection concurrent
+  retries, capped liberation, online backup/restore, restart continuity and
+  unrelated/forward-schema rejection. Windows also probes the service with the
+  launcher's actual WinHTTP client; Linux checks owner-only file permissions.
 - `platform_tests` (Windows): real loopback HTTP requests, base-path handling,
   redirects, HTTP errors, invalid JSON, response limits and SHA-256 fingerprints.
 - `ui_tests` (Windows): the actual launcher views in an offscreen ImGui context.
@@ -96,3 +102,19 @@ command and the public signed feed. The replacement passed its native startup
 check and remained alive afterward; saved settings, mod metadata and unmanaged
 files were preserved, and the transaction was confirmed. This is launcher update
 evidence, separate from the synthetic rollback fault tests and from game startup.
+
+## Campaign view against a running service
+
+Save a local community endpoint in a separate launcher data directory, start the
+service, then use the application's own capture mode:
+
+```console
+CommunityDivers.exe --data-dir captures/campaign-launcher-data --page 1 --check-selected --capture captures/campaign.png
+```
+
+`--check-selected` requests the saved community's actual status/campaign and waits
+for that request before exporting a render capture. It sends no desktop input.
+The separate service-process check also verifies persisted HTTP state after a
+forced process stop/restart and exercises the native backup/restore CLI. These
+checks do not establish external TLS deployment, native input/DPI behavior or a
+working game adapter.

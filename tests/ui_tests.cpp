@@ -341,6 +341,30 @@ int main() {
                         ui.app->service->required_launcher_release == "widget-preview+12345678",
                     "Community version requirements did not reach the launcher view");
             std::cout << "PASS add, save and check community through widgets\n";
+            auto connected = *ui.app->service;
+            cd::CampaignSnapshot snapshot;
+            snapshot.community_id = connected.id;
+            snapshot.name = "Persisted test war";
+            snapshot.revision = 2;
+            snapshot.epoch = 1;
+            snapshot.planets.push_back(
+                {"test-planet", "Test planet", "test-biome", "terminid", 250000});
+            ui.app->community_checker = [connected, snapshot](const std::string &) mutable {
+                std::promise<cd::ProbeResult> promise;
+                cd::ProbeResult result{connected, {}};
+                result.campaign = snapshot;
+                promise.set_value(std::move(result));
+                return promise.get_future();
+            };
+            ui.page(1);
+            ui.click("Refresh campaign");
+            ui.frame();
+            require(ui.app->campaign && ui.app->campaign->revision == 2 &&
+                        ui.app->campaign->planets.size() == 1,
+                    "Refreshed campaign did not reach the actual Campaign view");
+            ui.app->community_checker = cd::probe_service;
+            std::cout << "PASS campaign refresh and persisted snapshot view\n";
+
             ui.page(3);
             ui.type("##profile", "Solo");
             ui.click("Create profile");
@@ -378,7 +402,7 @@ int main() {
             ui.click("Check selected");
             ui.click("Remove selected");
             ui.wait_for_probe();
-            require(ui.app->settings.communities.empty() && !ui.app->service,
+            require(ui.app->settings.communities.empty() && !ui.app->service && !ui.app->campaign,
                     "A stale service reply restored a removed community");
             std::cout << "PASS removed community discards in-flight status\n";
             ImGui::GetIO().DisplaySize = {1040, 730};

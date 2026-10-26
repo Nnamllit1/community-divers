@@ -30,3 +30,14 @@ __pycache__/
 
 # Publisher private-key exports
 *.private
+
+# Generated community service state and credential exports
+/community-data/
+/campaign-backup/
+/restored-community-data/
+/dist-service/
+operator.token
+*.sqlite
+*.sqlite-*
+*.credential.json
+/player-credential.json

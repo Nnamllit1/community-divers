@@ -1,0 +1,2 @@
+SQLite 3.54.1 is in the public domain.
+Upstream copyright declaration: https://www.sqlite.org/copyright.html

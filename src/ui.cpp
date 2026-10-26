@@ -211,9 +211,14 @@ void App::tick() {
         auto selected = community();
         if (selected && selected->id == pending_id && selected->url == pending_url) {
             service = std::move(result.status);
+            campaign = std::move(result.campaign);
             connected_id = service ? selected->id : "";
             notice_error = !service;
             notice = service ? "Connected to " + service->name + "." : result.error;
+            if (service && !result.campaign_error.empty()) {
+                notice += " Campaign: " + result.campaign_error;
+                notice_error = true;
+            }
         }
     }
     if (pending_identity.valid() &&
@@ -398,19 +403,67 @@ void App::draw(void *owner) {
 
         ImGui::EndChild();
     } else if (page == 1) {
-        section_head("Campaign connection");
-        if (service) {
+        section_head("Community campaign");
+        ImGui::BeginDisabled(!community() || pending.valid());
+        if (ImGui::Button(pending.valid() ? "Refreshing campaign..." : "Refresh campaign")) {
+            auto selected = community();
+            pending_id = selected->id;
+            pending_url = selected->url;
+            pending = community_checker(selected->url);
+        }
+        ImGui::EndDisabled();
+        gap(8);
+
+        if (campaign) {
+            ImGui::PushFont(heading);
+            text(campaign->name);
+            ImGui::PopFont();
+            subdued((service ? service->name : campaign->community_id) + " / campaign revision " +
+                    std::to_string(campaign->revision));
+            gap(10);
+            if (campaign->planets.empty())
+                wrap("The operator has not configured any planets yet.");
+            else if (ImGui::BeginTable(
+                         "campaign-planets", 4,
+                         ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
+                         {0, std::min(280.f, 46.f + static_cast<float>(campaign->planets.size()) *
+                                                        42.f)})) {
+                for (const char *label : {"Planet", "Biome", "Owner", "Liberation"})
+                    ImGui::TableSetupColumn(label);
+                ImGui::TableHeadersRow();
+                for (const auto &planet : campaign->planets) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    text(planet.name);
+                    ImGui::TableNextColumn();
+                    text(planet.biome_id);
+                    ImGui::TableNextColumn();
+                    text(planet.owner_faction);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%.2f%%", static_cast<double>(planet.liberation) / 10000.0);
+                }
+                ImGui::EndTable();
+            }
+            gap(12);
+            section_head("Configured mission templates");
+            if (campaign->templates.empty())
+                subdued("No mission templates configured.");
+            for (const auto &mission : campaign->templates) {
+                char contribution[64];
+                std::snprintf(contribution, sizeof(contribution), "%.4f%% liberation",
+                              static_cast<double>(mission.war_points) / 10000.0);
+                wrap(mission.name + " / " + std::to_string(mission.reward_xp) + " XP / " +
+                     contribution);
+            }
+            gap(12);
+            subdued("This is the service's persisted campaign snapshot. Game launch and "
+                    "multiplayer integration remain in development.");
+        } else if (service) {
             text("Community: " + service->name);
-            text("Campaign: " + (service->campaign.empty() ? "Not advertised" : service->campaign));
+            wrap("No campaign snapshot is available. Check the community connection again, or use "
+                 "a service advertising campaign.read.");
         } else
-            text("No community service connected.");
-        gap(10);
-        if (ImGui::Button("Manage connections..."))
-            page = 2;
-        gap(20);
-        section_head("Campaign service status");
-        wrap("War state, community decisions and mission contributions are not implemented in this "
-             "preview. Each community will operate its own campaign and progression.");
+            wrap("Select a community and check its connection to load its campaign.");
     } else if (page == 2) {
         float left = available * .58f;
         ImGui::BeginChild("community-list", {left, 0});
@@ -418,8 +471,9 @@ void App::draw(void *owner) {
             if (auto c = community(); c && !pending.valid()) {
                 pending_id = c->id;
                 pending_url = c->url;
-                pending = probe_service(c->url);
+                pending = community_checker(c->url);
                 service.reset();
+                campaign.reset();
                 notice = "Checking community service...";
                 notice_error = false;
             }
@@ -432,6 +486,7 @@ void App::draw(void *owner) {
                 settings.selected_community =
                     settings.communities.empty() ? "" : settings.communities.front().id;
                 service.reset();
+                campaign.reset();
                 save();
             }
         }
@@ -451,6 +506,7 @@ void App::draw(void *owner) {
                                       ImGuiSelectableFlags_SpanAllColumns)) {
                     settings.selected_community = c.id;
                     service.reset();
+                    campaign.reset();
                     save();
                 }
                 ImGui::TableNextColumn();
@@ -482,6 +538,7 @@ void App::draw(void *owner) {
                 settings.communities.push_back({key, server_name, e.canonical});
                 settings.selected_community = key;
                 service.reset();
+                campaign.reset();
                 server_name[0] = server_url[0] = 0;
                 save();
             } catch (const std::exception &e) {

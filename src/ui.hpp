@@ -33,7 +33,9 @@ struct App {
     Installation game;
     std::vector<Mod> mods;
     std::optional<ServiceStatus> service;
+    std::optional<CampaignSnapshot> campaign;
     std::future<ProbeResult> pending;
+    std::function<std::future<ProbeResult>(std::string)> community_checker = probe_service;
     std::future<ClientIdentity> pending_identity;
     std::string identity_for_path, identity_summary;
     std::string pending_id, pending_url, connected_id, notice, settings_warning;

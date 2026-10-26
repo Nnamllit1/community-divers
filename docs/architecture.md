@@ -11,8 +11,8 @@ community service. [PROJECT.md](../PROJECT.md) defines their milestones.
 - `community_platform`: Windows Steam discovery, HTTPS requests, read-only BCrypt file hashing, ECDSA publisher verification, streamed update staging and desktop paths.
 - `CommunityDivers`: Win32/Direct3D 11 desktop application and Dear ImGui views.
 
-The launcher displays actual detected and configured state. There is no built-in
-community server and no simulated campaign presented as a live one. The initial
+The launcher displays detected/configured state and campaign snapshots fetched
+from a real community service. Empty campaigns remain empty until configured. The initial
 client integration capability is unavailable, so a remote service claiming to
 support a build cannot enable game launch by itself.
 
@@ -26,11 +26,12 @@ private profile storage, service routing and the client startup contract. A
 supported game build, verified isolation and a compatible community service will
 all be required before launch. Startup and native access remain unverified.
 
-## Planned community service
+## Community service
 
-One authoritative campaign service owns its war and player progression. It
-provides accounts, mission/operation data, lobbies, community decisions and
-deduplicated mission results. Independent services have independent campaigns
+The native `CommunityDiversService` owns its independent community state in SQLite.
+It provides scoped operator/player credentials, profile/loadout storage, configured
+planets and mission templates, transactional solo result receipts and native backup/
+restore. Lobbies, operations, scheduling and community decisions remain planned. Independent services have independent campaigns
 unless shared authority/federation is explicitly added.
 
 Player-hosted missions retain the game's simulation. HTTPS handles service data;
@@ -52,3 +53,6 @@ A separate native helper installs owned launcher files, verifies restart health
 and restores failed/interrupted updates. Server coordination and automatic
 scheduling remain pending. The update trust root is
 compiled into the launcher rather than provided by a community endpoint.
+
+See [self-hosting](self-hosting.md) for the explicit Server install component,
+loopback/HTTPS-proxy deployment and the boundary between API tests and game integration.

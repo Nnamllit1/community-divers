@@ -14,6 +14,8 @@ void open_folder(const fs::path &path);
 struct ProbeResult {
     std::optional<ServiceStatus> status;
     std::string error;
+    std::optional<CampaignSnapshot> campaign;
+    std::string campaign_error;
 };
 std::future<ProbeResult> probe_service(std::string url);
 FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path);

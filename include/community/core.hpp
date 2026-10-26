@@ -74,8 +74,23 @@ struct Mod {
 std::vector<Mod> discover_mods(const fs::path &directory);
 struct ServiceStatus {
     std::string id, name, campaign, required_release_set, required_launcher_release;
-    std::vector<std::string> game_builds;
+    std::vector<std::string> game_builds, capabilities;
 };
+struct CampaignPlanet {
+    std::string id, name, biome_id, owner_faction;
+    uint32_t liberation = 0;
+};
+struct CampaignTemplate {
+    std::string id, name;
+    uint32_t reward_xp = 0, war_points = 0;
+};
+struct CampaignSnapshot {
+    std::string community_id, name;
+    uint64_t revision = 0, epoch = 0;
+    std::vector<CampaignPlanet> planets;
+    std::vector<CampaignTemplate> templates;
+};
+CampaignSnapshot parse_campaign(const std::string &body, const std::string &community_id);
 ServiceStatus parse_status(const std::string &body);
 std::string launch_blocker(const Installation &game, const ServiceStatus *service);
 } // namespace cd
