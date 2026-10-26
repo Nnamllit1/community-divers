@@ -53,6 +53,9 @@ unimplemented game-adapter gates.
 
 ## Development
 
+Most of this project's code and artwork is AI-generated. Review and validation
+are ongoing. The launcher also includes this disclosure in About.
+
 Requirements: CMake 3.25+, a C++20 compiler, and the Windows SDK for the launcher.
 Dependencies are downloaded from pinned releases at configure time.
 

@@ -34,8 +34,8 @@ objective can stay stable while the roadmap evolves.
 - Distribute source and launcher components, not proprietary game files. Keep
   genuine game ownership and official account/progression separation intact.
 
-- Keep the development disclosure in the launcher About view. Public descriptions
-  and the README introduction should focus on the project's capabilities.
+- Keep the development disclosure in the launcher About view and the README
+  development section. The short public description should focus on capabilities.
 
 ## Milestones and acceptance criteria
 
