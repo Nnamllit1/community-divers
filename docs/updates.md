@@ -2,12 +2,14 @@
 
 Automatic updating is part of the project scope. Current source builds check the
 signed preview feed at startup and hourly, with an opt-out setting under About.
-They can download and verify a package into launcher data without changing the
-installed launcher. Automatic installation, CI feed publication, server admission
-checks and the server update agent remain unimplemented.
+They can download and verify a package into launcher data. Portable installations
+also provide Install and restart: the helper replaces owned launcher files after
+the old process exits, checks the replacement's startup and rolls back failures.
+Fully automatic scheduling, CI feed publication, server admission checks and the
+server update agent remain unimplemented.
 
-The first downloadable preview predates the update checker. Build current source
-to use this functionality until a newer binary release is published.
+The first downloadable preview predates the update checker and installer. Build
+and install current source to use these features until a newer binary is published.
 
 ## From a push to an update
 
@@ -125,9 +127,59 @@ CommunityDiversUpdate.exe --sign payload.json .local/keys/update-publisher.priva
 Generation and signing refuse existing output paths. Store the private key in
 ignored local storage and an appropriate secret backup; never publish it. The
 initial channel was signed manually. CI secret provisioning and automatic
-promotion remain pending. Trust-root rotation and persisted replay protection
-must be completed before automatic installation is enabled; the current checker
-never installs or rolls back an application on its own.
+promotion remain pending. The accepted channel envelope is persisted and reauthenticated on subsequent
+checks. An older observed revision or a changed package for the same revision is
+rejected. A corrupt saved channel state is reported rather than silently reset.
+Trust-root rotation across multiple publisher keys remains pending; current
+installations use one compiled publisher key.
 
 Native implementation references: [Windows signature verification](https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptverifysignature)
 and [WinHTTP response headers](https://learn.microsoft.com/en-us/windows/win32/api/winhttp/nf-winhttp-winhttpqueryheaders).
+
+## Launcher installation and recovery
+
+Install and restart is available in portable installations containing
+`install-inventory.json`. To make one from source:
+
+```console
+cmake --install out/windows-dev --prefix dist/CommunityDivers
+```
+
+Use a writable application directory separate from launcher data and the game.
+The inventory lists only files installed by the project; it does not adopt
+unrelated files already in that directory. Packages include the inventory,
+`build-info.json` and launcher update protocol 1. The original binary preview
+lacks that protocol and cannot be an automatic installation target.
+
+The helper is copied into a unique job directory outside the application. It
+independently checks the publisher signature, the observed channel revision,
+package size/hash, bounded ZIP contents, each file's inventory hash and the
+packaged build identity. Paths with traversal, Windows aliases, duplicate names,
+links, unexpected top-level content or excessive expanded sizes are rejected.
+No downloaded package code runs during this preparation.
+
+Backups and a durable journal are completed before the helper signals that the
+launcher may exit. The parent is identified by PID, creation time and executable
+path. A timed-out preparation is stopped before reporting failure. A per-install
+file lock excludes another launcher during replacement and is inherited by the
+replacement process. The helper replaces individual managed files atomically,
+removes obsolete inventory entries and preserves unmanaged files.
+
+The replacement acknowledges startup after rendering and checking its compiled
+source identity against build metadata. A process exit, missing acknowledgement
+or early crash triggers restoration of the verified backup and restarts the old
+launcher. The journal and recovery pointer allow the next launch to restore an
+update interrupted by helper/process failure. Backups remain in launcher data
+under `updates/jobs`; automatic history cleanup is not implemented yet.
+
+The native process tests cover successful restart, early failure, a hung startup,
+unsafe ZIP rejection, independent helper signature rejection and recovery after
+an updater crash midway through replacement. An optional real-launcher smoke
+check additionally exercises Direct3D rendering and the startup acknowledgement;
+these results do not establish game-adapter or server update support.
+
+Maintainers can inspect a signed bundle without installing or executing it:
+
+```console
+CommunityDiversUpdate.exe --verify-package package.zip signed-feed.json extracted-package
+```

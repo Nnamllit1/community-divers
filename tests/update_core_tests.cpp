@@ -1,4 +1,5 @@
 #include "update_fixture.hpp"
+#include "community/installer.hpp"
 #include <iostream>
 using namespace cd;
 using namespace cd::test;
@@ -43,6 +44,14 @@ int main() {
                            compare_update(r, std::string(40, 'b'), 6) == UpdateRelation::unknown,
                        "Unknown or divergent build ordering was invented");
         std::cout << "PASS update ordering protects newer development builds\n";
+        for (const auto &path : {"../CommunityDivers.exe", "docs/../launcher.json", "docs/CON.txt",
+                                 "docs/a:stream", "docs/a.", "docs/a\\x", "mods/private.json",
+                                 "userdata/profile.json", "docs/a//x", "docs/COM1.txt"})
+            update_require(!managed_update_path(path), "Unsafe managed inventory path accepted");
+        update_require(managed_update_path("assets/brand/logo.png") &&
+                           managed_update_path("CommunityDivers.exe"),
+                       "Launcher-owned paths rejected");
+        std::cout << "PASS managed-file policy excludes user data and Windows path aliases\n";
         Settings settings;
         settings.check_updates = false;
         update_require(!decode_settings(encode_settings(settings)).check_updates,

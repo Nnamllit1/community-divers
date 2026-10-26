@@ -79,6 +79,8 @@ struct UI {
             return io.Fonts->AddFontDefault(&cfg);
         };
         app = std::make_unique<cd::App>(data, false);
+        app->portable_install = true;
+        app->update_recorder = [](const auto &, const auto &, const auto &) {};
         app->body = font(L"segoeui.ttf", 18);
         app->heading = font(L"bahnschrift.ttf", 28);
         app->title = font(L"bahnschrift.ttf", 36);
@@ -252,7 +254,7 @@ int main() {
                 release.source_commit = std::string(40, 'a');
                 release.revision = UINT64_MAX;
                 release.bytes = 1234;
-                promise.set_value({release, {}});
+                promise.set_value({release, {}, "widget-envelope-fixture"});
                 return promise.get_future();
             };
             ui.click("Check for updates");
@@ -272,6 +274,29 @@ int main() {
             ui.frame();
             require(!ui.app->downloaded_update.empty() && !ui.app->update_error,
                     "Staged update result was not displayed");
+            ui.app->update_installer = [&](cd::fs::path package, std::string envelope, cd::fs::path,
+                                           cd::fs::path data) {
+                require(package == ui.app->downloaded_update &&
+                            envelope == "widget-envelope-fixture" && data == fixture.data,
+                        "Install control did not preserve its verified download context");
+                std::promise<cd::InstallHandoff> promise;
+                promise.set_value({{}, "Preparation test rejection"});
+                return promise.get_future();
+            };
+            ui.click("Install and restart");
+            ui.frame();
+            require(ui.app->update_error && !ui.app->exit_for_update,
+                    "Failed preparation closed the launcher");
+            ui.app->update_installer = [](auto, auto, auto, auto) {
+                std::promise<cd::InstallHandoff> promise;
+                promise.set_value({"fixture-job", {}});
+                return promise.get_future();
+            };
+            ui.click("Install and restart");
+            ui.frame();
+            require(ui.app->exit_for_update, "Prepared install did not request launcher exit");
+            ui.app->exit_for_update = false;
+            std::cout << "PASS install control exits only after successful helper preparation\n";
             ui.app->update_checker = [] {
                 std::promise<cd::UpdateCheck> promise;
                 promise.set_value({{}, "Signature test failure"});

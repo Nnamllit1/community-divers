@@ -37,8 +37,9 @@ and verify it with the accompanying SHA-256 file.
 - Export read-only client fingerprints for exact-build integration analysis.
 
 Current source builds also check a signed preview update feed and stage verified
-package downloads. Automatic installation is still pending; the first binary
-preview predates this update functionality.
+package downloads. Portable builds support Install and restart with startup checks,
+rollback and interrupted-update recovery. The first binary preview predates these
+update features; fully automatic scheduling and CI publication remain pending.
 
 Run `out/windows-dev/CommunityDivers.exe` after building, or use the executable
 in a portable package. Launcher data lives in `%LOCALAPPDATA%/CommunityDivers`.

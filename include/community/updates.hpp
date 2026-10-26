@@ -29,12 +29,16 @@ std::string update_publisher_key();
 struct UpdateCheck {
     std::optional<UpdateRelease> release;
     std::string error;
+    std::string envelope;
 };
 // Custom transport is for deterministic component tests. Production uses HTTPS only.
 using UpdateFetch = std::function<std::string(const std::string &, uint64_t)>;
 UpdateCheck check_update(const std::string &url, const std::string &public_hex,
                          const UpdateFetch &fetch);
 std::future<UpdateCheck> check_update_async();
+void remember_update_channel(const UpdateRelease &release, const std::string &envelope,
+                             const fs::path &data,
+                             const std::string &trust_key = update_publisher_key());
 using UpdateSink = std::function<void(std::string_view)>;
 using UpdateStream = std::function<void(const std::string &, uint64_t, const UpdateSink &)>;
 bool update_transport_url_allowed(const std::string &url);

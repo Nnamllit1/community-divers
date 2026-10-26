@@ -1,4 +1,5 @@
 #include "community/updates.hpp"
+#include "community/installer.hpp"
 #include "community/platform.hpp"
 #include "community/version.hpp"
 #include <fstream>
@@ -17,6 +18,18 @@ void write_new(const cd::fs::path &p, const std::string &value) {
 } // namespace
 int wmain(int count, wchar_t **args) {
     try {
+        if (count == 5 && std::wstring(args[1]) == L"--verify-package") {
+            auto release =
+                cd::verify_update_envelope(cd::read_text(args[3], cd::update_manifest_limit),
+                                           "preview", cd::update_publisher_key());
+            auto files = cd::extract_update_bundle(args[2], release, args[4]);
+            std::cout << "Verified and extracted " << files.size() << " owned launcher files.\n";
+            return 0;
+        }
+        if (count == 3 &&
+            (std::wstring(args[1]) == L"--apply" || std::wstring(args[1]) == L"--recover"))
+            return cd::run_update_installer(args[2], cd::update_publisher_key(),
+                                            std::wstring(args[1]) == L"--recover");
         if (count == 3 && std::wstring(args[1]) == L"--generate-key") {
             cd::fs::path prefix(args[2]);
             auto private_path = prefix;
@@ -59,6 +72,7 @@ int wmain(int count, wchar_t **args) {
         }
         std::cout << "CommunityDiversUpdate --check\n"
                      "CommunityDiversUpdate --download <staging-directory>\n"
+                     "CommunityDiversUpdate --verify-package <ZIP> <signed-feed> <new-directory>\n"
                      "Maintainers: --generate-key <private-prefix>\n"
                      "Maintainers: --sign <payload.json> <private-key> <output.json>\n";
         return 2;

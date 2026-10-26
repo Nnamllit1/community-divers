@@ -1,3 +1,5 @@
+#include "community/installer.hpp"
+#include "community/version.hpp"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 #include "ui.hpp"
@@ -166,6 +168,7 @@ LRESULT WINAPI window_proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
     cd::fs::path capture_path, data;
     int page = 0;
+    uintptr_t inherited_lock = 0, update_health = 0;
     int window_width = 1440, window_height = 900;
     try {
         check(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED));
@@ -173,7 +176,11 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         auto args = CommandLineToArgvW(GetCommandLineW(), &count);
         for (int i = 1; i < count; ++i) {
             std::wstring arg = args[i];
-            if (arg == L"--capture" && i + 1 < count)
+            if (arg == L"--launcher-lock-handle" && i + 1 < count)
+                inherited_lock = static_cast<uintptr_t>(std::stoull(args[++i]));
+            else if (arg == L"--update-health-handle" && i + 1 < count)
+                update_health = static_cast<uintptr_t>(std::stoull(args[++i]));
+            else if (arg == L"--capture" && i + 1 < count)
                 capture_path = args[++i];
             else if (arg == L"--data-dir" && i + 1 < count)
                 data = args[++i];
@@ -186,6 +193,20 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         LocalFree(args);
         if (data.empty())
             data = cd::user_data_path();
+        auto installation = cd::executable_directory();
+        cd::LauncherLock instance_lock(installation, inherited_lock);
+        if (update_health) {
+            auto info = cd::json::parse(cd::read_text(installation / "build-info.json"));
+            if (info.at("source_commit").get<std::string>() != cd::version::source_commit ||
+                info.at("source_revision").get<uint64_t>() != cd::version::source_revision)
+                throw std::runtime_error("Installed build metadata does not match this launcher");
+        }
+        if (cd::fs::exists(installation / ".community-divers-update.json") && !update_health) {
+            auto recovery = cd::start_update_recovery(installation, data);
+            if (!recovery.error.empty())
+                throw std::runtime_error(recovery.error);
+            return 0;
+        }
         ImGui_ImplWin32_EnableDpiAwareness();
         WNDCLASSEXW wc{sizeof(wc),
                        CS_CLASSDC,
@@ -269,6 +290,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             ImGui_ImplWin32_NewFrame();
             ImGui::NewFrame();
             app.draw(window);
+            if (app.exit_for_update)
+                done = true;
             ImGui::Render();
             float clear[] = {.04f, .065f, .09f, 1};
             ID3D11RenderTargetView *view = target.Get();
@@ -280,6 +303,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
                 done = true;
             }
             check(swapchain->Present(1, 0));
+            if (update_health && ++frames >= 4) {
+                cd::signal_update_health(update_health);
+                update_health = 0;
+            }
         }
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
@@ -301,7 +328,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             std::ofstream(data / "launcher-error.log", std::ios::app) << e.what() << '\n';
         } catch (...) {
         }
-        if (capture_path.empty())
+        if (capture_path.empty() && !update_health)
             MessageBoxW(nullptr, cd::wide(e.what()).c_str(), L"Community Divers could not start",
                         MB_ICONERROR | MB_OK);
         return 1;

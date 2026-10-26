@@ -123,7 +123,9 @@ UpdateRelease verify_update_envelope(const std::string &body, const std::string 
 }
 UpdateCheck check_update(const std::string &url, const std::string &key, const UpdateFetch &fetch) {
     try {
-        return {verify_update_envelope(fetch(url, update_manifest_limit), "preview", key), {}};
+        auto envelope = fetch(url, update_manifest_limit);
+        auto release = verify_update_envelope(envelope, "preview", key);
+        return {std::move(release), {}, std::move(envelope)};
     } catch (const std::exception &e) {
         return {{}, e.what()};
     }

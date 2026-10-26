@@ -86,6 +86,7 @@ void theme() {
 }
 App::App(fs::path data_path, bool allow_background_updates)
     : data(std::move(data_path)), background_updates(allow_background_updates) {
+    portable_install = fs::exists(executable_directory() / "install-inventory.json");
     auto loaded = load_settings(data / "launcher.json");
     settings = std::move(loaded.value);
     settings_warning = loaded.error;
@@ -152,7 +153,9 @@ void App::tick() {
             auto result = pending_update.get();
             update_error = !result.release;
             if (result.release) {
+                update_recorder(*result.release, result.envelope, data);
                 update_release = std::move(result.release);
+                update_envelope = std::move(result.envelope);
                 auto relation = compare_update(*update_release, version::source_commit,
                                                version::source_revision);
                 update_message =
@@ -177,16 +180,30 @@ void App::tick() {
                 update_message = result.error;
             else {
                 downloaded_update = std::move(result.package);
-                update_message = "Package downloaded and SHA-256 verified. Automatic installation "
-                                 "is not implemented yet.";
+                update_message =
+                    "Package downloaded and SHA-256 verified. Ready to install and restart.";
             }
         } catch (const std::exception &e) {
             update_message = e.what();
             update_error = true;
         }
     }
+    if (ready(pending_install)) {
+        try {
+            auto handoff = pending_install.get();
+            update_error = !handoff.error.empty();
+            if (update_error)
+                update_message = handoff.error;
+            else
+                exit_for_update = true;
+        } catch (const std::exception &e) {
+            update_message = e.what();
+            update_error = true;
+        }
+    }
     if (background_updates && settings.check_updates && !pending_update.valid() &&
-        !pending_download.valid() && std::chrono::steady_clock::now() >= next_update_check)
+        !pending_download.valid() && !pending_install.valid() &&
+        std::chrono::steady_clock::now() >= next_update_check)
         check_for_updates();
 
     if (pending.valid() && pending.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
@@ -622,7 +639,8 @@ void App::draw(void *owner) {
             if (settings.check_updates && background_updates)
                 check_for_updates();
         }
-        ImGui::BeginDisabled(pending_update.valid() || pending_download.valid());
+        ImGui::BeginDisabled(pending_update.valid() || pending_download.valid() ||
+                             pending_install.valid());
         if (ImGui::Button(pending_update.valid() ? "Checking updates..." : "Check for updates"))
             check_for_updates();
         ImGui::EndDisabled();
@@ -637,11 +655,12 @@ void App::draw(void *owner) {
             auto relation =
                 compare_update(*update_release, version::source_commit, version::source_revision);
             ImGui::BeginDisabled(pending_download.valid() || pending_update.valid() ||
-                                 relation == UpdateRelation::current ||
+                                 pending_install.valid() || relation == UpdateRelation::current ||
                                  relation == UpdateRelation::local_newer);
             if (ImGui::Button(pending_download.valid() ? "Downloading update..."
                                                        : "Download verified package")) {
                 downloaded_update.clear();
+                downloaded_envelope = update_envelope;
                 update_error = false;
                 update_message = "Downloading the signed release package...";
                 pending_download = update_downloader(*update_release, data / "updates");
@@ -649,11 +668,24 @@ void App::draw(void *owner) {
             ImGui::EndDisabled();
         }
         if (!downloaded_update.empty()) {
+            ImGui::BeginDisabled(!portable_install || downloaded_envelope.empty() ||
+                                 pending_install.valid() || pending_update.valid() ||
+                                 pending_download.valid());
+            if (ImGui::Button(pending_install.valid() ? "Preparing installation..."
+                                                      : "Install and restart")) {
+                update_error = false;
+                update_message = "Verifying files and preparing a recoverable update...";
+                pending_install = update_installer(downloaded_update, downloaded_envelope,
+                                                   executable_directory(), data);
+            }
+            ImGui::EndDisabled();
             if (ImGui::Button("Open downloaded package folder"))
                 open_folder(downloaded_update.parent_path());
         }
-        subdued("Preview channel. Downloads are authenticated and staged separately. The launcher "
-                "does not replace running files yet.");
+        if (!portable_install)
+            subdued("Use a portable installation to enable Install and restart.");
+        subdued("Preview channel. Installation restarts the launcher and keeps a verified backup. "
+                "A failed startup restores the previous version.");
         gap(18);
         section_head("COMMUNITY DIVERS");
         text("Launcher preview " CD_VERSION);

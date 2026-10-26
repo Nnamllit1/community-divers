@@ -1,4 +1,5 @@
 #include "update_fixture.hpp"
+#include "community/installer.hpp"
 #include "community/platform.hpp"
 #include <chrono>
 #include <fstream>
@@ -53,6 +54,23 @@ int main() {
                            "https://release-assets.githubusercontent.com/x?token=public-download"),
                        "GitHub asset redirect rejected");
         std::cout << "PASS HTTPS-only bounded redirect host policy\n";
+        remember_update_channel(r, signed_text, root / "state", key.public_hex);
+        auto newer = update_payload();
+        newer["source_revision"] = 7u;
+        newer["source_commit"] = std::string(40, 'b');
+        auto newer_envelope = sign_update_payload(newer.dump(), key.private_hex);
+        auto newer_release = verify_update_envelope(newer_envelope, "preview", key.public_hex);
+        remember_update_channel(newer_release, newer_envelope, root / "state", key.public_hex);
+        update_rejects(
+            [&] { remember_update_channel(r, signed_text, root / "state", key.public_hex); });
+        newer["sha256"] = std::string(64, 'c');
+        auto changed_release = sign_update_payload(newer.dump(), key.private_hex);
+        update_rejects([&] {
+            remember_update_channel(
+                verify_update_envelope(changed_release, "preview", key.public_hex), changed_release,
+                root / "state", key.public_hex);
+        });
+        std::cout << "PASS persisted channel state rejects replay and changed immutable releases\n";
         auto stream = [](const std::string &, uint64_t limit, const UpdateSink &sink) {
             update_require(limit == 3, "Download not bounded to signed package size");
             sink("a");

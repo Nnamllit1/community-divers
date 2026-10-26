@@ -1,6 +1,7 @@
 #pragma once
 #include "community/platform.hpp"
 #include "community/updates.hpp"
+#include "community/installer.hpp"
 #include <chrono>
 #include "imgui.h"
 #include <d3d11.h>
@@ -13,6 +14,16 @@ struct App {
     std::future<UpdateDownload> pending_download;
     std::optional<UpdateRelease> update_release;
     fs::path downloaded_update;
+    std::string update_envelope, downloaded_envelope;
+    std::future<InstallHandoff> pending_install;
+    bool exit_for_update = false;
+    bool portable_install = false;
+    std::function<void(const UpdateRelease &, const std::string &, const fs::path &)>
+        update_recorder = [](const auto &release, const auto &envelope, const auto &data) {
+            remember_update_channel(release, envelope, data);
+        };
+    std::function<std::future<InstallHandoff>(fs::path, std::string, fs::path, fs::path)>
+        update_installer = start_update_install_async;
     std::string update_message = "Update check has not run.";
     bool update_error = false;
     std::chrono::steady_clock::time_point next_update_check{};

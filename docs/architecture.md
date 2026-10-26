@@ -48,5 +48,7 @@ identity from adapter availability. Identity reports never grant game launch.
 The [update design](updates.md) links CI publication to immutable client/server
 release sets, admission checks, idle-point installation and operator-controlled
 server rollout. Source builds check a signed feed and stage verified downloads.
-Installation and server coordination remain pending. The update trust root is
+A separate native helper installs owned launcher files, verifies restart health
+and restores failed/interrupted updates. Server coordination and automatic
+scheduling remain pending. The update trust root is
 compiled into the launcher rather than provided by a community endpoint.

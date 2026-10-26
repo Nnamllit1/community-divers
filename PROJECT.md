@@ -34,16 +34,16 @@ objective can stay stable while the roadmap evolves.
 - Distribute source and launcher components, not proprietary game files. Keep
   genuine game ownership and official account/progression separation intact.
 
-- Transparent AI usage: disclose in the README and launcher About view that most
-  code and artwork is AI-generated.
+- Keep the development disclosure in the launcher About view. Public descriptions
+  and the README introduction should focus on the project's capabilities.
 
 ## Milestones and acceptance criteria
 
-### 1. Native launcher foundation â€” active
+### 1. Native launcher foundation - active
 
 - [x] CMake builds the launcher and portable core with pinned dependencies.
 - [ ] Visual design is coherent, resizable and keyboard navigable.
-- [x] Predominantly AI-generated development is disclosed in the launcher About view.
+- [x] The development disclosure is accessible in the launcher About view.
 - [x] Steam library discovery and manual installation selection work.
 - [ ] Verify native Win32 input, the folder picker and DPI transitions on desktop.
 - [x] Display detected game build and actionable readiness information.
@@ -99,6 +99,8 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [ ] Detect incompatible profiles before joining rather than during gameplay.
 - [ ] Provide optional progression snapshot import with a preview and field mapping.
 - [x] Authenticate a signed update channel and stage size/hash-verified package downloads.
+- [x] Install launcher-owned files with process-instance handoff, startup checks,
+  rollback, interrupted-update recovery and persisted channel replay protection.
 - [ ] Publish immutable update bundles and a signed channel manifest after successful CI.
 - [ ] Check for launcher/client updates at startup and before joining a community.
 - [ ] Enforce the server's required release set, including adapter and game build.
@@ -106,7 +108,7 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [ ] Provide a server update agent that drains active missions before switching versions.
 - [ ] Preserve profiles, campaign data and mods across client/server updates.
 - [ ] Finish repair, uninstall and release packaging.
-- [ ] Verify the complete install â†’ join â†’ mission â†’ progression â†’ restart flow.
+- [ ] Verify the complete install -> join -> mission -> progression -> restart flow.
 
 ## Working order
 

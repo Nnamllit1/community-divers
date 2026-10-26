@@ -7,9 +7,13 @@ CTest runs these suites:
   settings persistence/recovery, manifest validation and launch readiness.
 - `update_core_tests`: signed-payload fields, package bounds, release URL/path
   constraints, known/unknown revision ordering and compatible settings migration.
+- `update_install_tests` (Windows): real disposable launcher/helper processes,
+  successful replacement, failed/hung startup rollback, unsafe ZIP/signature
+  rejection and recovery after a mid-transaction process crash. User data and
+  unmanaged files must survive each case. Fixture executables are not packaged.
 - `update_tests` (Windows): real CNG signatures with generated fixture keys,
   tampering/wrong-key rejection, transport URL policy, streamed Unicode staging,
-  verified cache reuse/repair and failed-transfer cleanup.
+  verified cache reuse/repair, failed-transfer cleanup and persisted replay rejection.
 - `platform_tests` (Windows): real loopback HTTP requests, base-path handling,
   redirects, HTTP errors, invalid JSON, response limits and SHA-256 fingerprints.
 - `ui_tests` (Windows): the actual launcher views in an offscreen ImGui context.
@@ -17,7 +21,7 @@ CTest runs these suites:
   community forms and checks, mod checkboxes and profiles, restart persistence,
   stale network responses, asynchronous client inspection and the minimum-window
   footer/navigation layout, update-check preferences, verified-release display,
-  staged-download results and authentication errors.
+  staged-download results, authentication errors and installation handoff errors/success.
 
 The widget suite uses a repository-owned driver through the pinned ImGui test
 hooks. It runs without a GPU and keeps fixtures in a uniquely named temporary
@@ -61,3 +65,15 @@ also follows the public release asset redirect and verifies the downloaded ZIP.
 Both require Internet access and are separate from offline CTest. Neither installs
 or executes the download. Signing tests exercise native cryptography; this public
 check verifies the actual published feed/key/package combination.
+
+## Optional real launcher startup acknowledgement
+
+```console
+cmake --install out/windows-dev --prefix captures/portable
+out/windows-dev/update_launcher_smoke.exe captures/portable captures/health-data captures/health.png
+```
+
+This starts the actual packaged launcher with explicitly inherited lock and health
+handles, checks the first rendered frames, exports its own backbuffer and requires
+a normal process exit. It needs Windows graphics and is not part of headless CI.
+It sends no desktop input and does not replace native input/dialog/DPI validation.
