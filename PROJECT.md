@@ -74,7 +74,7 @@ objective can stay stable while the roadmap evolves.
   loadout storage, operator-configured planets/templates and deduplicated solo results.
 - [x] Display real persisted campaign snapshots in the launcher.
 - [x] Verify process restart continuity and the initial native backup/restore path.
-- [ ] Publish a versioned launcher/service contract and a self-hosting guide.
+- [x] Publish a versioned launcher/service contract and a self-hosting guide.
 - [ ] Persist accounts, profile ownership, loadouts, progression and mission results.
 - [ ] Define authoritative war state: planets, factions, operations, liberation,
   offensives, schedules and community-controlled events using existing content.

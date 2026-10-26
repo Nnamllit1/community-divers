@@ -118,3 +118,11 @@ The separate service-process check also verifies persisted HTTP state after a
 forced process stop/restart and exercises the native backup/restore CLI. These
 checks do not establish external TLS deployment, native input/DPI behavior or a
 working game adapter.
+
+The initial service has passed both Windows and Linux CI, with separately installed
+service artifacts. A Windows process check initialized private state on a Unicode
+path, made authenticated HTTP changes, force-stopped/restarted the service and
+verified profile/campaign continuity and duplicate-result protection. Native
+backup/restore commands also passed while the service was running. The launcher
+render check fetched that persisted campaign through its production WinHTTP path.
+External HTTPS hosting and native game sessions remain unverified.
