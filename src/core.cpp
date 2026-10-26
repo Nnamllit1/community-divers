@@ -104,7 +104,8 @@ bool identifier(const std::string &s) {
 }
 bool valid_ipv6(const std::string &host) {
     auto compressed = host.find("::");
-    if (host.find(":::") != std::string::npos) return false;
+    if (host.find(":::") != std::string::npos)
+        return false;
     if (host.empty() || (host.front() == ':' && !host.starts_with("::")) ||
         (host.back() == ':' && !host.ends_with("::")))
         return false;
@@ -133,6 +134,10 @@ bool is_loopback(const std::string &s) {
 } // namespace
 fs::path from_utf8(const std::string &value) {
     return fs::path(std::u8string(reinterpret_cast<const char8_t *>(value.data()), value.size()));
+}
+std::string to_utf8(const fs::path &value) {
+    auto encoded = value.u8string();
+    return std::string(reinterpret_cast<const char *>(encoded.data()), encoded.size());
 }
 KV parse_vdf(const std::string &text) {
     return VdfParser{text}.object();
@@ -164,9 +169,15 @@ Installation inspect_installation(const fs::path &path) {
         auto manifest = path.parent_path().parent_path() / "appmanifest_553850.acf";
         auto doc = parse_vdf(read_text(manifest));
         auto app = doc.get("AppState");
-        if (app && app->text("appid") == "553850" &&
-            app->text("installdir") == path.filename().string())
-            result.build = app->text("buildid");
+        if (app && app->text("appid") == "553850") {
+            auto directory = from_utf8(app->text("installdir"));
+            std::error_code identity_error;
+            if (!directory.empty() && !directory.is_absolute() && !directory.has_parent_path() &&
+                directory != "." && directory != ".." &&
+                fs::equivalent(path, path.parent_path() / directory, identity_error) &&
+                !identity_error)
+                result.build = app->text("buildid");
+        }
     } catch (const std::exception &) {
     }
     return result;
@@ -419,7 +430,7 @@ std::vector<Mod> discover_mods(const fs::path &root) {
             continue;
         Mod m;
         m.directory = entry.path();
-        m.name = entry.path().filename().string();
+        m.name = to_utf8(entry.path().filename());
         try {
             auto j = json::parse(read_text(entry.path() / "mod.json", 65536));
             if (j.at("schema") != 1)

@@ -41,10 +41,11 @@ objective can stay stable while the roadmap evolves.
 - [x] CMake builds the launcher and portable core with pinned dependencies.
 - [ ] Visual design is coherent, resizable and keyboard navigable.
 - [x] Predominantly AI-generated development is disclosed in the launcher About view.
-- [ ] Steam library discovery and manual installation selection work.
+- [x] Steam library discovery and manual installation selection work.
+- [ ] Verify native Win32 input, the folder picker and DPI transitions on desktop.
 - [x] Display detected game build and actionable readiness information.
 - [ ] Community endpoints can be added, selected, saved and checked over HTTPS.
-- [ ] Local mod manifests can be inspected and enabled per profile; deployment
+- [x] Local mod manifests can be inspected and enabled per profile; deployment
   state is explicit and no untrusted mod code runs during discovery.
 - [x] Settings survive restarts and invalid settings do not erase recoverable data.
 - [x] CI runs core tests on Windows and Linux and builds the Windows launcher.

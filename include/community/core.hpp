@@ -14,6 +14,7 @@ struct KV {
     std::string text(const std::string &key) const;
 };
 fs::path from_utf8(const std::string &value);
+std::string to_utf8(const fs::path &value);
 KV parse_vdf(const std::string &text);
 std::string read_text(const fs::path &path, size_t limit = 2 * 1024 * 1024);
 struct Installation {

@@ -1,0 +1,6 @@
+{
+  "protocol": 1,
+  "id": "community-divers-protocol-fixture",
+  "name": "Community Divers protocol test fixture",
+  "game_builds": ["12345"]
+}

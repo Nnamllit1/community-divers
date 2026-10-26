@@ -59,6 +59,7 @@ ctest --preset windows-dev
 
 `Build.cmd` finds the installed Visual Studio tools and runs the same steps.
 Both dependencies are pinned by version and archive SHA-256.
+See [validation](docs/testing.md) for core, native HTTP and offscreen widget checks.
 
 To prepare a portable directory:
 

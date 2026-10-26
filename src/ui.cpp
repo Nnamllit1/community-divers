@@ -435,7 +435,7 @@ void App::draw(void *owner) {
             for (const auto &mod : mods) {
                 if (lower(mod.name + " " + mod.id).find(lower(mod_search)) == std::string::npos)
                     continue;
-                ImGui::PushID(mod.directory.string().c_str());
+                ImGui::PushID(path_text(mod.directory).c_str());
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 auto &enabled = profile().enabled_mods;
