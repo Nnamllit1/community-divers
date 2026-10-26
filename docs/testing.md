@@ -77,3 +77,15 @@ This starts the actual packaged launcher with explicitly inherited lock and heal
 handles, checks the first rendered frames, exports its own backbuffer and requires
 a normal process exit. It needs Windows graphics and is not part of headless CI.
 It sends no desktop input and does not replace native input/dialog/DPI validation.
+
+## Publishing and actual launcher upgrades
+
+The preview publishing job requires both platform jobs, verifies clean build
+metadata/checksum, validates the signed archive through the native extractor and
+checks published asset digests before channel promotion. Pull requests never run
+the publishing job or receive its signing secret. Native `--sign-env` rejects a
+secret that does not match the compiled public key before writing a feed.
+
+`CommunityDivers.exe --update` provides the production noninteractive handoff for
+upgrade checks between actual released builds; process fixture coverage remains
+separate from that end-to-end result.

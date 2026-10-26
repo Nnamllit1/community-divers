@@ -29,3 +29,28 @@ jobs:
       - run: cmake --preset linux-dev
       - run: cmake --build --preset linux-dev
       - run: ctest --preset linux-dev
+
+  publish-preview:
+    needs: [windows, linux-core]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: preview-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: CommunityDivers-windows-x64
+          path: dist-ci
+      - name: Publish immutable preview and promote signed feed
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CD_UPDATE_SIGNING_KEY: ${{ secrets.CD_UPDATE_SIGNING_KEY }}
+          CD_BEFORE_SHA: ${{ github.event.before }}
+        run: ./tools/publish-preview.ps1

@@ -46,6 +46,7 @@ bool managed_update_path(const std::string &path) {
                                          "build-info.json",
                                          "install-inventory.json",
                                          "LICENSE",
+                                         "Update.cmd",
                                          "THIRD_PARTY.md",
                                          "README.md",
                                          "PROJECT.md",

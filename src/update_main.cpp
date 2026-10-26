@@ -2,6 +2,8 @@
 #include "community/installer.hpp"
 #include "community/platform.hpp"
 #include "community/version.hpp"
+#include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 namespace {
@@ -18,6 +20,27 @@ void write_new(const cd::fs::path &p, const std::string &value) {
 } // namespace
 int wmain(int count, wchar_t **args) {
     try {
+        if (count == 3 && std::wstring(args[1]) == L"--inspect-feed") {
+            auto body = cd::read_text(args[2], cd::update_manifest_limit);
+            cd::verify_update_envelope(body, "preview", cd::update_publisher_key());
+            std::cout << cd::json::parse(body).at("payload").get<std::string>() << '\n';
+            return 0;
+        }
+        if (count == 4 && std::wstring(args[1]) == L"--sign-env") {
+            char *raw = nullptr;
+            size_t length = 0;
+            if (_dupenv_s(&raw, &length, "CD_UPDATE_SIGNING_KEY") || !raw)
+                throw std::runtime_error("CD_UPDATE_SIGNING_KEY is not set");
+            std::string key(raw);
+            std::fill_n(raw, length, '\0');
+            std::free(raw);
+            auto signed_feed = cd::sign_update_payload(cd::read_text(args[2], 32768), key);
+            std::fill(key.begin(), key.end(), '\0');
+            cd::verify_update_envelope(signed_feed, "preview", cd::update_publisher_key());
+            write_new(args[3], signed_feed);
+            std::cout << "Signed feed matches the compiled publisher key.\n";
+            return 0;
+        }
         if (count == 5 && std::wstring(args[1]) == L"--verify-package") {
             auto release =
                 cd::verify_update_envelope(cd::read_text(args[3], cd::update_manifest_limit),
@@ -73,6 +96,8 @@ int wmain(int count, wchar_t **args) {
         std::cout << "CommunityDiversUpdate --check\n"
                      "CommunityDiversUpdate --download <staging-directory>\n"
                      "CommunityDiversUpdate --verify-package <ZIP> <signed-feed> <new-directory>\n"
+                     "Maintainers: --inspect-feed <signed-feed.json>\n"
+                     "Maintainers: --sign-env <payload.json> <output.json>\n"
                      "Maintainers: --generate-key <private-prefix>\n"
                      "Maintainers: --sign <payload.json> <private-key> <output.json>\n";
         return 2;

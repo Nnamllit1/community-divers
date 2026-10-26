@@ -5,11 +5,13 @@ signed preview feed at startup and hourly, with an opt-out setting under About.
 They can download and verify a package into launcher data. Portable installations
 also provide Install and restart: the helper replaces owned launcher files after
 the old process exits, checks the replacement's startup and rolls back failures.
-Fully automatic scheduling, CI feed publication, server admission checks and the
-server update agent remain unimplemented.
+The CI publisher promotes successful component builds to the signed preview feed.
+`Update.cmd` runs a noninteractive native update check/download/install handoff.
+Automatic in-app installation scheduling, server admission checks and the server
+update agent remain unimplemented.
 
-The first downloadable preview predates the update checker and installer. Build
-and install current source to use these features until a newer binary is published.
+Use a current preview package for update support. The original `v0.1.0-preview.1`
+predates the updater and must be replaced manually.
 
 ## From a push to an update
 
@@ -183,3 +185,33 @@ Maintainers can inspect a signed bundle without installing or executing it:
 ```console
 CommunityDiversUpdate.exe --verify-package package.zip signed-feed.json extracted-package
 ```
+
+## Preview publishing pipeline
+
+`publish-preview` runs only on main after Windows and Linux checks pass. It
+consumes the Windows job's package, checks its source identity/checksum, signs
+through the native updater using an environment secret and verifies extraction
+before creating a draft release. The source tag identifies the full build commit;
+ZIP names include the version and short commit. Draft retries may replace draft
+assets; published assets are checked and never overwritten.
+
+The release is published before `updates/preview.json` is promoted through a
+compare-and-swap Contents API update on main. A competing/newer channel revision
+cannot be replaced by an older one. Channel-only and documentation-only pushes
+do not promote releases. The workflow uses its scoped GITHUB_TOKEN for repository
+writes, preventing channel commits from recursively starting another workflow.
+Stable-tag publication and combined service/adapter release sets remain planned.
+
+For script-based launcher updates, run `Update.cmd`, or:
+
+```console
+CommunityDivers.exe --update --data-dir custom-launcher-data
+```
+
+The command uses the same pinned key, replay protection, ZIP validation and
+restart helper as About. It exits successfully without replacement when the
+installed release is current or newer, and returns an error without applying an
+update if the build ordering or compatibility cannot be verified. Errors are
+recorded in launcher data. A successful upgrade opens the replacement launcher.
+The original launcher must be closed before running the command; its installation
+lock prevents concurrent instances. This command updates launcher files only.

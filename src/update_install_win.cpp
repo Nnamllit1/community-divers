@@ -527,7 +527,11 @@ int run_update_installer(const fs::path &plan_path, const std::string &key, bool
         require(DeleteFileW((root / ".community-divers-update.json").c_str()),
                 "Cannot finish confirmed update state");
         mutation = false;
-        auto result = json{{"ok", true}, {"release_id", release->release_id}, {"recovered", false}};
+        auto result = json{{"ok", true},
+                           {"release_id", release->release_id},
+                           {"recovered", false},
+                           {"child_pid", GetProcessId(child.process.h)},
+                           {"child_created", created(child.process.h)}};
         try {
             atomic_json(job / "result.json", result);
             atomic_json(data / "updates/last-install.json", result);

@@ -166,7 +166,8 @@ LRESULT WINAPI window_proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) 
 }
 } // namespace
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
-    cd::fs::path capture_path, data;
+    cd::fs::path capture_path, data, install_package, install_manifest;
+    bool update_only = false;
     int page = 0;
     uintptr_t inherited_lock = 0, update_health = 0;
     int window_width = 1440, window_height = 900;
@@ -176,7 +177,12 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         auto args = CommandLineToArgvW(GetCommandLineW(), &count);
         for (int i = 1; i < count; ++i) {
             std::wstring arg = args[i];
-            if (arg == L"--launcher-lock-handle" && i + 1 < count)
+            if (arg == L"--update")
+                update_only = true;
+            else if (arg == L"--install-update" && i + 2 < count) {
+                install_package = args[++i];
+                install_manifest = args[++i];
+            } else if (arg == L"--launcher-lock-handle" && i + 1 < count)
                 inherited_lock = static_cast<uintptr_t>(std::stoull(args[++i]));
             else if (arg == L"--update-health-handle" && i + 1 < count)
                 update_health = static_cast<uintptr_t>(std::stoull(args[++i]));
@@ -205,6 +211,39 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             auto recovery = cd::start_update_recovery(installation, data);
             if (!recovery.error.empty())
                 throw std::runtime_error(recovery.error);
+            return 0;
+        }
+        if (update_only) {
+            auto checked = cd::check_update(std::string(cd::preview_feed),
+                                            cd::update_publisher_key(), cd::fetch_update_text);
+            if (!checked.release)
+                throw std::runtime_error(checked.error);
+            cd::remember_update_channel(*checked.release, checked.envelope, data);
+            auto relation = cd::compare_update(*checked.release, cd::version::source_commit,
+                                               cd::version::source_revision);
+            if (relation == cd::UpdateRelation::unknown)
+                throw std::runtime_error(
+                    "Cannot order this local build against the update channel");
+            if (relation != cd::UpdateRelation::available)
+                return 0;
+            if (cd::version::source_dirty)
+                throw std::runtime_error("Automatic updates require a clean portable build");
+            auto downloaded =
+                cd::stage_update(*checked.release, data / "updates", cd::stream_update);
+            if (!downloaded.error.empty())
+                throw std::runtime_error(downloaded.error);
+            auto handoff =
+                cd::start_update_install(downloaded.package, checked.envelope, installation, data);
+            if (!handoff.error.empty())
+                throw std::runtime_error(handoff.error);
+            return 0;
+        }
+        if (!install_package.empty()) {
+            auto handoff = cd::start_update_install(
+                install_package, cd::read_text(install_manifest, cd::update_manifest_limit),
+                installation, data);
+            if (!handoff.error.empty())
+                throw std::runtime_error(handoff.error);
             return 0;
         }
         ImGui_ImplWin32_EnableDpiAwareness();
@@ -328,7 +367,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             std::ofstream(data / "launcher-error.log", std::ios::app) << e.what() << '\n';
         } catch (...) {
         }
-        if (capture_path.empty() && !update_health)
+        if (capture_path.empty() && !update_health && install_package.empty() && !update_only)
             MessageBoxW(nullptr, cd::wide(e.what()).c_str(), L"Community Divers could not start",
                         MB_ICONERROR | MB_OK);
         return 1;

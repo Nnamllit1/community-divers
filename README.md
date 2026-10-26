@@ -27,7 +27,7 @@ kept separate from Windows integration. It does not require a webview, Python or
 
 ## Launcher preview
 
-[Download the Windows prerelease](https://github.com/Nnamllit1/community-divers/releases/tag/v0.1.0-preview.1)
+[Download a Windows preview](https://github.com/Nnamllit1/community-divers/releases)
 and verify it with the accompanying SHA-256 file.
 
 - Detect an existing game through Steam or choose its installation directory.
@@ -36,10 +36,11 @@ and verify it with the accompanying SHA-256 file.
 - Recover settings without silently discarding a malformed original file.
 - Export read-only client fingerprints for exact-build integration analysis.
 
-Current source builds also check a signed preview update feed and stage verified
-package downloads. Portable builds support Install and restart with startup checks,
-rollback and interrupted-update recovery. The first binary preview predates these
-update features; fully automatic scheduling and CI publication remain pending.
+Current builds check a signed preview feed and stage verified downloads. Portable
+packages support Install and restart with startup checks, rollback and interrupted
+update recovery. `Update.cmd` performs the native update handoff without entering
+the UI. The original `v0.1.0-preview.1` predates these features and needs a manual
+replacement. In-app installation scheduling and server updates remain planned.
 
 Run `out/windows-dev/CommunityDivers.exe` after building, or use the executable
 in a portable package. Launcher data lives in `%LOCALAPPDATA%/CommunityDivers`.
