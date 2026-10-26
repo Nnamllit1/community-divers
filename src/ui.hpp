@@ -12,7 +12,6 @@ struct App {
     std::future<ProbeResult> pending;
     std::string pending_id, pending_url, connected_id, notice, settings_warning;
     int page = 0;
-    int rendered_page = 0;
     bool notice_error = false;
     char server_name[129]{}, server_url[2049]{}, game_path[4097]{}, profile_name[129]{},
         mod_search[129]{};

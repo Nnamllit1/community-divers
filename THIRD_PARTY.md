@@ -8,7 +8,7 @@ No third-party application, game asset or runtime binary is committed here.
 | [Dear ImGui](https://github.com/ocornut/imgui) | 1.93.0 | MIT | Native launcher UI and Win32/Direct3D 11 backends |
 | [JSON for Modern C++](https://github.com/nlohmann/json) | 3.12.0 | MIT | Settings, mod manifests and service messages |
 
-Bahnschrift and Consolas are loaded from the Windows installation when available
+Bahnschrift and Segoe UI are loaded from the Windows installation when available
 and are not redistributed. The launcher falls back to Dear ImGui's bundled font.
 
 Portable release packages must include this file and the dependency license files.

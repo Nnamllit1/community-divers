@@ -22,7 +22,7 @@ run their own progression and choose their mods together. Each community can
 operate its own campaign service, while players' machines run individual missions
 using their own installed game assets.
 
-The launcher uses a restrained military-terminal layout and is written in C++20
+The launcher uses a HELLDIVERS 2-inspired menu layout and is written in C++20
 with Win32, Direct3D 11 and Dear ImGui. The portable core is
 kept separate from Windows integration. It does not require a webview, Python or
 .NET to run.

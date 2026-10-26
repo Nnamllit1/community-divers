@@ -11,8 +11,8 @@ objective can stay stable while the roadmap evolves.
 
 ## Product commitments
 
-- A restrained military-terminal interface: angular controls, charcoal panels,
-  muted yellow accents and task-oriented navigation.
+- A HELLDIVERS 2-inspired interface: broad menu navigation, blue-black panels,
+  condensed headings, white typography and clear yellow selection states.
 - A polished C++20 desktop launcher; application components should remain C++
   where practical. Windows/Steam is the first supported target.
 - A current-game client integration, isolated installation and separate profiles.

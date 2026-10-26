@@ -166,7 +166,7 @@ LRESULT WINAPI window_proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
     cd::fs::path capture_path, data;
     int page = 0;
-    int window_width = 1320, window_height = 930;
+    int window_width = 1440, window_height = 900;
     try {
         check(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED));
         int count = 0;
@@ -231,10 +231,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             config.SizePixels = size;
             return io.Fonts->AddFontDefault(&config);
         };
-        app.body = font(L"bahnschrift.ttf", 18);
+        app.body = font(L"segoeui.ttf", 18);
         app.heading = font(L"bahnschrift.ttf", 28);
-        app.title = font(L"seguisb.ttf", 38);
-        app.caption_font = font(L"consola.ttf", 14);
+        app.title = font(L"bahnschrift.ttf", 36);
+        app.caption_font = font(L"segoeui.ttf", 14);
         io.FontDefault = app.body;
         auto logo =
             load_logo(cd::executable_directory() / L"assets/brand/logo.png", app.logo_ratio);

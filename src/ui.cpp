@@ -6,7 +6,7 @@
 #include <set>
 namespace cd {
 namespace {
-const ImVec4 accent{.87f, .79f, .43f, 1}, muted{.60f, .63f, .58f, 1};
+const ImVec4 accent{1.f, .88f, .25f, 1}, muted{.64f, .69f, .74f, 1};
 void text(const std::string &s) {
     ImGui::TextUnformatted(s.c_str());
 }
@@ -24,7 +24,7 @@ void section_head(const char *s) {
     std::string label(s);
     std::transform(label.begin(), label.end(), label.begin(),
                    [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-    ImGui::PushStyleColor(ImGuiCol_Text, accent);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{.94f, .96f, .98f, 1});
     ImGui::SeparatorText(label.c_str());
     ImGui::PopStyleColor();
 }
@@ -48,43 +48,36 @@ std::string lower(std::string s) {
 } // namespace
 void theme() {
     auto &s = ImGui::GetStyle();
-    s.WindowRounding = 0;
-    s.ChildRounding = 0;
-    s.FrameRounding = 0;
-    s.PopupRounding = 0;
-    s.GrabRounding = 0;
+    s.WindowRounding = s.ChildRounding = s.FrameRounding = s.PopupRounding = s.GrabRounding = 0;
     s.ScrollbarRounding = 0;
     s.WindowBorderSize = 0;
-    s.ChildBorderSize = 1;
+    s.ChildBorderSize = 0;
     s.FrameBorderSize = 1;
-    s.WindowPadding = {14, 12};
-    s.FramePadding = {9, 5};
-    s.ItemSpacing = {9, 8};
-    s.CellPadding = {8, 7};
+    s.WindowPadding = {30, 24};
+    s.FramePadding = {14, 10};
+    s.ItemSpacing = {12, 12};
+    s.CellPadding = {12, 12};
+    s.ScrollbarSize = 8;
     auto c = s.Colors;
-    c[ImGuiCol_Text] = {.9f, .9f, .9f, 1};
+    c[ImGuiCol_Text] = {.94f, .96f, .98f, 1};
     c[ImGuiCol_TextDisabled] = muted;
-    c[ImGuiCol_WindowBg] = {.065f, .075f, .065f, 1};
-    c[ImGuiCol_ChildBg] = {.08f, .095f, .08f, 1};
-    c[ImGuiCol_PopupBg] = {.10f, .12f, .10f, 1};
-    c[ImGuiCol_Border] = {.26f, .29f, .23f, 1};
-    c[ImGuiCol_Separator] = c[ImGuiCol_Border];
-    c[ImGuiCol_FrameBg] = {.045f, .055f, .045f, 1};
-    c[ImGuiCol_FrameBgHovered] = {.16f, .18f, .14f, 1};
-    c[ImGuiCol_FrameBgActive] = {.20f, .22f, .16f, 1};
-    c[ImGuiCol_Button] = {.17f, .19f, .14f, 1};
-    c[ImGuiCol_ButtonHovered] = {.27f, .29f, .20f, 1};
-    c[ImGuiCol_ButtonActive] = {.36f, .33f, .19f, 1};
-    c[ImGuiCol_Header] = {.29f, .26f, .20f, 1};
-    c[ImGuiCol_HeaderHovered] = {.28f, .28f, .29f, 1};
-    c[ImGuiCol_HeaderActive] = {.37f, .32f, .22f, 1};
-    c[ImGuiCol_Tab] = {.10f, .12f, .09f, 1};
-    c[ImGuiCol_TabSelected] = {.24f, .25f, .17f, 1};
-    c[ImGuiCol_TabHovered] = {.31f, .30f, .19f, 1};
-    c[ImGuiCol_TabSelectedOverline] = accent;
-    c[ImGuiCol_TableHeaderBg] = {.10f, .12f, .09f, 1};
-    c[ImGuiCol_TableBorderStrong] = c[ImGuiCol_Border];
-    c[ImGuiCol_TableBorderLight] = {.14f, .16f, .12f, 1};
+    c[ImGuiCol_WindowBg] = {.045f, .060f, .080f, 1};
+    c[ImGuiCol_ChildBg] = {.025f, .035f, .050f, .72f};
+    c[ImGuiCol_PopupBg] = {.055f, .075f, .10f, 1};
+    c[ImGuiCol_Border] = {.32f, .36f, .40f, .7f};
+    c[ImGuiCol_Separator] = {.30f, .34f, .39f, .65f};
+    c[ImGuiCol_FrameBg] = {.015f, .025f, .04f, .9f};
+    c[ImGuiCol_FrameBgHovered] = {.10f, .14f, .18f, 1};
+    c[ImGuiCol_FrameBgActive] = {.18f, .19f, .12f, 1};
+    c[ImGuiCol_Button] = {.045f, .065f, .09f, .95f};
+    c[ImGuiCol_ButtonHovered] = {.21f, .22f, .13f, 1};
+    c[ImGuiCol_ButtonActive] = {.37f, .34f, .12f, 1};
+    c[ImGuiCol_Header] = {.32f, .30f, .11f, 1};
+    c[ImGuiCol_HeaderHovered] = {.19f, .22f, .25f, 1};
+    c[ImGuiCol_HeaderActive] = {.37f, .34f, .12f, 1};
+    c[ImGuiCol_TableHeaderBg] = {.035f, .05f, .07f, .9f};
+    c[ImGuiCol_TableBorderStrong] = c[ImGuiCol_Separator];
+    c[ImGuiCol_TableBorderLight] = {.12f, .16f, .20f, .6f};
     c[ImGuiCol_CheckMark] = accent;
     c[ImGuiCol_NavCursor] = accent;
     c[ImGuiCol_SliderGrab] = accent;
@@ -151,126 +144,146 @@ void App::draw(void *owner) {
     auto &io = ImGui::GetIO();
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S))
         save();
+    if (!io.WantTextInput && !io.KeyCtrl && !io.KeyAlt) {
+        if (ImGui::IsKeyPressed(ImGuiKey_Q))
+            page = (page + 5) % 6;
+        if (ImGui::IsKeyPressed(ImGuiKey_E))
+            page = (page + 1) % 6;
+    }
+    if (ImGui::IsKeyPressed(ImGuiKey_F1))
+        page = 5;
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize(io.DisplaySize);
     ImGui::Begin("Community Divers", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
-    const char *pages[] = {"DEPLOYMENT", "CAMPAIGN", "NETWORK", "MODS", "CONFIGURATION", "ABOUT"};
-    if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Save settings", "Ctrl+S"))
-                save();
-            if (ImGui::MenuItem("Open launcher data"))
-                open_folder(data);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("View")) {
-            for (int i = 0; i < 6; ++i)
-                if (ImGui::MenuItem(pages[i], nullptr, page == i))
-                    page = i;
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Help")) {
-            if (ImGui::MenuItem("About Community Divers"))
-                page = 5;
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenuBar();
-    }
+                     ImGuiWindowFlags_NoSavedSettings);
+    auto origin = ImGui::GetWindowPos();
+    auto size = ImGui::GetWindowSize();
+    auto *background = ImGui::GetWindowDrawList();
+    background->AddRectFilledMultiColor(origin, {origin.x + size.x, origin.y + size.y},
+                                        IM_COL32(25, 34, 44, 255), IM_COL32(15, 23, 33, 255),
+                                        IM_COL32(6, 10, 16, 255), IM_COL32(10, 15, 22, 255));
     if (logo) {
-        ImGui::Image((ImTextureID)(intptr_t)logo, {76, 76 / logo_ratio});
-        ImGui::SameLine(0, 14);
+        ImGui::Image((ImTextureID)(intptr_t)logo, {90, 90 / logo_ratio});
+        ImGui::SameLine(0, 20);
     }
     ImGui::BeginGroup();
-    ImGui::PushFont(this->heading);
+    ImGui::PushFont(title);
     text("COMMUNITY DIVERS");
     ImGui::PopFont();
-    subdued("LAUNCHER / PREVIEW " CD_VERSION);
+    ImGui::PushFont(caption_font);
+    subdued("COMMUNITY LAUNCHER  /  PREVIEW " CD_VERSION);
+    ImGui::PopFont();
     ImGui::EndGroup();
-    ImGui::SameLine(ImGui::GetWindowWidth() - 340);
+    ImGui::SameLine(ImGui::GetWindowWidth() - 300);
     ImGui::BeginGroup();
-    text(game.valid ? "HELLDIVERS 2 detected" : "Game installation not selected");
-    subdued(game.build.empty() ? "Build not identified" : "Steam build " + game.build);
+    ImGui::TextColored(accent, "%s", game.valid ? "GAME FILES DETECTED" : "GAME SETUP REQUIRED");
+    ImGui::PushFont(caption_font);
+    subdued(game.build.empty() ? "Build not identified" : "STEAM BUILD  " + game.build);
+    ImGui::PopFont();
     ImGui::EndGroup();
-    gap(6);
-    auto line = ImGui::GetCursorScreenPos();
-    ImGui::GetWindowDrawList()->AddRectFilled(
-        line, {line.x + ImGui::GetContentRegionAvail().x, line.y + 2},
-        IM_COL32(222, 201, 110, 255));
-    gap(6);
-    if (!settings_warning.empty()) {
-        ImGui::PushStyleColor(ImGuiCol_Text, accent);
-        wrap(settings_warning);
-        ImGui::PopStyleColor();
-    }
-    const int requested_page = page;
-    const bool programmatic_tab = page != rendered_page;
-    if (ImGui::BeginTabBar("sections", ImGuiTabBarFlags_FittingPolicyScroll |
-                                           ImGuiTabBarFlags_NoCloseWithMiddleMouseButton)) {
-        for (int i = 0; i < 6; ++i) {
-            if (ImGui::BeginTabItem(
-                    pages[i], nullptr,
-                    programmatic_tab && requested_page == i ? ImGuiTabItemFlags_SetSelected : 0)) {
-                if (!programmatic_tab || requested_page == i)
-                    rendered_page = i;
-                ImGui::EndTabItem();
-            }
+    gap(22);
+    const char *pages[] = {"DEPLOYMENT",   "CAMPAIGN", "COMMUNITIES",
+                           "MOD PROFILES", "SETTINGS", "ABOUT"};
+    const float tab_width = (ImGui::GetContentRegionAvail().x - 5 * 8) / 6;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {8, 0});
+    for (int i = 0; i < 6; ++i) {
+        ImGui::PushID(i);
+        bool selected = page == i;
+        ImGui::PushStyleColor(ImGuiCol_Button, selected ? ImVec4{.12f, .16f, .20f, .95f}
+                                                        : ImVec4{.025f, .04f, .06f, .8f});
+        ImGui::PushStyleColor(ImGuiCol_Border, selected ? ImVec4{.92f, .94f, .96f, 1}
+                                                        : ImVec4{.35f, .40f, .46f, .5f});
+        if (ImGui::Button("##section", {tab_width, 62}))
+            page = i;
+        auto a = ImGui::GetItemRectMin();
+        auto b = ImGui::GetItemRectMax();
+        auto *draw = ImGui::GetWindowDrawList();
+        draw->AddText(body, 18, {a.x + 12, a.y + 11},
+                      selected ? IM_COL32(255, 232, 82, 255) : IM_COL32(225, 230, 236, 255),
+                      pages[i]);
+        if (selected) {
+            draw->PushClipRect({a.x + 12, b.y - 18}, {b.x - 36, b.y - 7}, true);
+            for (float x = a.x + 7; x < b.x - 25; x += 12)
+                draw->AddLine({x, b.y - 7}, {x + 11, b.y - 19}, IM_COL32(208, 216, 225, 150), 4);
+            draw->PopClipRect();
         }
-        ImGui::EndTabBar();
+        char number[4];
+        std::snprintf(number, sizeof(number), "%02d", i + 1);
+        draw->AddText(caption_font, 13, {b.x - 27, b.y - 22}, IM_COL32(145, 156, 169, 255), number);
+        ImGui::PopStyleColor(2);
+        ImGui::PopID();
+        if (i != 5)
+            ImGui::SameLine();
     }
-    if (programmatic_tab)
-        rendered_page = requested_page;
-    page = rendered_page;
-    gap(6);
-    ImGui::BeginChild("workspace", {0, -36}, ImGuiChildFlags_Borders);
+    ImGui::PopStyleVar();
+    gap(22);
+    if (!settings_warning.empty()) {
+        ImGui::TextColored(accent, "SETTINGS NEED ATTENTION");
+        wrap(settings_warning);
+        gap(8);
+    }
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {20, 20});
+    ImGui::BeginChild("workspace", {0, -84}, ImGuiChildFlags_AlwaysUseWindowPadding);
     float available = ImGui::GetContentRegionAvail().x;
     if (page == 0) {
-        section_head("Deployment configuration");
-        if (ImGui::BeginTable("setup", 2, ImGuiTableFlags_SizingStretchProp)) {
-            ImGui::TableSetupColumn("Field", ImGuiTableColumnFlags_WidthFixed, 150);
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            text("Game installation");
-            ImGui::TableNextColumn();
-            text(game.valid ? "Detected" : "Not selected");
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            text("Community");
-            ImGui::TableNextColumn();
-            text(community() ? community()->name : "None selected");
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            text("Connection");
-            ImGui::TableNextColumn();
-            text(service ? service->name : "Not checked");
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            text("Mod profile");
-            ImGui::TableNextColumn();
-            text(profile().name + " (" + std::to_string(profile().enabled_mods.size()) +
-                 " selected)");
-            ImGui::EndTable();
-        }
-        gap(16);
-        if (ImGui::Button("Choose community..."))
-            page = 2;
-        ImGui::SameLine();
-        if (ImGui::Button("Configure mods..."))
-            page = 3;
-        ImGui::SameLine();
-        if (ImGui::Button("Game settings..."))
-            page = 4;
-        gap(16);
-        section_head("Deployment status");
+        const float left_width = available * .55f;
+        ImGui::BeginChild("deployment-options", {left_width, 0});
+        section_head("Session configuration");
+        gap(10);
+        auto option = [&](const char *name, const std::string &value, int destination) {
+            ImGui::PushID(name);
+            ImGui::PushStyleColor(ImGuiCol_Button, {.025f, .035f, .05f, .95f});
+            bool clicked = ImGui::Button("##option", {ImGui::GetContentRegionAvail().x, 86});
+            auto a = ImGui::GetItemRectMin();
+            auto b = ImGui::GetItemRectMax();
+            auto *d = ImGui::GetWindowDrawList();
+            bool focus = ImGui::IsItemHovered() || ImGui::IsItemFocused();
+            if (focus) {
+                d->AddRectFilled(a, b, IM_COL32(105, 96, 31, 100));
+                d->AddRectFilled(a, {a.x + 3, b.y}, IM_COL32(255, 230, 68, 255));
+            }
+            d->AddText(body, 19, {a.x + 18, a.y + 15}, IM_COL32(240, 243, 247, 255), name);
+            d->PushClipRect({a.x + 18, a.y + 43}, {b.x - 40, b.y - 8}, true);
+            d->AddText(caption_font, 15, {a.x + 18, a.y + 48}, IM_COL32(158, 173, 187, 255),
+                       value.c_str());
+            d->PopClipRect();
+            d->AddTriangleFilled({b.x - 24, a.y + 35}, {b.x - 16, a.y + 43}, {b.x - 24, a.y + 51},
+                                 focus ? IM_COL32(255, 230, 68, 255)
+                                       : IM_COL32(175, 186, 198, 255));
+            if (clicked)
+                page = destination;
+            ImGui::PopStyleColor();
+            ImGui::PopID();
+            gap(6);
+        };
+        option("GAME INSTALLATION",
+               game.valid ? "HELLDIVERS 2 / BUILD " + game.build : "Choose an installed copy", 4);
+        option("COMMUNITY", community() ? community()->name : "Choose a community service", 2);
+        option("MOD PROFILE",
+               profile().name + " / " + std::to_string(profile().enabled_mods.size()) + " selected",
+               3);
+        ImGui::EndChild();
+        ImGui::SameLine(0, 30);
+        ImGui::BeginChild("deployment-detail", {0, 0});
+        section_head("Deployment details");
+        gap(8);
+        ImGui::PushFont(heading);
+        text("COMMUNITY CLIENT");
+        ImGui::PopFont();
+        ImGui::TextColored(accent, "IN DEVELOPMENT");
+        gap(12);
+        wrap("The launcher can prepare your community connection and mod profile. The isolated "
+             "game adapter is not available yet.");
+        gap(14);
+        subdued(launch_blocker(game, service ? &*service : nullptr));
+        gap(18);
         ImGui::BeginDisabled();
-        ImGui::Button("Launch game", {150, 34});
+        ImGui::Button("LAUNCH GAME", {ImGui::GetContentRegionAvail().x, 48});
         ImGui::EndDisabled();
-        gap(3);
-        wrap(launch_blocker(game, service ? &*service : nullptr));
-        gap(16);
-        subdued("This preview manages launcher settings and profiles. Community game launch is "
-                "awaiting the isolated client adapter.");
+        gap(8);
+        text(service ? "Service: " + service->name : "Service connection: not checked");
+        ImGui::EndChild();
     } else if (page == 1) {
         section_head("Campaign connection");
         if (service) {
@@ -404,6 +417,12 @@ void App::draw(void *owner) {
         ImGui::InputTextWithHint("##search", "Search mods", mod_search, sizeof(mod_search));
         subdued(
             "Profile selections are saved. Deployment is awaiting the isolated client adapter.");
+        for (const auto &selected : profile().enabled_mods) {
+            if (std::none_of(mods.begin(), mods.end(),
+                             [&](const auto &mod) { return mod.id == selected; })) {
+                ImGui::TextColored(accent, "Missing selected mod: %s", selected.c_str());
+            }
+        }
         if (ImGui::BeginTable("mods", 4,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
                                   ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable,
@@ -507,15 +526,25 @@ void App::draw(void *owner) {
                 "Sony Interactive Entertainment.");
     }
     ImGui::EndChild();
-    gap(3);
+    ImGui::PopStyleVar();
+    gap(10);
     ImGui::Separator();
+    if (ImGui::Button("CTRL+S  SAVE SETTINGS"))
+        save();
+    ImGui::SameLine();
+    if (ImGui::Button("F1  ABOUT"))
+        page = 5;
+    ImGui::SameLine();
+    ImGui::PushFont(caption_font);
     if (!notice.empty()) {
         ImGui::PushStyleColor(ImGuiCol_Text, notice_error ? ImVec4{1, .58f, .48f, 1} : muted);
         text(notice);
         ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("%s", notice.c_str());
     } else
-        subdued(pending.valid() ? "Checking community service..."
-                                : "Ready. Community game integration is in development.");
+        subdued("Q / E  SWITCH SECTION");
+    ImGui::PopFont();
     ImGui::End();
 }
 } // namespace cd
