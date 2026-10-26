@@ -11,6 +11,8 @@ objective can stay stable while the roadmap evolves.
 
 ## Product commitments
 
+- A restrained military-terminal interface: angular controls, charcoal panels,
+  muted yellow accents and task-oriented navigation.
 - A polished C++20 desktop launcher; application components should remain C++
   where practical. Windows/Steam is the first supported target.
 - A current-game client integration, isolated installation and separate profiles.
@@ -29,19 +31,23 @@ objective can stay stable while the roadmap evolves.
 - Distribute source and launcher components, not proprietary game files. Keep
   genuine game ownership and official account/progression separation intact.
 
+- Transparent AI usage: disclose in the README and launcher About view that most
+  code and artwork is AI-generated.
+
 ## Milestones and acceptance criteria
 
 ### 1. Native launcher foundation — active
 
 - [x] CMake builds the launcher and portable core with pinned dependencies.
 - [ ] Visual design is coherent, resizable and keyboard navigable.
+- [x] Predominantly AI-generated development is disclosed in the launcher About view.
 - [ ] Steam library discovery and manual installation selection work.
 - [x] Display detected game build and actionable readiness information.
 - [ ] Community endpoints can be added, selected, saved and checked over HTTPS.
 - [ ] Local mod manifests can be inspected and enabled per profile; deployment
   state is explicit and no untrusted mod code runs during discovery.
 - [x] Settings survive restarts and invalid settings do not erase recoverable data.
-- [ ] CI runs core tests on Windows and Linux and builds the Windows launcher.
+- [x] CI runs core tests on Windows and Linux and builds the Windows launcher.
 - [x] Public docs explain what works, building, contributions and current limits.
 - [ ] The first public release has a verified portable Windows artifact.
 

@@ -6,45 +6,33 @@
 #include <set>
 namespace cd {
 namespace {
-ImVec4 teal{.45f, .89f, .80f, 1}, muted{.57f, .65f, .70f, 1}, gold{.96f, .81f, .39f, 1};
-void text(const std::string &value) {
-    ImGui::TextUnformatted(value.c_str());
+const ImVec4 accent{.87f, .79f, .43f, 1}, muted{.60f, .63f, .58f, 1};
+void text(const std::string &s) {
+    ImGui::TextUnformatted(s.c_str());
 }
-void wrap(const std::string &value) {
+void wrap(const std::string &s) {
     ImGui::PushTextWrapPos(0);
-    text(value);
+    text(s);
     ImGui::PopTextWrapPos();
 }
-void subdued(const std::string &value) {
+void subdued(const std::string &s) {
     ImGui::PushStyleColor(ImGuiCol_Text, muted);
-    wrap(value);
+    wrap(s);
     ImGui::PopStyleColor();
 }
-void gap(float n = 12) {
+void section_head(const char *s) {
+    std::string label(s);
+    std::transform(label.begin(), label.end(), label.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    ImGui::PushStyleColor(ImGuiCol_Text, accent);
+    ImGui::SeparatorText(label.c_str());
+    ImGui::PopStyleColor();
+}
+void gap(float n = 8) {
     ImGui::Dummy({0, n});
 }
-void label(const char *value) {
-    ImGui::TextColored(teal, "%s", value);
-    gap(5);
-}
-bool action(const char *value, ImVec2 size = {0, 38}) {
-    ImGui::PushStyleColor(ImGuiCol_Button, {.21f, .67f, .59f, 1});
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {.34f, .82f, .72f, 1});
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, {.24f, .73f, .64f, 1});
-    ImGui::PushStyleColor(ImGuiCol_Text, {.03f, .09f, .10f, 1});
-    bool pressed = ImGui::Button(value, size);
-    ImGui::PopStyleColor(4);
-    return pressed;
-}
-void card(const char *id, ImVec2 size) {
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, {.075f, .11f, .14f, 1});
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {22, 20});
-    ImGui::BeginChild(id, size, ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
-}
-void end_card() {
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor();
+void buffer(char *out, size_t size, const std::string &s) {
+    std::snprintf(out, size, "%s", s.c_str());
 }
 std::string id(const char *prefix) {
     static unsigned serial = 0;
@@ -52,50 +40,54 @@ std::string id(const char *prefix) {
            std::to_string(std::chrono::system_clock::now().time_since_epoch().count()) + "-" +
            std::to_string(serial++);
 }
-void buffer(char *target, size_t size, const std::string &value) {
-    std::snprintf(target, size, "%s", value.c_str());
-}
-std::string lower(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(),
+std::string lower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    return value;
+    return s;
 }
 } // namespace
 void theme() {
     auto &s = ImGui::GetStyle();
     s.WindowRounding = 0;
-    s.ChildRounding = 12;
-    s.FrameRounding = 7;
-    s.PopupRounding = 9;
-    s.GrabRounding = 6;
-    s.ScrollbarRounding = 8;
+    s.ChildRounding = 0;
+    s.FrameRounding = 0;
+    s.PopupRounding = 0;
+    s.GrabRounding = 0;
+    s.ScrollbarRounding = 0;
     s.WindowBorderSize = 0;
     s.ChildBorderSize = 1;
-    s.FrameBorderSize = 0;
-    s.WindowPadding = {0, 0};
-    s.FramePadding = {12, 9};
-    s.ItemSpacing = {12, 10};
-    s.ScrollbarSize = 12;
+    s.FrameBorderSize = 1;
+    s.WindowPadding = {14, 12};
+    s.FramePadding = {9, 5};
+    s.ItemSpacing = {9, 8};
+    s.CellPadding = {8, 7};
     auto c = s.Colors;
-    c[ImGuiCol_Text] = {.92f, .95f, .96f, 1};
+    c[ImGuiCol_Text] = {.9f, .9f, .9f, 1};
     c[ImGuiCol_TextDisabled] = muted;
-    c[ImGuiCol_WindowBg] = {.04f, .065f, .09f, 1};
-    c[ImGuiCol_ChildBg] = {.055f, .08f, .105f, 1};
-    c[ImGuiCol_PopupBg] = {.075f, .11f, .14f, 1};
-    c[ImGuiCol_Border] = {.15f, .21f, .25f, 1};
+    c[ImGuiCol_WindowBg] = {.065f, .075f, .065f, 1};
+    c[ImGuiCol_ChildBg] = {.08f, .095f, .08f, 1};
+    c[ImGuiCol_PopupBg] = {.10f, .12f, .10f, 1};
+    c[ImGuiCol_Border] = {.26f, .29f, .23f, 1};
     c[ImGuiCol_Separator] = c[ImGuiCol_Border];
-    c[ImGuiCol_FrameBg] = {.105f, .155f, .19f, 1};
-    c[ImGuiCol_FrameBgHovered] = {.14f, .22f, .25f, 1};
-    c[ImGuiCol_FrameBgActive] = {.16f, .28f, .29f, 1};
-    c[ImGuiCol_Button] = {.12f, .19f, .23f, 1};
-    c[ImGuiCol_ButtonHovered] = {.18f, .29f, .32f, 1};
-    c[ImGuiCol_ButtonActive] = {.20f, .35f, .35f, 1};
-    c[ImGuiCol_Header] = {.12f, .25f, .26f, 1};
-    c[ImGuiCol_HeaderHovered] = {.17f, .31f, .32f, 1};
-    c[ImGuiCol_HeaderActive] = {.18f, .36f, .35f, 1};
-    c[ImGuiCol_CheckMark] = teal;
-    c[ImGuiCol_SliderGrab] = teal;
-    c[ImGuiCol_NavCursor] = teal;
+    c[ImGuiCol_FrameBg] = {.045f, .055f, .045f, 1};
+    c[ImGuiCol_FrameBgHovered] = {.16f, .18f, .14f, 1};
+    c[ImGuiCol_FrameBgActive] = {.20f, .22f, .16f, 1};
+    c[ImGuiCol_Button] = {.17f, .19f, .14f, 1};
+    c[ImGuiCol_ButtonHovered] = {.27f, .29f, .20f, 1};
+    c[ImGuiCol_ButtonActive] = {.36f, .33f, .19f, 1};
+    c[ImGuiCol_Header] = {.29f, .26f, .20f, 1};
+    c[ImGuiCol_HeaderHovered] = {.28f, .28f, .29f, 1};
+    c[ImGuiCol_HeaderActive] = {.37f, .32f, .22f, 1};
+    c[ImGuiCol_Tab] = {.10f, .12f, .09f, 1};
+    c[ImGuiCol_TabSelected] = {.24f, .25f, .17f, 1};
+    c[ImGuiCol_TabHovered] = {.31f, .30f, .19f, 1};
+    c[ImGuiCol_TabSelectedOverline] = accent;
+    c[ImGuiCol_TableHeaderBg] = {.10f, .12f, .09f, 1};
+    c[ImGuiCol_TableBorderStrong] = c[ImGuiCol_Border];
+    c[ImGuiCol_TableBorderLight] = {.14f, .16f, .12f, 1};
+    c[ImGuiCol_CheckMark] = accent;
+    c[ImGuiCol_NavCursor] = accent;
+    c[ImGuiCol_SliderGrab] = accent;
 }
 App::App(fs::path data_path) : data(std::move(data_path)) {
     auto loaded = load_settings(data / "launcher.json");
@@ -157,218 +149,214 @@ void App::tick() {
 void App::draw(void *owner) {
     tick();
     auto &io = ImGui::GetIO();
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S))
+        save();
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize(io.DisplaySize);
     ImGui::Begin("Community Divers", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoSavedSettings);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {22, 24});
-    ImGui::BeginChild("navigation", {228, 0}, ImGuiChildFlags_AlwaysUseWindowPadding,
-                      ImGuiWindowFlags_NoScrollbar);
-    if (logo) {
-        ImGui::SetCursorPosX(24);
-        ImGui::Image((ImTextureID)(intptr_t)logo, {180, 180 / logo_ratio});
-    }
-    gap(12);
-    ImGui::PushFont(heading);
-    text("COMMUNITY");
-    text("DIVERS");
-    ImGui::PopFont();
-    gap(6);
-    subdued("Your community.\nYour campaign.");
-    gap(28);
-    const char *pages[] = {"Overview", "Campaign", "Communities", "Mod profiles", "Settings"};
-    for (int i = 0; i < 5; ++i) {
-        ImGui::PushID(i);
-        bool selected = page == i;
-        if (selected)
-            ImGui::PushStyleColor(ImGuiCol_Button, {.12f, .27f, .28f, 1});
-        if (ImGui::Button(pages[i], {184, 43}))
-            page = i;
-        if (selected)
-            ImGui::PopStyleColor();
-        ImGui::PopID();
-    }
-    float footer = ImGui::GetWindowHeight() - 100;
-    if (ImGui::GetCursorPosY() < footer)
-        ImGui::SetCursorPosY(footer);
-    ImGui::Separator();
-    gap(7);
-    ImGui::PushFont(caption_font);
-    subdued("PREVIEW  " CD_VERSION);
-    subdued("Community client in development");
-    ImGui::PopFont();
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::SameLine(0, 0);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {32, 26});
-    ImGui::BeginChild("content", {0, 0}, ImGuiChildFlags_AlwaysUseWindowPadding);
-    label(pages[page]);
-    ImGui::PushFont(heading);
-    const char *titles[] = {"A campaign of your own.", "Your shared frontline.",
-                            "Find your community.", "Make it your own.", "Launcher settings."};
-    text(titles[page]);
-    ImGui::PopFont();
-    gap(14);
-    if (!settings_warning.empty()) {
-        ImGui::TextColored(gold, "Settings need attention");
-        wrap(settings_warning);
-        gap();
-    }
-    if (!notice.empty()) {
-        ImGui::PushStyleColor(ImGuiCol_Text, notice_error ? ImVec4{1, .60f, .48f, 1} : teal);
-        wrap(notice);
-        ImGui::PopStyleColor();
-        gap(8);
-    }
-    float width = ImGui::GetContentRegionAvail().x;
-    if (page == 0) {
-        card("hero", {0, 256});
-        auto start = ImGui::GetCursorPos();
-        float available = ImGui::GetContentRegionAvail().x;
-        ImGui::PushFont(title);
-        text("YOUR WORLD.\nYOUR RULES.");
-        ImGui::PopFont();
-        gap(8);
-        ImGui::PushTextWrapPos(start.x + available * .57f);
-        ImGui::PushStyleColor(ImGuiCol_Text, muted);
-        text("Choose a community, build your mod profile, and prepare for a shared war shaped by "
-             "its players.");
-        ImGui::PopStyleColor();
-        ImGui::PopTextWrapPos();
-        gap(6);
-        if (action("Choose a community"))
-            page = 2;
-        if (logo && available > 650) {
-            ImGui::SetCursorPos({start.x + available * .65f, start.y + 12});
-            ImGui::Image((ImTextureID)(intptr_t)logo,
-                         {available * .32f, available * .32f / logo_ratio});
+                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
+    const char *pages[] = {"DEPLOYMENT", "CAMPAIGN", "NETWORK", "MODS", "CONFIGURATION", "ABOUT"};
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Save settings", "Ctrl+S"))
+                save();
+            if (ImGui::MenuItem("Open launcher data"))
+                open_folder(data);
+            ImGui::EndMenu();
         }
-        end_card();
-        gap(4);
-        float half = (width - 16) / 2;
-        card("game", {half, 190});
-        label(game.valid ? "GAME DETECTED" : "GAME SETUP");
-        ImGui::PushFont(heading);
-        text("HELLDIVERS 2");
-        ImGui::PopFont();
-        subdued(game.build.empty() ? "Build not identified" : "Steam build " + game.build);
-        if (ImGui::Button("Installation settings"))
-            page = 4;
-        end_card();
-        ImGui::SameLine(0, 16);
-        card("community", {half, 190});
-        label(service ? "SERVICE CONNECTED" : "COMMUNITY");
-        ImGui::PushFont(heading);
-        text(community() ? community()->name : "No community selected");
-        ImGui::PopFont();
-        subdued(service ? service->name : "Add a community endpoint to check its service.");
-        if (ImGui::Button("Manage communities"))
+        if (ImGui::BeginMenu("View")) {
+            for (int i = 0; i < 6; ++i)
+                if (ImGui::MenuItem(pages[i], nullptr, page == i))
+                    page = i;
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Help")) {
+            if (ImGui::MenuItem("About Community Divers"))
+                page = 5;
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+    if (logo) {
+        ImGui::Image((ImTextureID)(intptr_t)logo, {76, 76 / logo_ratio});
+        ImGui::SameLine(0, 14);
+    }
+    ImGui::BeginGroup();
+    ImGui::PushFont(this->heading);
+    text("COMMUNITY DIVERS");
+    ImGui::PopFont();
+    subdued("LAUNCHER / PREVIEW " CD_VERSION);
+    ImGui::EndGroup();
+    ImGui::SameLine(ImGui::GetWindowWidth() - 340);
+    ImGui::BeginGroup();
+    text(game.valid ? "HELLDIVERS 2 detected" : "Game installation not selected");
+    subdued(game.build.empty() ? "Build not identified" : "Steam build " + game.build);
+    ImGui::EndGroup();
+    gap(6);
+    auto line = ImGui::GetCursorScreenPos();
+    ImGui::GetWindowDrawList()->AddRectFilled(
+        line, {line.x + ImGui::GetContentRegionAvail().x, line.y + 2},
+        IM_COL32(222, 201, 110, 255));
+    gap(6);
+    if (!settings_warning.empty()) {
+        ImGui::PushStyleColor(ImGuiCol_Text, accent);
+        wrap(settings_warning);
+        ImGui::PopStyleColor();
+    }
+    const int requested_page = page;
+    const bool programmatic_tab = page != rendered_page;
+    if (ImGui::BeginTabBar("sections", ImGuiTabBarFlags_FittingPolicyScroll |
+                                           ImGuiTabBarFlags_NoCloseWithMiddleMouseButton)) {
+        for (int i = 0; i < 6; ++i) {
+            if (ImGui::BeginTabItem(
+                    pages[i], nullptr,
+                    programmatic_tab && requested_page == i ? ImGuiTabItemFlags_SetSelected : 0)) {
+                if (!programmatic_tab || requested_page == i)
+                    rendered_page = i;
+                ImGui::EndTabItem();
+            }
+        }
+        ImGui::EndTabBar();
+    }
+    if (programmatic_tab)
+        rendered_page = requested_page;
+    page = rendered_page;
+    gap(6);
+    ImGui::BeginChild("workspace", {0, -36}, ImGuiChildFlags_Borders);
+    float available = ImGui::GetContentRegionAvail().x;
+    if (page == 0) {
+        section_head("Deployment configuration");
+        if (ImGui::BeginTable("setup", 2, ImGuiTableFlags_SizingStretchProp)) {
+            ImGui::TableSetupColumn("Field", ImGuiTableColumnFlags_WidthFixed, 150);
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            text("Game installation");
+            ImGui::TableNextColumn();
+            text(game.valid ? "Detected" : "Not selected");
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            text("Community");
+            ImGui::TableNextColumn();
+            text(community() ? community()->name : "None selected");
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            text("Connection");
+            ImGui::TableNextColumn();
+            text(service ? service->name : "Not checked");
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            text("Mod profile");
+            ImGui::TableNextColumn();
+            text(profile().name + " (" + std::to_string(profile().enabled_mods.size()) +
+                 " selected)");
+            ImGui::EndTable();
+        }
+        gap(16);
+        if (ImGui::Button("Choose community..."))
             page = 2;
-        end_card();
-        gap(4);
-        card("readiness", {0, 166});
-        label("PLAY READINESS");
+        ImGui::SameLine();
+        if (ImGui::Button("Configure mods..."))
+            page = 3;
+        ImGui::SameLine();
+        if (ImGui::Button("Game settings..."))
+            page = 4;
+        gap(16);
+        section_head("Deployment status");
         ImGui::BeginDisabled();
-        ImGui::Button("Launch community game", {235, 38});
+        ImGui::Button("Launch game", {150, 34});
         ImGui::EndDisabled();
         gap(3);
-        subdued(launch_blocker(game, service ? &*service : nullptr));
-        end_card();
+        wrap(launch_blocker(game, service ? &*service : nullptr));
+        gap(16);
+        subdued("This preview manages launcher settings and profiles. Community game launch is "
+                "awaiting the isolated client adapter.");
     } else if (page == 1) {
-        card("campaign", {0, 315});
-        if (service && !service->campaign.empty()) {
-            label("CONNECTED CAMPAIGN");
-            ImGui::PushFont(title);
-            wrap(service->campaign);
-            ImGui::PopFont();
-            subdued("Reported by " + service->name + ".");
-        } else {
-            label("SHARED WAR CAMPAIGN");
-            ImGui::PushFont(title);
-            text("A world worth\nbuilding together.");
-            ImGui::PopFont();
-            gap();
-            subdued("Connect to a community service to see its campaign identity. War state, "
-                    "voting and mission contributions will arrive with the campaign backend.");
-        }
-        gap(18);
-        if (action("Community connections"))
+        section_head("Campaign connection");
+        if (service) {
+            text("Community: " + service->name);
+            text("Campaign: " + (service->campaign.empty() ? "Not advertised" : service->campaign));
+        } else
+            text("No community service connected.");
+        gap(10);
+        if (ImGui::Button("Manage connections..."))
             page = 2;
-        end_card();
-        gap();
-        subdued("Each community will operate its own war and progression. No live war data is "
-                "available in this launcher preview.");
+        gap(20);
+        section_head("Campaign service status");
+        wrap("War state, community decisions and mission contributions are not implemented in this "
+             "preview. Each community will operate its own campaign and progression.");
     } else if (page == 2) {
-        card("servers", {width * .47f, 435});
-        label("YOUR COMMUNITIES");
-        if (settings.communities.empty())
-            subdued("No servers added yet. Use the form to add a service you or your community "
-                    "operate.");
-        std::string remove;
-        for (const auto &c : settings.communities) {
-            ImGui::PushID(c.id.c_str());
-            if (ImGui::Selectable(c.name.c_str(), settings.selected_community == c.id, 0,
-                                  {0, 34})) {
-                settings.selected_community = c.id;
+        float left = available * .58f;
+        ImGui::BeginChild("community-list", {left, 0});
+        if (ImGui::Button("Check selected")) {
+            if (auto c = community(); c && !pending.valid()) {
+                pending_id = c->id;
+                pending_url = c->url;
+                pending = probe_service(c->url);
                 service.reset();
-                connected_id.clear();
+                notice = "Checking community service...";
+                notice_error = false;
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Remove selected")) {
+            if (auto c = community()) {
+                auto key = c->id;
+                std::erase_if(settings.communities, [&](const auto &v) { return v.id == key; });
+                settings.selected_community =
+                    settings.communities.empty() ? "" : settings.communities.front().id;
+                service.reset();
                 save();
             }
-            ImGui::PushFont(caption_font);
-            subdued(c.url);
-            ImGui::PopFont();
-            if (settings.selected_community == c.id) {
-                ImGui::BeginDisabled(pending.valid());
-                if (ImGui::Button(pending.valid() ? "Checking..." : "Check connection")) {
-                    pending_id = c.id;
-                    pending_url = c.url;
-                    pending = probe_service(c.url);
-                    notice = "Checking community service...";
-                    notice_error = false;
+        }
+        gap(4);
+        if (ImGui::BeginTable("servers", 2,
+                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                                  ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable,
+                              {0, -5})) {
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, .42f);
+            ImGui::TableSetupColumn("Service URL", ImGuiTableColumnFlags_WidthStretch, .58f);
+            ImGui::TableHeadersRow();
+            for (const auto &c : settings.communities) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::PushID(c.id.c_str());
+                if (ImGui::Selectable(c.name.c_str(), settings.selected_community == c.id,
+                                      ImGuiSelectableFlags_SpanAllColumns)) {
+                    settings.selected_community = c.id;
                     service.reset();
+                    save();
                 }
-                ImGui::EndDisabled();
-                ImGui::SameLine();
-                if (ImGui::Button("Remove"))
-                    remove = c.id;
+                ImGui::TableNextColumn();
+                text(c.url);
+                ImGui::PopID();
             }
-            gap(5);
-            ImGui::Separator();
-            ImGui::PopID();
+            ImGui::EndTable();
         }
-        if (!remove.empty()) {
-            std::erase_if(settings.communities, [&](const auto &c) { return c.id == remove; });
-            settings.selected_community =
-                settings.communities.empty() ? "" : settings.communities.front().id;
-            service.reset();
-            save();
-        }
-        end_card();
-        ImGui::SameLine(0, 16);
-        card("add", {0, 435});
-        label("ADD A COMMUNITY");
-        text("Display name");
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("community-form", {0, 0});
+        section_head("Add community");
+        text("Name");
         ImGui::SetNextItemWidth(-1);
         ImGui::InputText("##name", server_name, sizeof(server_name));
-        text("Service URL");
+        text("Base URL");
         ImGui::SetNextItemWidth(-1);
         ImGui::InputTextWithHint("##url", "https://community.example", server_url,
                                  sizeof(server_url));
-        gap(8);
         ImGui::BeginDisabled(!server_name[0] || !server_url[0] ||
                              settings.communities.size() >= 100);
-        if (action("Add community")) {
+        if (ImGui::Button("Add community")) {
             try {
-                auto endpoint = parse_endpoint(server_url);
+                auto e = parse_endpoint(server_url);
                 if (std::any_of(settings.communities.begin(), settings.communities.end(),
-                                [&](const auto &c) { return c.url == endpoint.canonical; }))
-                    throw std::runtime_error("This community URL is already saved.");
+                                [&](const auto &c) { return c.url == e.canonical; }))
+                    throw std::runtime_error("This URL is already saved.");
                 auto key = id("community-");
-                settings.communities.push_back({key, server_name, endpoint.canonical});
+                settings.communities.push_back({key, server_name, e.canonical});
                 settings.selected_community = key;
                 service.reset();
-                server_name[0] = server_url[0] = '\0';
+                server_name[0] = server_url[0] = 0;
                 save();
             } catch (const std::exception &e) {
                 notice = e.what();
@@ -376,20 +364,15 @@ void App::draw(void *owner) {
             }
         }
         ImGui::EndDisabled();
-        gap(12);
-        subdued("Use the base HTTPS address published by your community. The launcher checks "
-                "/v1/status without sending account credentials.");
+        gap(18);
+        subdued("Enter a community's base HTTPS address. Status checks use /v1/status and send no "
+                "account credentials.");
         gap();
-        subdued("Local development services may use HTTP on localhost or loopback addresses.");
-        end_card();
-        gap();
-        subdued("A service connection checks availability and advertised game builds. A working "
-                "game adapter is also required before community play.");
+        subdued("HTTP is available only for local development on loopback addresses.");
+        ImGui::EndChild();
     } else if (page == 3) {
-        card("profiles", {0, 190});
-        label("MOD PROFILE");
-        ImGui::SetNextItemWidth(260);
-        if (ImGui::BeginCombo("Active profile", profile().name.c_str())) {
+        ImGui::SetNextItemWidth(240);
+        if (ImGui::BeginCombo("Profile", profile().name.c_str())) {
             for (const auto &p : settings.profiles)
                 if (ImGui::Selectable(p.name.c_str(), p.id == settings.selected_profile)) {
                     settings.selected_profile = p.id;
@@ -397,7 +380,7 @@ void App::draw(void *owner) {
                 }
             ImGui::EndCombo();
         }
-        ImGui::SetNextItemWidth(260);
+        ImGui::SetNextItemWidth(240);
         ImGui::InputTextWithHint("##profile", "New profile name", profile_name,
                                  sizeof(profile_name));
         ImGui::SameLine();
@@ -410,65 +393,65 @@ void App::draw(void *owner) {
             save();
         }
         ImGui::EndDisabled();
-        subdued("Selections are saved per profile. Mod deployment is awaiting the isolated client "
-                "adapter.");
-        end_card();
-        gap(6);
+        gap(4);
         if (ImGui::Button("Open mods folder"))
             open_folder(data / "mods");
         ImGui::SameLine();
-        if (ImGui::Button("Refresh manifests"))
+        if (ImGui::Button("Refresh"))
             scan();
-        gap(4);
-        ImGui::SetNextItemWidth(-1);
-        ImGui::InputTextWithHint("##search", "Search local mods", mod_search, sizeof(mod_search));
-        if (mods.empty()) {
-            gap(20);
-            subdued("No local mod manifests found. Add a folder containing mod.json to your mods "
-                    "directory; discovery reads metadata only.");
-        }
-        std::set<std::string> present;
-        for (const auto &mod : mods) {
-            present.insert(mod.id);
-            if (lower(mod.name + " " + mod.id).find(lower(mod_search)) == std::string::npos)
-                continue;
-            card(mod.directory.string().c_str(), {0, 135});
-            auto &enabled = profile().enabled_mods;
-            bool selected = std::find(enabled.begin(), enabled.end(), mod.id) != enabled.end();
-            ImGui::BeginDisabled(!mod.error.empty());
-            if (ImGui::Checkbox(mod.name.c_str(), &selected)) {
-                if (selected)
-                    enabled.push_back(mod.id);
-                else
-                    std::erase(enabled, mod.id);
-                save();
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(240);
+        ImGui::InputTextWithHint("##search", "Search mods", mod_search, sizeof(mod_search));
+        subdued(
+            "Profile selections are saved. Deployment is awaiting the isolated client adapter.");
+        if (ImGui::BeginTable("mods", 4,
+                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                                  ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable,
+                              {0, -8})) {
+            ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed, 65);
+            ImGui::TableSetupColumn("Mod");
+            ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 90);
+            ImGui::TableSetupColumn("Details");
+            ImGui::TableHeadersRow();
+            for (const auto &mod : mods) {
+                if (lower(mod.name + " " + mod.id).find(lower(mod_search)) == std::string::npos)
+                    continue;
+                ImGui::PushID(mod.directory.string().c_str());
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                auto &enabled = profile().enabled_mods;
+                bool selected = std::find(enabled.begin(), enabled.end(), mod.id) != enabled.end();
+                ImGui::BeginDisabled(!mod.error.empty());
+                if (ImGui::Checkbox("##enabled", &selected)) {
+                    if (selected)
+                        enabled.push_back(mod.id);
+                    else
+                        std::erase(enabled, mod.id);
+                    save();
+                }
+                ImGui::EndDisabled();
+                ImGui::TableNextColumn();
+                text(mod.name);
+                ImGui::TableNextColumn();
+                text(mod.version);
+                ImGui::TableNextColumn();
+                wrap(mod.error.empty() ? mod.description : mod.error);
+                ImGui::PopID();
             }
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::TextColored(muted, "%s", mod.version.c_str());
-            subdued(mod.error.empty() ? mod.description : mod.error);
-            end_card();
-            gap(3);
+            ImGui::EndTable();
         }
-        for (const auto &key : profile().enabled_mods)
-            if (!present.contains(key)) {
-                ImGui::TextColored(gold, "Missing enabled mod: %s", key.c_str());
-            }
     } else if (page == 4) {
-        card("installation", {0, 310});
-        label("GAME INSTALLATION");
-        subdued("Choose the existing HELLDIVERS 2 folder. Installation discovery only reads files "
-                "and Steam metadata.");
-        gap(8);
+        section_head("Game installation");
+        text("HELLDIVERS 2 directory");
         ImGui::SetNextItemWidth(-1);
-        ImGui::InputText("##gamepath", game_path, sizeof(game_path));
-        if (action("Use this folder")) {
+        ImGui::InputText("##path", game_path, sizeof(game_path));
+        if (ImGui::Button("Use folder")) {
             settings.game_path = game_path;
             scan();
             save();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Browse...", {0, 38})) {
+        if (ImGui::Button("Browse...")) {
             try {
                 if (auto selected = choose_game_folder(owner)) {
                     settings.game_path = path_text(*selected);
@@ -481,7 +464,7 @@ void App::draw(void *owner) {
             }
         }
         ImGui::SameLine();
-        if (ImGui::Button("Find through Steam", {0, 38})) {
+        if (ImGui::Button("Find in Steam libraries")) {
             auto found = discover_steam(steam_roots());
             auto valid =
                 std::find_if(found.begin(), found.end(), [](const auto &g) { return g.valid; });
@@ -490,35 +473,49 @@ void App::draw(void *owner) {
                 scan();
                 save();
             } else {
-                notice = "No valid HELLDIVERS 2 installation was found in the registered Steam "
-                         "libraries.";
+                notice = "No valid game installation was found in the Steam libraries.";
                 notice_error = true;
             }
         }
-        gap(7);
-        ImGui::TextColored(game.valid ? teal : gold, "%s",
-                           game.valid ? "Installation detected" : "Installation needs attention");
-        subdued(game.detail);
-        if (!game.build.empty())
-            text("Steam build " + game.build);
-        end_card();
-        gap(6);
-        card("storage", {0, 184});
-        label("LAUNCHER STORAGE");
-        ImGui::PushFont(caption_font);
-        subdued(path_text(data));
-        ImGui::PopFont();
-        if (ImGui::Button("Open launcher data"))
+        gap(8);
+        wrap(game.detail);
+        gap(18);
+        section_head("Launcher data");
+        text(path_text(data));
+        if (ImGui::Button("Open data folder"))
             open_folder(data);
         ImGui::SameLine();
-        if (ImGui::Button("Save current settings"))
+        if (ImGui::Button("Save settings"))
             save();
-        subdued("Settings and mod profiles belong to this launcher. Invalid settings are preserved "
-                "during recovery.");
-        end_card();
+        gap(8);
+        subdued("Installation discovery reads game files and Steam metadata. Launcher settings and "
+                "mod profiles are stored separately from the game.");
+    } else if (page == 5) {
+        section_head("COMMUNITY DIVERS");
+        text("Launcher preview " CD_VERSION);
+        gap(10);
+        ImGui::TextColored(accent, "Mostly AI-generated project");
+        wrap("Most of this project's code and artwork is AI-generated. Review and validation are "
+             "ongoing. Available features, test coverage and remaining limitations are documented "
+             "in the repository.");
+        gap(18);
+        section_head("Project");
+        text("https://github.com/Nnamllit1/community-divers");
+        text("Project code: MIT license");
+        gap(10);
+        subdued("An independent community project, unaffiliated with Arrowhead Game Studios or "
+                "Sony Interactive Entertainment.");
     }
     ImGui::EndChild();
-    ImGui::PopStyleVar();
+    gap(3);
+    ImGui::Separator();
+    if (!notice.empty()) {
+        ImGui::PushStyleColor(ImGuiCol_Text, notice_error ? ImVec4{1, .58f, .48f, 1} : muted);
+        text(notice);
+        ImGui::PopStyleColor();
+    } else
+        subdued(pending.valid() ? "Checking community service..."
+                                : "Ready. Community game integration is in development.");
     ImGui::End();
 }
 } // namespace cd

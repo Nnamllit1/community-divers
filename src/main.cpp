@@ -180,9 +180,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             else if (arg == L"--window-size" && i + 2 < count) {
                 window_width = std::clamp(_wtoi(args[++i]), 1040, 3840);
                 window_height = std::clamp(_wtoi(args[++i]), 730, 2160);
-            }
-            else if (arg == L"--page" && i + 1 < count)
-                page = std::clamp(_wtoi(args[++i]), 0, 4);
+            } else if (arg == L"--page" && i + 1 < count)
+                page = std::clamp(_wtoi(args[++i]), 0, 5);
         }
         LocalFree(args);
         if (data.empty())
@@ -202,9 +201,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
                        nullptr};
         if (!RegisterClassExW(&wc))
             throw std::runtime_error("Cannot register launcher window");
-        HWND window =
-            CreateWindowW(wc.lpszClassName, L"Community Divers", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                          CW_USEDEFAULT, window_width, window_height, nullptr, nullptr, instance, nullptr);
+        HWND window = CreateWindowW(wc.lpszClassName, L"Community Divers", WS_OVERLAPPEDWINDOW,
+                                    CW_USEDEFAULT, CW_USEDEFAULT, window_width, window_height,
+                                    nullptr, nullptr, instance, nullptr);
         if (!window)
             throw std::runtime_error("Cannot create launcher window");
         BOOL dark = TRUE;
@@ -232,10 +231,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             config.SizePixels = size;
             return io.Fonts->AddFontDefault(&config);
         };
-        app.body = font(L"segoeui.ttf", 17);
-        app.heading = font(L"seguisb.ttf", 24);
+        app.body = font(L"bahnschrift.ttf", 18);
+        app.heading = font(L"bahnschrift.ttf", 28);
         app.title = font(L"seguisb.ttf", 38);
-        app.caption_font = font(L"segoeui.ttf", 14);
+        app.caption_font = font(L"consola.ttf", 14);
         io.FontDefault = app.body;
         auto logo =
             load_logo(cd::executable_directory() / L"assets/brand/logo.png", app.logo_ratio);
