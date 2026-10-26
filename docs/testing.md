@@ -89,3 +89,10 @@ secret that does not match the compiled public key before writing a feed.
 `CommunityDivers.exe --update` provides the production noninteractive handoff for
 upgrade checks between actual released builds; process fixture coverage remains
 separate from that end-to-end result.
+
+The release-to-release smoke check has been exercised from
+`preview-bdb99ef95204` to `preview-0039e8e3846f` using the production `--update`
+command and the public signed feed. The replacement passed its native startup
+check and remained alive afterward; saved settings, mod metadata and unmanaged
+files were preserved, and the transaction was confirmed. This is launcher update
+evidence, separate from the synthetic rollback fault tests and from game startup.

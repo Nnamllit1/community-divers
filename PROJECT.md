@@ -101,7 +101,9 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [x] Authenticate a signed update channel and stage size/hash-verified package downloads.
 - [x] Install launcher-owned files with process-instance handoff, startup checks,
   rollback, interrupted-update recovery and persisted channel replay protection.
-- [ ] Publish immutable update bundles and a signed channel manifest after successful CI.
+- [x] Publish immutable launcher previews and a signed channel after Windows/Linux CI.
+  [Update-capable preview](https://github.com/Nnamllit1/community-divers/releases/tag/preview-0039e8e3846f)
+- [ ] Extend publication to client-adapter/server bundles in a compatible release set.
 - [ ] Check for launcher/client updates at startup and before joining a community.
 - [ ] Enforce the server's required release set, including adapter and game build.
 - [ ] Stage updates, apply them at a safe idle point, verify startup and roll back failures.

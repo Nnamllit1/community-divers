@@ -215,3 +215,8 @@ update if the build ordering or compatibility cannot be verified. Errors are
 recorded in launcher data. A successful upgrade opens the replacement launcher.
 The original launcher must be closed before running the command; its installation
 lock prevents concurrent instances. This command updates launcher files only.
+
+Channel promotion is atomic in repository storage, but CDN copies of the raw feed
+can lag for a few minutes. A client may temporarily see the prior valid signed
+release. The launcher checks again while idle or on a manual Check for updates;
+server admission enforcement must still require the community's selected set.
