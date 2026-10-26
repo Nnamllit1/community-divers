@@ -31,6 +31,9 @@ kept separate from Windows integration. It does not require a webview, Python or
 
 ## Launcher preview
 
+[Download the Windows prerelease](https://github.com/Nnamllit1/community-divers/releases/tag/v0.1.0-preview.1)
+and verify it with the accompanying SHA-256 file.
+
 - Detect an existing game through Steam or choose its installation directory.
 - Save community HTTPS endpoints and check their protocol/build advertisements.
 - Inspect local mod manifests and save selections in named profiles.

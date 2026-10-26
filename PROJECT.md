@@ -53,7 +53,8 @@ objective can stay stable while the roadmap evolves.
 - [x] Settings survive restarts and invalid settings do not erase recoverable data.
 - [x] CI runs core tests on Windows and Linux and builds the Windows launcher.
 - [x] Public docs explain what works, building, contributions and current limits.
-- [ ] The first public release has a verified portable Windows artifact.
+- [x] The first public release has a verified portable Windows artifact.
+  [Launcher preview 1](https://github.com/Nnamllit1/community-divers/releases/tag/v0.1.0-preview.1)
 
 ### 2. Isolated current-client integration
 
@@ -91,6 +92,8 @@ objective can stay stable while the roadmap evolves.
 - [ ] Document the strict TCP-443 option and its limits, if implemented.
 
 ### 5. Mod ecosystem, import and release readiness
+
+The [coordinated update design](docs/updates.md) defines channels and release sets.
 
 - [ ] Install/update/remove mods transactionally in the isolated game copy.
 - [ ] Detect incompatible profiles before joining rather than during gameplay.
