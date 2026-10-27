@@ -4,7 +4,10 @@ Run `Build.cmd` on Windows, or the Linux core presets described in the README.
 CTest runs these suites:
 
 - `core_tests`: Valve KeyValues, installation discovery, endpoint parsing,
-  settings persistence/recovery, manifest validation and launch readiness.
+  settings persistence/recovery and launch readiness.
+- `mod_loader_tests`: independent manifest discovery and duplicate-ID rejection.
+- `patch_notes_tests`: immutable revision lookup, document/image limits, safe relative
+  image paths and an injected asynchronous transport without updater/UI dependencies.
 - `update_core_tests`: signed-payload fields, package bounds, release URL/path
   constraints, known/unknown revision ordering and compatible settings migration.
 - `update_install_tests` (Windows): real disposable launcher/helper processes,
@@ -20,6 +23,9 @@ CTest runs these suites:
   retries, capped liberation, online backup/restore, restart continuity and
   unrelated/forward-schema rejection. Windows also probes the service with the
   launcher's actual WinHTTP client; Linux checks owner-only file permissions.
+- `setup_tests` (Windows): installation ownership, interrupted setup repair, path
+  rejection, active-launcher locks and inventory-based removal that preserves
+  modified resources and unrelated files.
 - `platform_tests` (Windows): real loopback HTTP requests, base-path handling,
   redirects, HTTP errors, invalid JSON, response limits and SHA-256 fingerprints.
 - `ui_tests` (Windows): the actual launcher views in an offscreen ImGui context.
@@ -28,6 +34,8 @@ CTest runs these suites:
   stale network responses, asynchronous client inspection and the minimum-window
   footer/navigation layout, update-check preferences, verified-release display,
   staged-download results, authentication errors and installation handoff errors/success.
+  The real patch-note renderer also exercises formatting, image loading/caching and
+  rejection of stale asynchronous document results.
 
 The widget suite uses a repository-owned driver through the pinned ImGui test
 hooks. It runs without a GPU and keeps fixtures in a uniquely named temporary
@@ -168,3 +176,24 @@ restart. Normal and minimum-size captures show the persisted XP, completion coun
 and saved-loadout count with visible primary actions. The QA credential was seeded
 through the Windows API and removed afterward; the file dialog was not driven by
 that process check. This is profile/HTTP/render evidence, not native gameplay.
+
+## Setup and native patch-note checks
+
+Windows CI builds a QA setup with a separate registration name, then runs
+`tests/setup_smoke.py` against it. The check installs to a Unicode path, verifies
+the app-list entry and shortcut, starts the installed native launcher, refuses
+an active-launcher uninstall, and uninstalls while preserving custom files,
+mods, a synthetic game copy and separate user data. It refuses to replace any
+existing test registration. This exercises the real install/uninstall commands;
+interactive wizard input remains a separate desktop check.
+
+To capture the native note viewer from packaged docs:
+
+```console
+CommunityDivers.exe --data-dir captures/notes-data --page 5 --release-notes --capture captures/release-notes.png
+```
+
+The viewer is an ImGui window rendered by the launcher, not an external browser.
+Use the normal window-size option to inspect wrapping at the minimum supported
+size. Formatting tests use an offscreen context; native backbuffer capture also
+exercises the real Direct3D/WIC image path.

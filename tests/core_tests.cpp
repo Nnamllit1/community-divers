@@ -113,15 +113,6 @@ int main() {
                                 {{"id", "same"}, {"name", "B"}, {"url", "https://b.example"}}};
             rejects([&] { decode_settings(j); });
         });
-        test("mod metadata and duplicate IDs", [&] {
-            auto mods = root / "mods";
-            for (auto name : {"a", "b"})
-                write(mods / name / "mod.json",
-                      R"({"schema":1,"id":"duplicate","name":"A","version":"1"})");
-            auto found = discover_mods(mods);
-            require(found.size() == 2 && !found[0].error.empty() && !found[1].error.empty(),
-                    "Duplicate mod IDs not flagged");
-        });
         test("remote readiness cannot enable unimplemented client integration", [] {
             auto service = parse_status(
                 R"({"protocol":1,"id":"test","name":"Test","game_builds":["12345"],"launch_available":true})");

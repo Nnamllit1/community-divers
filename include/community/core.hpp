@@ -1,4 +1,5 @@
 #pragma once
+#include "community/mod_types.hpp"
 #include <filesystem>
 #include <array>
 #include <cstdint>
@@ -49,10 +50,6 @@ Endpoint parse_endpoint(std::string input);
 struct Community {
     std::string id, name, url;
 };
-struct Profile {
-    std::string id = "default", name = "Default";
-    std::vector<std::string> enabled_mods;
-};
 struct Settings {
     bool check_updates = true;
     std::string game_path, selected_community, selected_profile = "default";
@@ -67,11 +64,6 @@ struct SettingsLoad {
 };
 SettingsLoad load_settings(const fs::path &path);
 void save_settings(const fs::path &path, const Settings &settings);
-struct Mod {
-    std::string id, name, version, description, error;
-    fs::path directory;
-};
-std::vector<Mod> discover_mods(const fs::path &directory);
 struct ServiceStatus {
     std::string id, name, campaign, required_release_set, required_launcher_release;
     std::vector<std::string> game_builds, capabilities;

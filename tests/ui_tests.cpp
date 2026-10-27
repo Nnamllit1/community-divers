@@ -82,6 +82,7 @@ struct UI {
         app->portable_install = true;
         app->update_recorder = [](const auto &, const auto &, const auto &) {};
         app->body = font(L"segoeui.ttf", 18);
+        app->strong = font(L"segoeuib.ttf", 18);
         app->heading = font(L"bahnschrift.ttf", 28);
         app->title = font(L"bahnschrift.ttf", 36);
         app->caption_font = font(L"segoeui.ttf", 14);
@@ -307,6 +308,38 @@ int main() {
             require(ui.app->update_error && ui.app->update_message == "Signature test failure",
                     "Update authentication error was hidden");
             std::cout << "PASS signed-update view, download and persisted check preference\n";
+            int release_images = 0;
+            ui.app->note_image_loader = [&](const std::string &bytes) {
+                require(bytes == "image-fixture", "Wrong release image bytes");
+                ++release_images;
+                return cd::NoteTexture{static_cast<ImTextureID>(1), {200, 100}, {}};
+            };
+            ui.click("What's new in this build");
+            ui.app->notes.markdown =
+                "# Notes\n**Highlighted change**\n  * A useful fix\n![Preview](images/fixture.png)";
+            ui.app->notes.images = {{"images/fixture.png", "image-fixture"}};
+            ui.frame();
+            ui.frame();
+            require(ui.app->notes_open && release_images == 1,
+                    "Native notes modal did not render/cache the inline image");
+            ui.click("Close notes");
+            require(!ui.app->notes_open, "Release notes did not close");
+            std::cout << "PASS native formatted release notes and inline image cache\n";
+            auto deferred_notes = std::make_shared<std::promise<cd::ReleaseNotes>>();
+            ui.app->notes_reader = [deferred_notes](auto) { return deferred_notes->get_future(); };
+            ui.click("Read update notes");
+            ui.click("Close notes");
+            ui.click("What's new in this build");
+            auto local_markdown = ui.app->notes.markdown;
+            cd::ReleaseNotes delayed;
+            delayed.markdown = "Wrong old release notes";
+            deferred_notes->set_value(std::move(delayed));
+            ui.frame();
+            require(ui.app->notes.markdown == local_markdown,
+                    "A delayed notes reply replaced the selected release");
+            ui.click("Close notes");
+            std::cout << "PASS release-note selection discards delayed replies\n";
+
             ui.page(2);
             ui.type("##name", "Local widget test");
             auto &io = ImGui::GetIO();

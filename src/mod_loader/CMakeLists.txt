@@ -1,0 +1,2 @@
+add_library(community_mod_loader catalog.cpp)
+target_link_libraries(community_mod_loader PUBLIC community_core)

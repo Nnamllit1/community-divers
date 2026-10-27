@@ -1,0 +1,6 @@
+add_library(community_core core.cpp player_profile.cpp)
+target_include_directories(community_core PUBLIC "${PROJECT_SOURCE_DIR}/include" "${CMAKE_BINARY_DIR}/generated")
+target_link_libraries(community_core PUBLIC nlohmann_json::nlohmann_json)
+if(WIN32)
+  target_compile_definitions(community_core PUBLIC UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()

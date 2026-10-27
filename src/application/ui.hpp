@@ -1,5 +1,7 @@
 #pragma once
 #include "community/platform.hpp"
+#include "community/mod_loader.hpp"
+#include "community/patch_notes_view.hpp"
 #include "community/updates.hpp"
 #include "community/installer.hpp"
 #include <chrono>
@@ -8,6 +10,20 @@
 namespace cd {
 struct App {
     fs::path data;
+    ReleaseNotes notes;
+    std::future<ReleaseNotes> pending_notes;
+    std::map<std::string, NoteTexture> note_textures;
+    std::function<NoteTexture(const std::string &)> note_image_loader;
+    std::function<std::future<ReleaseNotes>(std::string)> notes_reader = [](std::string source) {
+        return fetch_release_notes_async(std::move(source), fetch_update_text);
+    };
+    bool notes_open = false, notes_requested = false;
+    uint64_t notes_generation = 0, pending_notes_generation = 0;
+    std::string notes_title;
+    void show_local_notes();
+    void show_update_notes();
+    void draw_notes();
+
     Settings settings;
     bool background_updates;
     std::future<UpdateCheck> pending_update;
@@ -69,7 +85,8 @@ struct App {
     bool notice_error = false;
     char server_name[129]{}, server_url[2049]{}, game_path[4097]{}, profile_name[129]{},
         mod_search[129]{};
-    ImFont *body = nullptr, *heading = nullptr, *title = nullptr, *caption_font = nullptr;
+    ImFont *body = nullptr, *strong = nullptr, *heading = nullptr, *title = nullptr,
+           *caption_font = nullptr;
     ID3D11ShaderResourceView *logo = nullptr;
     float logo_ratio = 1.667f;
     explicit App(fs::path data_path, bool allow_background_updates = true);

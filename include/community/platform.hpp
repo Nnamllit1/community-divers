@@ -33,6 +33,7 @@ std::optional<PlayerCredential> saved_player(const fs::path &data, const std::st
 void forget_player(const fs::path &data, const std::string &url, const std::string &community_id);
 std::optional<fs::path> choose_player_credential(void *owner);
 
+FileFingerprint fingerprint_handle(uintptr_t handle, std::string relative_path);
 FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path);
 ClientIdentity inspect_client(const fs::path &path);
 std::future<ClientIdentity> inspect_client_async(fs::path path);

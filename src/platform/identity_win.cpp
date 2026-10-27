@@ -38,13 +38,16 @@ struct Hash {
     }
 };
 } // namespace
-FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path) {
+FileFingerprint fingerprint_handle(uintptr_t borrowed, std::string relative_path) {
     FileFingerprint result;
     result.path = std::move(relative_path);
     try {
-        File file(path);
+        auto handle = reinterpret_cast<HANDLE>(borrowed);
+        LARGE_INTEGER zero{};
+        if (!SetFilePointerEx(handle, zero, nullptr, FILE_BEGIN))
+            throw std::runtime_error("Cannot rewind file for hashing");
         LARGE_INTEGER size{};
-        if (!GetFileSizeEx(file.value, &size) || size.QuadPart < 0)
+        if (!GetFileSizeEx(handle, &size) || size.QuadPart < 0)
             throw std::runtime_error("Cannot read file size");
         result.bytes = static_cast<uint64_t>(size.QuadPart);
         Algorithm algorithm;
@@ -61,7 +64,7 @@ FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path
         uint64_t total = 0;
         for (;;) {
             DWORD bytes = 0;
-            if (!ReadFile(file.value, buffer.data(), static_cast<DWORD>(buffer.size()), &bytes,
+            if (!ReadFile(handle, buffer.data(), static_cast<DWORD>(buffer.size()), &bytes,
                           nullptr))
                 throw std::runtime_error("Cannot read client file");
             if (!bytes)
@@ -83,6 +86,15 @@ FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path
         result.error = e.what();
     }
     return result;
+}
+FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path) {
+    try {
+        File file(path);
+        return fingerprint_handle(reinterpret_cast<uintptr_t>(file.value),
+                                  std::move(relative_path));
+    } catch (const std::exception &e) {
+        return {std::move(relative_path), {}, e.what(), 0};
+    }
 }
 ClientIdentity inspect_client(const fs::path &path) {
     ClientIdentity result;

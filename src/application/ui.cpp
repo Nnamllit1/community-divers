@@ -289,11 +289,67 @@ void App::draw_player(void *owner) {
     gap(10);
     subdued("Independent community progression.");
 }
+void App::show_local_notes() {
+    ++notes_generation;
+    notes =
+        local_release_notes(executable_directory() / "docs", std::string(version::source_commit));
+    note_textures.clear();
+    notes_title = "This build / " + std::string(version::release_id);
+    notes_requested = true;
+}
+void App::show_update_notes() {
+    if (!update_release || pending_notes.valid())
+        return;
+    notes = {};
+    note_textures.clear();
+    notes_title = "Update / " + update_release->release_id;
+    pending_notes_generation = ++notes_generation;
+    pending_notes = notes_reader(update_release->source_commit);
+    notes_requested = true;
+}
+void App::draw_notes() {
+    if (notes_requested) {
+        ImGui::OpenPopup("Release notes");
+        notes_open = true;
+        notes_requested = false;
+    }
+    auto area = ImGui::GetIO().DisplaySize;
+    ImGui::SetNextWindowSize({std::min(1000.f, area.x - 60), std::min(760.f, area.y - 60)},
+                             ImGuiCond_Appearing);
+    if (ImGui::BeginPopupModal("Release notes", &notes_open, ImGuiWindowFlags_NoCollapse)) {
+        text(notes_title);
+        if (ImGui::Button("Close notes")) {
+            notes_open = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::Separator();
+        ImGui::BeginChild("note-content", {0, 0});
+        if (pending_notes.valid() && pending_notes_generation == notes_generation)
+            wrap("Loading release notes...");
+        if (!notes.error.empty())
+            subdued(notes.error);
+        draw_release_notes({notes, note_textures, note_image_loader, body, strong, heading});
+        ImGui::EndChild();
+        ImGui::EndPopup();
+    }
+}
 void App::tick() {
     const auto ready = [](auto &future) {
         return future.valid() &&
                future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     };
+    if (ready(pending_notes)) {
+        try {
+            auto result = pending_notes.get();
+            if (pending_notes_generation == notes_generation) {
+                notes = std::move(result);
+                note_textures.clear();
+            }
+        } catch (const std::exception &e) {
+            if (pending_notes_generation == notes_generation)
+                notes.error = e.what();
+        }
+    }
     if (ready(pending_update)) {
         try {
             auto result = pending_update.get();
@@ -451,7 +507,7 @@ void App::draw(void *owner) {
     auto &io = ImGui::GetIO();
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S))
         save();
-    if (!io.WantTextInput && !io.KeyCtrl && !io.KeyAlt) {
+    if (!notes_open && !io.WantTextInput && !io.KeyCtrl && !io.KeyAlt) {
         if (ImGui::IsKeyPressed(ImGuiKey_Q))
             page = (page + 5) % 6;
         if (ImGui::IsKeyPressed(ImGuiKey_E))
@@ -912,7 +968,13 @@ void App::draw(void *owner) {
         wrap(update_message);
         if (update_error)
             ImGui::PopStyleColor();
+        if (ImGui::Button("What's new in this build"))
+            show_local_notes();
         if (update_release) {
+            ImGui::BeginDisabled(pending_notes.valid());
+            if (ImGui::Button("Read update notes"))
+                show_update_notes();
+            ImGui::EndDisabled();
             subdued("Published " + update_release->release_id + " / " +
                     std::to_string(update_release->bytes / 1024) + " KiB");
             auto relation =
@@ -969,6 +1031,7 @@ void App::draw(void *owner) {
                 "Sony Interactive Entertainment.");
     }
     ImGui::EndChild();
+    draw_notes();
     ImGui::PopStyleVar();
     gap(10);
     ImGui::Separator();

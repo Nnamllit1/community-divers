@@ -15,8 +15,15 @@ objective can stay stable while the roadmap evolves.
   condensed headings, white typography and clear yellow selection states.
 - A polished C++20 desktop launcher; application components should remain C++
   where practical. Windows/Steam is the first supported target.
+- Separate application, patch-note and mod-loader modules under `src/`, with
+  explicit public interfaces and independent build/test targets. Keep backend,
+  update, setup and client-preparation code in their own components.
 - A current-game client integration, isolated installation and separate profiles.
   The pre-EAC game is reference material, not the target implementation.
+- Human-readable notes for every release, rendered inside the launcher with text
+  emphasis, headings, lists and optional images, and published with the release.
+- A simple per-user Windows launcher installer/uninstaller. Preserve user profiles,
+  mods, campaign databases and game copies when uninstalling.
 - Automatic, CI-gated launcher/client updates after publishing a pushed revision.
   Each community pins a release set so players update before joining.
   Include an operator-controlled server update agent with graceful mission drain.
@@ -42,6 +49,8 @@ objective can stay stable while the roadmap evolves.
 ### 1. Native launcher foundation - active
 
 - [x] CMake builds the launcher and portable core with pinned dependencies.
+- [x] Separate application, patch-note and mod-loader modules, with documented
+  dependencies and independent component checks.
 - [ ] Visual design is coherent, resizable and keyboard navigable.
 - [x] The development disclosure is accessible in the launcher About view.
 - [x] Steam library discovery and manual installation selection work.
@@ -116,6 +125,9 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [ ] Stage updates, apply them at a safe idle point, verify startup and roll back failures.
 - [ ] Provide a server update agent that drains active missions before switching versions.
 - [ ] Preserve profiles, campaign data and mods across client/server updates.
+- [x] Render formatted per-release notes, including optional images, inside the launcher.
+- [ ] Publish the same release notes with each versioned GitHub release.
+- [ ] Provide and verify a Windows installer, app-list entry, shortcut and safe uninstaller.
 - [ ] Finish repair, uninstall and release packaging.
 - [ ] Verify the complete install -> join -> mission -> progression -> restart flow.
 

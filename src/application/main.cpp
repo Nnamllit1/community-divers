@@ -50,23 +50,17 @@ void create_device(HWND window) {
     check(hr);
     render_target();
 }
-ComPtr<ID3D11ShaderResourceView> load_logo(const cd::fs::path &path, float &ratio) {
+ComPtr<ID3D11ShaderResourceView> image_texture(IWICBitmapFrameDecode *frame, UINT &w, UINT &h,
+                                               UINT limit) {
+    check(frame->GetSize(&w, &h));
+    if (!w || !h || w > limit || h > limit)
+        throw std::runtime_error("Image dimensions exceed the supported size");
     ComPtr<IWICImagingFactory> factory;
     check(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                            IID_PPV_ARGS(&factory)));
-    ComPtr<IWICBitmapDecoder> decoder;
-    check(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ,
-                                             WICDecodeMetadataCacheOnLoad, &decoder));
-    ComPtr<IWICBitmapFrameDecode> frame;
-    check(decoder->GetFrame(0, &frame));
-    UINT w = 0, h = 0;
-    check(frame->GetSize(&w, &h));
-    if (!w || !h || w > 8192 || h > 8192)
-        throw std::runtime_error("Invalid launcher logo size");
-    ratio = static_cast<float>(w) / h;
     ComPtr<IWICFormatConverter> converter;
     check(factory->CreateFormatConverter(&converter));
-    check(converter->Initialize(frame.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone,
+    check(converter->Initialize(frame, GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone,
                                 nullptr, 0, WICBitmapPaletteTypeCustom));
     std::vector<unsigned char> pixels(static_cast<size_t>(w) * h * 4);
     check(converter->CopyPixels(nullptr, w * 4, static_cast<UINT>(pixels.size()), pixels.data()));
@@ -85,6 +79,43 @@ ComPtr<ID3D11ShaderResourceView> load_logo(const cd::fs::path &path, float &rati
     ComPtr<ID3D11ShaderResourceView> view;
     check(device->CreateShaderResourceView(texture.Get(), nullptr, &view));
     return view;
+}
+ComPtr<ID3D11ShaderResourceView> load_logo(const cd::fs::path &path, float &ratio) {
+    ComPtr<IWICImagingFactory> factory;
+    check(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                           IID_PPV_ARGS(&factory)));
+    ComPtr<IWICBitmapDecoder> decoder;
+    check(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ,
+                                             WICDecodeMetadataCacheOnLoad, &decoder));
+    ComPtr<IWICBitmapFrameDecode> frame;
+    check(decoder->GetFrame(0, &frame));
+    UINT w = 0, h = 0;
+    auto texture = image_texture(frame.Get(), w, h, 8192);
+    ratio = static_cast<float>(w) / h;
+    return texture;
+}
+cd::NoteTexture load_note_image(const std::string &bytes) {
+    if (bytes.empty() || bytes.size() > 4 * 1024 * 1024)
+        throw std::runtime_error("Invalid release image size");
+    ComPtr<IWICImagingFactory> factory;
+    check(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                           IID_PPV_ARGS(&factory)));
+    ComPtr<IWICStream> stream;
+    check(factory->CreateStream(&stream));
+    check(stream->InitializeFromMemory(reinterpret_cast<BYTE *>(const_cast<char *>(bytes.data())),
+                                       static_cast<DWORD>(bytes.size())));
+    ComPtr<IWICBitmapDecoder> decoder;
+    check(factory->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnLoad,
+                                           &decoder));
+    ComPtr<IWICBitmapFrameDecode> frame;
+    check(decoder->GetFrame(0, &frame));
+    UINT w = 0, h = 0;
+    auto view = image_texture(frame.Get(), w, h, 2048);
+    auto owner =
+        std::shared_ptr<ID3D11ShaderResourceView>(view.Detach(), [](auto *p) { p->Release(); });
+    return {static_cast<ImTextureID>(reinterpret_cast<uintptr_t>(owner.get())),
+            {static_cast<float>(w), static_cast<float>(h)},
+            std::move(owner)};
 }
 void capture(const cd::fs::path &path) {
     ComPtr<ID3D11Texture2D> back;
@@ -167,7 +198,7 @@ LRESULT WINAPI window_proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) 
 } // namespace
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
     cd::fs::path capture_path, data, install_package, install_manifest;
-    bool update_only = false, check_selected = false;
+    bool update_only = false, check_selected = false, show_notes = false;
     int page = 0;
     uintptr_t inherited_lock = 0, update_health = 0;
     int window_width = 1440, window_height = 900;
@@ -177,7 +208,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
         auto args = CommandLineToArgvW(GetCommandLineW(), &count);
         for (int i = 1; i < count; ++i) {
             std::wstring arg = args[i];
-            if (arg == L"--check-selected")
+            if (arg == L"--release-notes")
+                show_notes = true;
+            else if (arg == L"--check-selected")
                 check_selected = true;
             else if (arg == L"--update")
                 update_only = true;
@@ -302,6 +335,10 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             return io.Fonts->AddFontDefault(&config);
         };
         app.body = font(L"segoeui.ttf", 18);
+        app.strong = font(L"segoeuib.ttf", 18);
+        app.note_image_loader = load_note_image;
+        if (show_notes)
+            app.show_local_notes();
         app.heading = font(L"bahnschrift.ttf", 28);
         app.title = font(L"bahnschrift.ttf", 36);
         app.caption_font = font(L"segoeui.ttf", 14);

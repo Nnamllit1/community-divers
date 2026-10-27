@@ -14,8 +14,9 @@ if ($env:GITHUB_EVENT_NAME -eq 'push') {
     if ($before -notmatch '^[a-f0-9]{40}$') { throw 'Invalid previous source SHA.' }
     if ($before -match '^0+$') { $changed = @(git ls-tree -r --name-only $source); Assert-Native }
     else { $changed = @(git diff --name-only $before $source --); Assert-Native }
-    $components = @($changed | Where-Object { $_ -match '^(src/|include/|tests/|cmake/|compatibility/|assets/|\.github/workflows/|tools/|CMakeLists\.txt$|CMakePresets\.json$|Build\.cmd$|Update\.cmd$)' })
+    $components = @($changed | Where-Object { $_ -match '^(src/|include/|tests/|cmake/|compatibility/|assets/|installer/|docs/release-notes\.md$|\.github/workflows/|tools/|CMakeLists\.txt$|CMakePresets\.json$|Build\.cmd$|Update\.cmd$)' })
     if (-not $components.Count) { Write-Host 'No component changes; preview channel stays unchanged.'; exit 0 }
+    if ('docs/release-notes.md' -notin $changed) { throw 'Update docs/release-notes.md for this release before publishing component changes.' }
 }
 $work = Join-Path $env:RUNNER_TEMP ('community-divers-release-' + $source)
 if (Test-Path -LiteralPath $work) { throw 'Release work directory already exists.' }
@@ -23,6 +24,12 @@ New-Item -ItemType Directory -Path $work | Out-Null
 $zips = @(Get-ChildItem -LiteralPath $ArtifactDirectory -Filter '*.zip' -File)
 if ($zips.Count -ne 1) { throw 'Expected exactly one Windows package.' }
 $zip = $zips[0]
+$setups = @(Get-ChildItem -LiteralPath $ArtifactDirectory -Filter 'CommunityDiversSetup-*-windows-x64.exe' -File)
+if ($setups.Count -ne 1 -or $setups[0].Name.Contains('-qa-')) { throw 'Expected one production Windows installer.' }
+$setup = $setups[0]
+$setupChecksum = $setup.FullName + '.sha256'
+$setupDigest = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+if (-not (Test-Path -LiteralPath $setupChecksum) -or [IO.File]::ReadAllText($setupChecksum).Trim() -notmatch ('^' + $setupDigest + '\s+\*?' + [regex]::Escape($setup.Name) + '$')) { throw 'Installer checksum mismatch.' }
 $digest = (Get-FileHash -LiteralPath $zip.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
 $checksum = $zip.FullName + '.sha256'
 if (-not (Test-Path -LiteralPath $checksum)) { throw 'Package checksum is missing.' }
@@ -72,14 +79,15 @@ function Find-Release {
 }
 $existing = Find-Release
 $notesPath = Join-Path $work 'release-notes.md'
-$notes = @"
-Native Windows x64 launcher preview from source revision $source.
-
-Includes signed launcher update checks, managed-file installation, startup validation and recoverable rollback. Game integration, campaign gameplay and community multiplayer remain under development.
-
-Download the ZIP and its SHA-256 file. See the README and update documentation for usage and current limits.
-"@
-[IO.File]::WriteAllText($notesPath, $notes, [Text.UTF8Encoding]::new($false))
+$notesSource = [IO.File]::ReadAllText((Join-Path $roots[0].FullName 'docs/release-notes.md'))
+if ($notesSource.Length -lt 60 -or [Text.Encoding]::UTF8.GetByteCount($notesSource) -gt 65536 -or -not $notesSource.StartsWith('# ')) { throw 'A bounded, user-facing Markdown release note is required.' }
+[IO.File]::WriteAllText($notesPath, $notesSource, [Text.UTF8Encoding]::new($false))
+# Relative images are the same immutable source files used by the native viewer.
+$notes = [regex]::Replace($notesSource, '!\[([^\]]*)\]\((images/[A-Za-z0-9_./-]+)\)', {
+    param($match)
+    '![' + $match.Groups[1].Value + '](https://raw.githubusercontent.com/' + $repo + '/' + $source + '/docs/' + $match.Groups[2].Value + ')'
+})
+$notes += "`n`n---`nDownload the **Setup executable** asset for a per-user installation, or the **ZIP** for portable use. Both include the native release-note viewer. Game integration and community co-op remain in development.`n"
 function Api-Json([string]$Url, [string]$Method, $Body) {
     $encoded = [Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json -Depth 10))
     try { return Invoke-RestMethod -Uri $Url -Headers $headers -Method $Method -ContentType 'application/json' -Body $encoded }
@@ -98,24 +106,26 @@ if ($existing.draft) {
     $expectedUpload = 'https://uploads.github.com/repos/' + $repo + '/releases/' + $existing.id + '/assets'
     if ($uploadBase -ne $expectedUpload) { throw 'Unexpected GitHub asset upload endpoint.' }
     $assets = @($existing.assets)
-    $allowed = @($zip.Name, [IO.Path]::GetFileName($checksum), 'preview.json')
+    $allowed = @($zip.Name, [IO.Path]::GetFileName($checksum), $setup.Name, [IO.Path]::GetFileName($setupChecksum), 'release-notes.md', 'preview.json')
     if (@($assets | Where-Object { $_.name -notin $allowed }).Count) { throw 'Draft contains unexpected assets; refusing to publish them.' }
-    foreach ($file in @($zip.FullName, $checksum, $feedPath)) {
+    foreach ($file in @($zip.FullName, $checksum, $setup.FullName, $setupChecksum, $notesPath, $feedPath)) {
         $name = [IO.Path]::GetFileName($file)
         foreach ($asset in @($assets | Where-Object { $_.name -eq $name })) {
             # Only unpublished draft assets can be replaced on a retry.
             try { Invoke-RestMethod -Uri ($base + '/releases/assets/' + $asset.id) -Headers $headers -Method Delete | Out-Null }
             catch { throw 'Cannot replace an unpublished draft asset.' }
         }
-        $type = if ($name.EndsWith('.zip')) { 'application/zip' } elseif ($name.EndsWith('.json')) { 'application/json' } else { 'text/plain' }
+        $type = if ($name.EndsWith('.exe')) { 'application/vnd.microsoft.portable-executable' } elseif ($name.EndsWith('.zip')) { 'application/zip' } elseif ($name.EndsWith('.json')) { 'application/json' } else { 'text/plain' }
         try {
             Invoke-RestMethod -Uri ($uploadBase + '?name=' + [Uri]::EscapeDataString($name)) -Headers $headers -Method Post -ContentType $type -InFile $file | Out-Null
         } catch { throw 'Draft asset upload failed; no channel promotion occurred.' }
     }
-    $existing = Api-Json ($base + '/releases/' + $existing.id) 'Patch' @{draft=$false;prerelease=$true}
+    $existing = Api-Json ($base + '/releases/' + $existing.id) 'Patch' @{draft=$false;prerelease=$true;body=$notes}
 } else {
     $asset = @($existing.assets | Where-Object { $_.name -eq $zip.Name })
     if ($asset.Count -ne 1 -or ($asset[0].digest -and $asset[0].digest -ne ('sha256:' + $digest))) { throw 'Published package differs; refusing to overwrite it.' }
+    $publishedSetup = @($existing.assets | Where-Object { $_.name -eq $setup.Name })
+    if ($publishedSetup.Count -ne 1 -or ($publishedSetup[0].digest -and $publishedSetup[0].digest -ne ('sha256:' + $setupDigest))) { throw 'Published installer differs; refusing to overwrite it.' }
     $manifestAsset = @($existing.assets | Where-Object { $_.name -eq 'preview.json' })
     if ($manifestAsset.Count -ne 1) { throw 'Published signed manifest is missing.' }
     $publishedFeed = Join-Path $work 'published-preview.json'
@@ -133,6 +143,13 @@ for ($attempt = 0; $attempt -lt 5; $attempt++) {
     catch { if ($attempt -lt 4) { Start-Sleep -Seconds 2 } }
 }
 if (-not $downloaded -or (Get-FileHash -LiteralPath $publicZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) { throw 'Public package download differs from the tested artifact.' }
+$publicSetup = Join-Path $work 'public-setup.exe'
+$downloaded = $false
+for ($attempt = 0; $attempt -lt 5; $attempt++) {
+    try { Invoke-WebRequest -Uri ('https://github.com/' + $repo + '/releases/download/' + $tag + '/' + $setup.Name) -OutFile $publicSetup; $downloaded = $true; break }
+    catch { if ($attempt -lt 4) { Start-Sleep -Seconds 2 } }
+}
+if (-not $downloaded -or (Get-FileHash -LiteralPath $publicSetup -Algorithm SHA256).Hash.ToLowerInvariant() -ne $setupDigest) { throw 'Public installer differs from the tested artifact.' }
 $feedBytes = [IO.File]::ReadAllBytes($feedPath)
 for ($attempt = 0; $attempt -lt 3; $attempt++) {
     $current = Api-Get ($base + '/contents/updates/preview.json?ref=main')

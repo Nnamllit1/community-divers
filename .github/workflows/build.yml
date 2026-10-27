@@ -14,12 +14,22 @@ jobs:
         run: Build.cmd
       - name: Package versioned portable ZIP
         run: cpack --config out/windows-dev/CPackConfig.cmake -B dist
+      - name: Build and verify per-user setup
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem dist -Filter '*.zip' | Select-Object -First 1
+          ./tools/build-setup.ps1 -PortableZip $zip.FullName -OutputDirectory dist-setup-test -TestIdentity
+          $qa = Get-ChildItem dist-setup-test -Filter '*.exe' | Select-Object -First 1
+          python tests/setup_smoke.py --installer $qa.FullName --work "$env:RUNNER_TEMP/community-divers-setup-smoke" --registry-key CommunityDivers-QA --display-name "Community Divers QA"
+          if ($LASTEXITCODE -ne 0) { throw 'Installer/uninstaller smoke test failed.' }
+          ./tools/build-setup.ps1 -PortableZip $zip.FullName -OutputDirectory dist
       - uses: actions/upload-artifact@v4
         with:
           name: CommunityDivers-windows-x64
           path: |
             dist/*.zip
             dist/*.sha256
+            dist/*.exe
       - name: Install separate service artifact
         run: cmake --install out/windows-dev --prefix dist-service --component Server
       - uses: actions/upload-artifact@v4

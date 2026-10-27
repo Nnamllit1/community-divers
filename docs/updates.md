@@ -220,3 +220,17 @@ Channel promotion is atomic in repository storage, but CDN copies of the raw fee
 can lag for a few minutes. A client may temporarily see the prior valid signed
 release. The launcher checks again while idle or on a manual Check for updates;
 server admission enforcement must still require the community's selected set.
+
+## Notes and setup artifacts
+
+Every component release includes [formatted notes](release-notes-format.md), rendered
+inside the launcher from the installed document or exact pending source revision.
+The publishing job uploads the same Markdown and rewrites relative images to
+immutable URLs for the release body. Component pushes without a notes change fail
+publication; the existing signed channel remains available.
+
+Windows CI verifies a QA installer/uninstaller before building the production
+[setup](installation.md). The publisher verifies both ZIP and setup public-download
+hashes before promoting the channel. Setup is a separate release asset; it is
+not placed inside the portable ZIP or executed by the automatic updater. This
+preserves compatibility with the existing updater's package inventory rules.

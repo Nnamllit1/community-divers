@@ -1,5 +1,6 @@
 #include "community/updates.hpp"
 #include "community/installer.hpp"
+#include "community/setup.hpp"
 #include "community/platform.hpp"
 #include "community/version.hpp"
 #include <algorithm>
@@ -20,6 +21,24 @@ void write_new(const cd::fs::path &p, const std::string &value) {
 } // namespace
 int wmain(int count, wchar_t **args) {
     try {
+        if (count == 3 && std::wstring(args[1]) == L"--setup-check") {
+            cd::check_setup_destination(args[2]);
+            return 0;
+        }
+        if (count == 4 && std::wstring(args[1]) == L"--setup-begin") {
+            cd::begin_setup_install(args[2], cd::utf8(args[3]));
+            return 0;
+        }
+        if (count == 4 && std::wstring(args[1]) == L"--setup-register") {
+            cd::register_setup_install(args[2], cd::utf8(args[3]));
+            return 0;
+        }
+        if (count == 3 && std::wstring(args[1]) == L"--uninstall-managed") {
+            auto result = cd::uninstall_managed_launcher(args[2]);
+            std::cout << "Removed " << result.deleted << " launcher files; kept "
+                      << result.preserved << " modified files.\n";
+            return 0;
+        }
         if (count == 3 && std::wstring(args[1]) == L"--inspect-feed") {
             auto body = cd::read_text(args[2], cd::update_manifest_limit);
             cd::verify_update_envelope(body, "preview", cd::update_publisher_key());

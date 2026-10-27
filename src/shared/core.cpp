@@ -423,41 +423,6 @@ void save_settings(const fs::path &path, const Settings &s) {
         throw;
     }
 }
-std::vector<Mod> discover_mods(const fs::path &root) {
-    std::vector<Mod> result;
-    std::error_code ec;
-    if (!fs::exists(root, ec))
-        return result;
-    for (const auto &entry : fs::directory_iterator(root)) {
-        if (!entry.is_directory())
-            continue;
-        Mod m;
-        m.directory = entry.path();
-        m.name = to_utf8(entry.path().filename());
-        try {
-            auto j = json::parse(read_text(entry.path() / "mod.json", 65536));
-            if (j.at("schema") != 1)
-                throw std::runtime_error("Unsupported manifest schema");
-            m.id = checked_string(j, "id");
-            m.name = checked_string(j, "name", 128);
-            m.version = checked_string(j, "version", 64);
-            m.description = j.value("description", "");
-            if (!identifier(m.id) || m.name.empty() || m.version.empty() ||
-                m.description.size() > 4096)
-                throw std::runtime_error("Invalid mod metadata");
-        } catch (const std::exception &e) {
-            m.error = e.what();
-        }
-        result.push_back(std::move(m));
-    }
-    for (auto &m : result)
-        if (!m.id.empty() && std::count_if(result.begin(), result.end(),
-                                           [&](const auto &n) { return m.id == n.id; }) > 1)
-            m.error = "Duplicate mod ID; use one copy only";
-    std::sort(result.begin(), result.end(),
-              [](const auto &a, const auto &b) { return a.name < b.name; });
-    return result;
-}
 ServiceStatus parse_status(const std::string &body) {
     if (body.size() > 262144)
         throw std::runtime_error("Service response exceeds 256 KiB");

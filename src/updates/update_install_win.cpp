@@ -1,3 +1,4 @@
+#include "community/setup.hpp"
 #include <windows.h>
 #include "community/installer.hpp"
 #include "community/platform.hpp"
@@ -527,6 +528,7 @@ int run_update_installer(const fs::path &plan_path, const std::string &key, bool
         require(DeleteFileW((root / ".community-divers-update.json").c_str()),
                 "Cannot finish confirmed update state");
         mutation = false;
+        refresh_setup_registration(root, release->release_id);
         auto result = json{{"ok", true},
                            {"release_id", release->release_id},
                            {"recovered", false},

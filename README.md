@@ -19,8 +19,8 @@ operate its own campaign service, while players' machines run individual mission
 using their own installed game assets.
 
 The launcher uses a HELLDIVERS 2-inspired menu layout and is written in C++20
-with Win32, Direct3D 11 and Dear ImGui. The portable core is
-kept separate from Windows integration. It does not require a webview, Python or
+with Win32, Direct3D 11 and Dear ImGui. Application, patch notes and mod discovery have separate modules, and portable
+contracts are kept separate from Windows integration. It does not require a webview, Python or
 .NET to run.
 
 ![Launcher overview](docs/images/launcher-overview.png)
@@ -28,7 +28,9 @@ kept separate from Windows integration. It does not require a webview, Python or
 ## Launcher preview
 
 [Download a Windows preview](https://github.com/Nnamllit1/community-divers/releases)
-and verify it with the accompanying SHA-256 file.
+and verify it with the accompanying SHA-256 file. Choose the **Setup executable**
+for a per-user installation and uninstaller, or the **ZIP** for portable use.
+See [installation](docs/installation.md) for setup, updates and data preservation.
 
 - Detect an existing game through Steam or choose its installation directory.
 - Save community HTTPS endpoints and check their protocol/build advertisements.
@@ -38,6 +40,7 @@ and verify it with the accompanying SHA-256 file.
 - Prepare and verify an independent game-file copy using installed Steam depot inventories.
 - Display a connected community service's persisted campaign and mission templates.
 - Import community player credentials, remember sign-in securely and read live progression.
+- Read formatted per-release notes with optional images directly inside About.
 
 Current builds check a signed preview feed and stage verified downloads. Portable
 packages support Install and restart with startup checks, rollback and interrupted
@@ -101,7 +104,7 @@ cpack --config out/windows-dev/CPackConfig.cmake -B dist
 
 Packages include `build-info.json` with the exact source revision and release ID.
 The [update documentation](docs/updates.md) covers signed preview checks and verified
-downloads, plus planned CI publication, client/server release-set checks and rollback.
+downloads, CI publication and rollback, plus planned client/server release-set checks.
 
 For the portable core on Linux:
 

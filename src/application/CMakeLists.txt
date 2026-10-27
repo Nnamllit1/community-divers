@@ -1,0 +1,48 @@
+if(NOT WIN32)
+  message(FATAL_ERROR "The desktop launcher currently requires Windows; portable core tests remain available.")
+endif()
+FetchContent_Declare(imgui URL https://codeload.github.com/ocornut/imgui/tar.gz/refs/tags/v1.93.0
+  URL_HASH SHA256=f7bf6bc76e5d79d40d751096663e6c5d18daf08129dd52e7f7b09e4251c8eeee DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+FetchContent_MakeAvailable(imgui)
+FetchContent_Declare(markdown URL https://codeload.github.com/enkisoftware/imgui_markdown/zip/4acbf80584753e15ea54eb271129995862daac8f
+  URL_HASH SHA256=90cd2ec460020fa7bb72e706b07c6c9c22478d28708d595811bbf1889fb72ab3 DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+FetchContent_MakeAvailable(markdown)
+add_library(imgui STATIC ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
+  ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_win32.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_dx11.cpp)
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+target_compile_definitions(imgui PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+target_link_libraries(imgui PUBLIC d3d11 dxgi dwmapi)
+if(BUILD_TESTING)
+  add_library(imgui_widget_test STATIC ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp)
+  target_include_directories(imgui_widget_test PUBLIC ${imgui_SOURCE_DIR})
+  target_compile_definitions(imgui_widget_test PUBLIC IMGUI_ENABLE_TEST_ENGINE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
+community_notes_view(community_notes_view imgui)
+if(BUILD_TESTING)
+  community_notes_view(community_notes_view_test imgui_widget_test)
+endif()
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+  message(FATAL_ERROR "The Windows launcher currently targets x64.")
+endif()
+enable_language(RC)
+add_executable(CommunityDivers WIN32 main.cpp ui.cpp app.rc launcher.manifest)
+add_custom_target(community_docs ALL COMMAND ${CMAKE_COMMAND} -E copy_directory
+  "${CMAKE_SOURCE_DIR}/docs" "$<TARGET_FILE_DIR:CommunityDivers>/docs")
+add_dependencies(CommunityDivers community_catalog community_docs)
+target_link_libraries(CommunityDivers PRIVATE community_platform community_maintenance community_mod_loader community_notes_view imgui winhttp shell32 ole32 windowscodecs comdlg32)
+target_compile_definitions(CommunityDivers PRIVATE CD_VERSION="${PROJECT_VERSION}")
+add_custom_command(TARGET CommunityDivers POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+  "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:CommunityDivers>/assets")
+install(TARGETS CommunityDivers CommunityDiversInspect CommunityDiversUpdate RUNTIME DESTINATION .)
+install(FILES ${PROJECT_SOURCE_DIR}/updates/preview.json ${PROJECT_SOURCE_DIR}/updates/publisher-key.txt DESTINATION updates)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/compatibility DESTINATION .)
+install(FILES "${CMAKE_BINARY_DIR}/build-info.json" DESTINATION .)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/assets DESTINATION .)
+install(FILES ${PROJECT_SOURCE_DIR}/LICENSE ${PROJECT_SOURCE_DIR}/THIRD_PARTY.md ${PROJECT_SOURCE_DIR}/README.md
+  ${PROJECT_SOURCE_DIR}/PROJECT.md ${PROJECT_SOURCE_DIR}/CONTRIBUTING.md ${PROJECT_SOURCE_DIR}/Update.cmd DESTINATION .)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/docs DESTINATION .)
+install(FILES ${imgui_SOURCE_DIR}/LICENSE.txt DESTINATION licenses RENAME imgui.txt)
+install(FILES ${markdown_SOURCE_DIR}/License.txt DESTINATION licenses RENAME imgui-markdown.txt)
+install(FILES ${json_SOURCE_DIR}/LICENSE.MIT DESTINATION licenses RENAME nlohmann-json.txt)
