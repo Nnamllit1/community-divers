@@ -36,6 +36,32 @@ struct App {
     std::optional<CampaignSnapshot> campaign;
     std::future<ProbeResult> pending;
     std::function<std::future<ProbeResult>(std::string)> community_checker = probe_service;
+    std::optional<PlayerProfile> player;
+    std::optional<PlayerCredential> player_credential;
+    std::future<PlayerResult> pending_player;
+    std::function<std::future<PlayerResult>(std::string, PlayerCredential)> player_reader =
+        request_player_profile_async;
+    std::function<std::optional<fs::path>(void *)> credential_picker = choose_player_credential;
+    std::function<std::optional<PlayerCredential>(const fs::path &, const std::string &,
+                                                  const std::string &)>
+        player_loader = saved_player;
+    std::function<void(const fs::path &, const std::string &, const PlayerCredential &)>
+        player_saver = remember_player;
+    std::function<void(const fs::path &, const std::string &, const std::string &)>
+        player_forgetter = forget_player;
+    std::string connected_url, player_context, player_context_url, player_context_server;
+    std::string player_message = "Check a community connection to sign in.";
+    uint64_t player_generation = 0, pending_player_generation = 0;
+    bool player_error = false, remember_sign_in = true, player_remembered = false;
+    bool player_options_open = true;
+    bool pending_player_remember = false, pending_player_forget = false,
+         player_restore_requested = false;
+    void sync_player_context();
+    void begin_player_request(PlayerCredential credential, bool remember = false,
+                              bool forget = false);
+    void use_saved_player();
+    void sign_out_player();
+    void draw_player(void *owner);
     std::future<ClientIdentity> pending_identity;
     std::string identity_for_path, identity_summary;
     std::string pending_id, pending_url, connected_id, notice, settings_warning;

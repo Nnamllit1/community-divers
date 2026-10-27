@@ -18,6 +18,21 @@ struct ProbeResult {
     std::string campaign_error;
 };
 std::future<ProbeResult> probe_service(std::string url);
+struct PlayerResult {
+    std::optional<PlayerProfile> profile;
+    std::optional<PlayerCredential> credential;
+    std::string error;
+};
+PlayerResult request_player_profile(const std::string &url, PlayerCredential credential);
+std::future<PlayerResult> request_player_profile_async(std::string url,
+                                                       PlayerCredential credential);
+void remember_player(const fs::path &data, const std::string &url,
+                     const PlayerCredential &credential);
+std::optional<PlayerCredential> saved_player(const fs::path &data, const std::string &url,
+                                             const std::string &community_id);
+void forget_player(const fs::path &data, const std::string &url, const std::string &community_id);
+std::optional<fs::path> choose_player_credential(void *owner);
+
 FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path);
 ClientIdentity inspect_client(const fs::path &path);
 std::future<ClientIdentity> inspect_client_async(fs::path path);

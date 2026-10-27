@@ -2,6 +2,7 @@
 #include <httplib.h>
 #ifdef _WIN32
 #include "community/platform.hpp"
+#include "profile_http_fixture.hpp"
 #endif
 #include <sqlite3.h>
 #include <chrono>
@@ -150,6 +151,24 @@ int main() {
                 require(response(client.Get("/v1/me", auth(player)))["id"] == pid,
                         "Profile ownership failed");
             });
+#ifdef _WIN32
+            test("native player sign-in reads only its authenticated profile", [&] {
+                auto url = "http://127.0.0.1:" + std::to_string(live.port);
+                PlayerCredential credential{config.id, pid, player};
+                auto result = request_player_profile(url, credential);
+                require(result.profile && result.credential && result.profile->id == pid &&
+                            result.profile->name == "Player",
+                        "Native authenticated profile request failed");
+                credential.player_id = live.store.profile(other)["id"].get<std::string>();
+                require(!request_player_profile(url, credential).profile,
+                        "Another player's profile identity was accepted");
+                credential.player_id = pid;
+                credential.token = "cdp_" + std::string(64, '0');
+                auto invalid = request_player_profile(url, credential);
+                require(!invalid.profile && invalid.error.find("401") != std::string::npos,
+                        "Invalid credential accepted");
+            });
+#endif
             json planet{{"id", "test-planet"},
                         {"name", "Configured planet"},
                         {"biome_id", "test-biome"},
@@ -280,6 +299,11 @@ int main() {
                 response(
                     client.Post("/v1/missions", versioned(player), request.dump(), "text/plain"),
                     415);
+                response(client.Put("/v1/me/loadout", auth(player),
+                                    "{\"nested\":" + std::string(2000, '[') + "0" +
+                                        std::string(2000, ']') + "}",
+                                    "application/json"),
+                         400);
                 auto oversized = client.Put("/v1/me/loadout", auth(player), std::string(70000, 'x'),
                                             "application/json");
                 require(oversized && oversized->status == 413, "Oversized service body accepted");
@@ -311,6 +335,30 @@ int main() {
             require(read_text(data / "state.sqlite").find(player) == std::string::npos,
                     "Plaintext player token stored in SQLite");
         });
+#ifdef _WIN32
+        test("authenticated profile redirects, response bounds and diagnostics", [&] {
+            cd::test::ProfileHttpFixture f;
+            auto result = request_player_profile(f.url(), f.credential);
+            require(!result.profile && result.error.find("302") != std::string::npos &&
+                        f.trap_requests == 0,
+                    "Authenticated redirect was followed");
+            f.mode = 1;
+            result = request_player_profile(f.url(), f.credential);
+            require(!result.profile && result.error.find("32 KiB") != std::string::npos,
+                    "Oversized player profile accepted");
+            f.mode = 2;
+            result = request_player_profile(f.url(), f.credential);
+            require(!result.profile && result.error.find("identity") != std::string::npos,
+                    "Different player identity accepted");
+            f.mode = 3;
+            result = request_player_profile(f.url(), f.credential);
+            require(!result.profile && result.error.find("401") != std::string::npos &&
+                        result.error.find(f.credential.token) == std::string::npos,
+                    "Private error body leaked into diagnostics");
+            require(!f.public_auth && f.correct_auth,
+                    "Bearer attached to public status or wrong profile request");
+        });
+#endif
         test("unrelated and forward-version databases are rejected", [&] {
             private_directory(root / "foreign");
             private_write_new(root / "foreign/operator.token", admin);

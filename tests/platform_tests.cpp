@@ -28,6 +28,37 @@ int main(int argc, char **argv) {
             return 0;
         }
         {
+            auto scope =
+                fs::temp_directory_path() /
+                from_utf8(
+                    "community-divers-vault-" +
+                    std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+            PlayerCredential c{"vault-community", std::string(32, 'a'),
+                               "cdp_" + std::string(64, 'b')};
+            auto url = "http://127.0.0.1:8080/community";
+            try {
+                require(!saved_player(scope, url, c.community_id),
+                        "Unexpected existing vault fixture");
+                remember_player(scope, url, c);
+                auto loaded = saved_player(scope, url, c.community_id);
+                require(loaded && loaded->token == c.token && loaded->player_id == c.player_id,
+                        "Native secure credential storage failed");
+                require(
+                    !saved_player(scope, url, "other-community") &&
+                        !saved_player(scope, "http://127.0.0.1:8081/community", c.community_id) &&
+                        !saved_player(scope / "separate-launcher", url, c.community_id),
+                    "Credential crossed its scope");
+                forget_player(scope, url, c.community_id);
+                require(!saved_player(scope, url, c.community_id), "Sign-out retained credential");
+                require(!fs::exists(scope), "Native credential was written into launcher files");
+            } catch (...) {
+                forget_player(scope, url, c.community_id);
+                throw;
+            }
+            std::cout
+                << "PASS Windows credential persistence, scope isolation and exact sign-out\n";
+        }
+        {
             auto file =
                 fs::temp_directory_path() /
                 ("community-divers-sha-" +
@@ -86,6 +117,26 @@ int main(int argc, char **argv) {
             require(!result.status && result.error.find("256 KiB") != std::string::npos,
                     "Oversized response accepted");
             std::cout << "PASS response size limit\n";
+        }
+        {
+            PlayerCredential c{"profile-test", std::string(32, 'a'), "cdp_" + std::string(64, 'b')};
+            Server changed(
+                200,
+                R"({"protocol":1,"id":"different-community","name":"Changed","game_builds":[],"capabilities":["profiles"]})");
+            auto result = request_player_profile(changed.url(), c);
+            changed.worker.join();
+            require(!result.profile &&
+                        changed.request.find("Authorization:") == std::string::npos &&
+                        result.error.find(c.token) == std::string::npos,
+                    "Changed community received a credential or exposed it in diagnostics");
+            Server redirect(302, "", "Location: http://127.0.0.1:9/private\r\n");
+            result = request_player_profile(redirect.url(), c);
+            redirect.worker.join();
+            require(!result.profile && result.error.find("302") != std::string::npos &&
+                        redirect.request.find("Authorization:") == std::string::npos,
+                    "Pre-auth redirect was accepted");
+            std::cout << "PASS endpoint identity changes and redirects stop before credentials are "
+                         "sent\n";
         }
         WSACleanup();
         return 0;

@@ -141,5 +141,30 @@ The inspector's `--plan`, `--copy` and `--verify` commands are documented in
 [client integration](client-integration.md). A read-only plan of the installed
 build 26088801 resolved its three local depot manifests into 168 game files totaling
 24,150,575,918 bytes. This establishes inventory parsing/presence/size checks on
-that installation. The full current-game copy and native game startup have not
-been verified; the copy tests use synthetic fixtures.
+that installation. A complete independent HDD copy of those 168 files has also
+passed the native copy and separate verification commands, including all depot
+content hashes and the four catalogued module fingerprints. No game startup or
+profile/Steam Cloud/official-network isolation is established by that copy.
+Synthetic fixtures cover interruption, corruption and path-rejection failures.
+
+## Community profile sign-in
+
+Core checks cover bounded credential/profile parsing, identity mismatch, malformed
+credentials and deep JSON rejection without secret fragments in errors. Native
+Windows checks write/read/delete an application-scoped Credential Manager fixture
+and confirm separation by data directory, community URL and identity. Real WinHTTP
+requests exercise successful profile reads against the service, invalid credentials,
+wrong player IDs, public status without authorization, rejected redirects, response
+limits and credential-safe error handling.
+
+Offscreen widget tests exercise credential-file import, remembered/session-only
+sign-in, refresh, local sign-out and discarding responses after community changes.
+Native dialog input, public authenticated HTTPS deployment and game account/mission
+integration remain separate verification requirements.
+
+A native launcher render check has restored a scoped Windows credential and read
+the real service profile across fresh launcher processes and a forced service
+restart. Normal and minimum-size captures show the persisted XP, completion count
+and saved-loadout count with visible primary actions. The QA credential was seeded
+through the Windows API and removed afterward; the file dialog was not driven by
+that process check. This is profile/HTTP/render evidence, not native gameplay.

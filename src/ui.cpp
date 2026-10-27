@@ -143,6 +143,152 @@ Profile &App::profile() {
                           [&](const auto &p) { return p.id == settings.selected_profile; });
     return i == settings.profiles.end() ? settings.profiles.front() : *i;
 }
+void App::sync_player_context() {
+    auto selected = community();
+    auto key = selected ? selected->id : "";
+    auto url = selected ? selected->url : "";
+    auto server = selected && service && connected_id == key && connected_url == url &&
+                          std::find(service->capabilities.begin(), service->capabilities.end(),
+                                    "profiles") != service->capabilities.end()
+                      ? service->id
+                      : "";
+    if (key == player_context && url == player_context_url && server == player_context_server)
+        return;
+    ++player_generation;
+    player.reset();
+    player_credential.reset();
+    player_remembered = false;
+    player_options_open = true;
+    player_context = key;
+    player_context_url = url;
+    player_context_server = server;
+    player_error = false;
+    player_message = server.empty() ? "Check a community connection to sign in."
+                                    : "Import a player credential issued by this community.";
+    player_restore_requested = !server.empty();
+    if (player_restore_requested && !pending_player.valid())
+        use_saved_player();
+}
+void App::begin_player_request(PlayerCredential credential, bool remember, bool forget) {
+    if (pending_player.valid() || player_context_server.empty())
+        return;
+    if (credential.community_id != player_context_server)
+        throw std::runtime_error("This player credential belongs to another community.");
+    pending_player_generation = player_generation;
+    pending_player_remember = remember;
+    pending_player_forget = forget;
+    try {
+        pending_player = player_reader(player_context_url, std::move(credential));
+        player_error = false;
+        player_message = "Checking your community profile...";
+    } catch (const std::exception &e) {
+        player_message = e.what();
+        player_error = true;
+    }
+}
+void App::use_saved_player() {
+    player_restore_requested = false;
+    if (pending_player.valid() || player_context_server.empty())
+        return;
+    try {
+        auto credential = player_loader(data, player_context_url, player_context_server);
+        if (!credential) {
+            player_message =
+                "No saved sign-in. Import a credential from this community's operator.";
+            return;
+        }
+        player_remembered = true;
+        begin_player_request(std::move(*credential));
+    } catch (const std::exception &e) {
+        player_message = e.what();
+        player_error = true;
+    }
+}
+void App::sign_out_player() {
+    player_restore_requested = false;
+    player_options_open = true;
+    try {
+        if (!player_context_server.empty())
+            player_forgetter(data, player_context_url, player_context_server);
+        ++player_generation;
+        player.reset();
+        player_credential.reset();
+        player_remembered = false;
+        player_message = "Signed out. The saved credential for this community was forgotten.";
+        player_error = false;
+    } catch (const std::exception &e) {
+        // Still invalidate in-flight sign-in and clear local authenticated state.
+        ++player_generation;
+        player.reset();
+        player_credential.reset();
+        player_message = e.what();
+        player_error = true;
+    }
+}
+void App::draw_player(void *owner) {
+    section_head("Community profile");
+    bool available = !player_context_server.empty() && service &&
+                     std::find(service->capabilities.begin(), service->capabilities.end(),
+                               "profiles") != service->capabilities.end();
+    if (player) {
+        ImGui::PushFont(heading);
+        wrap(player->name);
+        ImGui::PopFont();
+        text(std::to_string(player->xp) + " XP / " + std::to_string(player->missions_completed) +
+             (player->missions_completed == 1 ? " mission completed" : " missions completed"));
+        text("Saved loadout: " + std::to_string(player->loadout.size()) + " entries");
+        subdued(player_remembered ? "Sign-in remembered on this Windows account."
+                                  : "Signed in for this launcher session.");
+        gap(10);
+    }
+    if (player_error || !player) {
+        if (player_error)
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{1, .58f, .48f, 1});
+        wrap(player_message);
+        if (player_error)
+            ImGui::PopStyleColor();
+        gap(8);
+    }
+    if (player_credential) {
+        ImGui::BeginDisabled(!available || pending_player.valid());
+        if (ImGui::Button("Refresh profile"))
+            begin_player_request(*player_credential);
+        ImGui::EndDisabled();
+        if (ImGui::GetContentRegionAvail().x >= 290)
+            ImGui::SameLine();
+    }
+    if (player || pending_player.valid() || player_remembered) {
+        ImGui::BeginDisabled(!available);
+        if (ImGui::Button("Sign out and forget"))
+            sign_out_player();
+        ImGui::EndDisabled();
+        gap(10);
+    }
+    ImGui::SetNextItemOpen(player_options_open, ImGuiCond_Always);
+    player_options_open = ImGui::CollapsingHeader("Sign-in options");
+    if (player_options_open) {
+        ImGui::BeginDisabled(!available || pending_player.valid());
+        ImGui::Checkbox("Remember sign-in", &remember_sign_in);
+        if (ImGui::Button("Import player credential...")) {
+            try {
+                if (auto file = credential_picker(owner)) {
+                    auto credential =
+                        parse_player_credential(read_text(*file, 16384), player_context_server);
+                    begin_player_request(std::move(credential), remember_sign_in,
+                                         !remember_sign_in);
+                }
+            } catch (const std::exception &e) {
+                player_message = e.what();
+                player_error = true;
+            }
+        }
+        if (ImGui::Button("Use saved sign-in"))
+            use_saved_player();
+        ImGui::EndDisabled();
+    }
+    gap(10);
+    subdued("Independent community progression.");
+}
 void App::tick() {
     const auto ready = [](auto &future) {
         return future.valid() &&
@@ -213,6 +359,7 @@ void App::tick() {
             service = std::move(result.status);
             campaign = std::move(result.campaign);
             connected_id = service ? selected->id : "";
+            connected_url = service ? selected->url : "";
             notice_error = !service;
             notice = service ? "Connected to " + service->name + "." : result.error;
             if (service && !result.campaign_error.empty()) {
@@ -221,6 +368,53 @@ void App::tick() {
             }
         }
     }
+    sync_player_context();
+    if (ready(pending_player)) {
+        try {
+            auto result = pending_player.get();
+            if (pending_player_generation == player_generation) {
+                if (result.profile && result.credential &&
+                    result.credential->community_id == player_context_server &&
+                    result.profile->id == result.credential->player_id) {
+                    if (!player || player->id != result.profile->id || pending_player_remember ||
+                        pending_player_forget)
+                        player_options_open = false;
+                    player = std::move(result.profile);
+                    player_credential = std::move(result.credential);
+                    player_error = false;
+                    player_message = "Signed in to " + service->name + ".";
+                    try {
+                        if (pending_player_remember) {
+                            player_saver(data, player_context_url, *player_credential);
+                            player_remembered = true;
+                        } else if (pending_player_forget) {
+                            player_forgetter(data, player_context_url, player_context_server);
+                            player_remembered = false;
+                        }
+                    } catch (const std::exception &e) {
+                        player_message += " " + std::string(e.what());
+                        player_error = true;
+                        player_remembered = false;
+                    }
+                } else {
+                    player.reset();
+                    player_credential.reset();
+                    player_options_open = true;
+                    player_message = result.error.empty()
+                                         ? "The community sign-in could not be verified."
+                                         : result.error;
+                    player_error = true;
+                }
+            }
+        } catch (const std::exception &e) {
+            if (pending_player_generation == player_generation) {
+                player_message = e.what();
+                player_error = true;
+            }
+        }
+    }
+    if (player_restore_requested && !pending_player.valid())
+        use_saved_player();
     if (pending_identity.valid() &&
         pending_identity.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
         try {
@@ -403,6 +597,7 @@ void App::draw(void *owner) {
 
         ImGui::EndChild();
     } else if (page == 1) {
+        ImGui::BeginChild("campaign-state", {available * .63f, 0});
         section_head("Community campaign");
         ImGui::BeginDisabled(!community() || pending.valid());
         if (ImGui::Button(pending.valid() ? "Refreshing campaign..." : "Refresh campaign")) {
@@ -464,6 +659,11 @@ void App::draw(void *owner) {
                  "a service advertising campaign.read.");
         } else
             wrap("Select a community and check its connection to load its campaign.");
+        ImGui::EndChild();
+        ImGui::SameLine(0, 24);
+        ImGui::BeginChild("community-player", {0, 0});
+        draw_player(owner);
+        ImGui::EndChild();
     } else if (page == 2) {
         float left = available * .58f;
         ImGui::BeginChild("community-list", {left, 0});
@@ -548,8 +748,9 @@ void App::draw(void *owner) {
         }
         ImGui::EndDisabled();
         gap(18);
-        subdued("Enter a community's base HTTPS address. Status checks use /v1/status and send no "
-                "account credentials.");
+        subdued("Enter a community's base HTTPS address. Public status checks send no account "
+                "credentials. "
+                "A remembered sign-in can then refresh your profile separately.");
         gap();
         subdued("HTTP is available only for local development on loopback addresses.");
         ImGui::EndChild();

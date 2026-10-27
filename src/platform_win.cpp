@@ -111,7 +111,8 @@ void http_check(BOOL ok) {
         throw std::runtime_error("Connection failed (Windows HTTP " +
                                  std::to_string(GetLastError()) + ")");
 }
-std::string get_json(const std::string &url, const std::string &suffix, size_t limit) {
+std::string get_json(const std::string &url, const std::string &suffix, size_t limit,
+                     const std::string &token = {}) {
     auto e = parse_endpoint(url);
     HttpHandle session(WinHttpOpen(L"CommunityDivers/0.1", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
                                    WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0));
@@ -127,7 +128,10 @@ std::string get_json(const std::string &url, const std::string &suffix, size_t l
     DWORD redirect = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
     http_check(
         WinHttpSetOption(query, WINHTTP_OPTION_REDIRECT_POLICY, &redirect, sizeof(redirect)));
-    http_check(WinHttpSendRequest(query, L"Accept: application/json\r\n", static_cast<DWORD>(-1),
+    auto headers = std::wstring(L"Accept: application/json\r\n");
+    if (!token.empty())
+        headers += L"Authorization: Bearer " + wide(token) + L"\r\n";
+    http_check(WinHttpSendRequest(query, headers.c_str(), static_cast<DWORD>(headers.size()),
                                   WINHTTP_NO_REQUEST_DATA, 0, 0, 0));
     http_check(WinHttpReceiveResponse(query, nullptr));
     DWORD status = 0, size = sizeof(status);
@@ -147,8 +151,9 @@ std::string get_json(const std::string &url, const std::string &suffix, size_t l
         if (!received)
             break;
         if (body.size() + received > limit)
-            throw std::runtime_error((limit == 262144 ? "Service response exceeds 256 KiB"
-                                                      : "Campaign response exceeds 1 MiB"));
+            throw std::runtime_error(limit == 262144  ? "Service response exceeds 256 KiB"
+                                     : limit == 32768 ? "Profile response exceeds 32 KiB"
+                                                      : "Campaign response exceeds 1 MiB");
         body.append(buffer, received);
     }
     return body;
@@ -173,6 +178,36 @@ ProbeResult request(const std::string &url) {
 }
 
 } // namespace
+PlayerResult request_player_profile(const std::string &url, PlayerCredential credential) {
+    try {
+        encode_player_credential(credential);
+        // Check identity without credentials before sending a bearer to this origin.
+        auto status = parse_status(get_json(url, "/v1/status", 262144));
+        if (status.id != credential.community_id ||
+            std::find(status.capabilities.begin(), status.capabilities.end(), "profiles") ==
+                status.capabilities.end())
+            throw std::runtime_error("This endpoint no longer identifies the credential's "
+                                     "community or does not support profiles.");
+        auto profile = parse_player_profile(get_json(url, "/v1/me", 32768, credential.token),
+                                            credential.player_id);
+        return {std::move(profile), std::move(credential), {}};
+    } catch (const std::exception &e) {
+        return {{}, {}, e.what()};
+    }
+}
+std::future<PlayerResult> request_player_profile_async(std::string url,
+                                                       PlayerCredential credential) {
+    auto promise = std::make_shared<std::promise<PlayerResult>>();
+    auto future = promise->get_future();
+    std::thread([promise, url = std::move(url), credential = std::move(credential)]() mutable {
+        try {
+            promise->set_value(request_player_profile(url, std::move(credential)));
+        } catch (...) {
+            promise->set_exception(std::current_exception());
+        }
+    }).detach();
+    return future;
+}
 std::future<ProbeResult> probe_service(std::string url) {
     auto promise = std::make_shared<std::promise<ProbeResult>>();
     auto future = promise->get_future();

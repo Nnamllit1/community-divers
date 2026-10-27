@@ -175,6 +175,62 @@ int main() {
             campaign["planets"][0]["liberation"] = 1000001;
             rejects([&] { parse_campaign(campaign.dump(), "test"); });
         });
+        test("player credentials are community scoped and never expose parse fragments", [] {
+            PlayerCredential c{"test-community", std::string(32, 'a'),
+                               "cdp_" + std::string(64, 'b')};
+            auto j = encode_player_credential(c);
+            require(parse_player_credential(j.dump(), c.community_id).player_id == c.player_id,
+                    "Credential fields lost");
+            rejects([&] { parse_player_credential(j.dump(), "another"); });
+            auto bad = j;
+            bad["token"] = "cdp_inject\r\nAuthorization: bad";
+            rejects([&] { parse_player_credential(bad.dump(), c.community_id); });
+            rejects([&] { parse_player_credential(std::string(16385, 'x'), c.community_id); });
+            auto duplicate = j.dump();
+            duplicate.insert(1, "\"schema\":1,");
+            rejects([&] { parse_player_credential(duplicate, c.community_id); });
+            rejects([&] {
+                parse_player_credential("{\"token\":" + std::string(2000, '[') + "0" +
+                                            std::string(2000, ']') + "}",
+                                        c.community_id);
+            });
+            auto malformed = "{\"token\":\"" + c.token + "\",bad";
+            try {
+                parse_player_credential(malformed, c.community_id);
+                throw std::logic_error("Accepted malformed credential");
+            } catch (const std::runtime_error &e) {
+                require(std::string(e.what()).find(c.token) == std::string::npos,
+                        "Credential leaked into diagnostics");
+            }
+        });
+        test("player profile replies bind ownership and enforce bounded progression/loadouts", [] {
+            auto pid = std::string(32, 'a');
+            json j{{"id", pid},
+                   {"name", "Profile"},
+                   {"xp", 12},
+                   {"missions_completed", 2},
+                   {"loadout", {{"armor", "test"}}}};
+            auto p = parse_player_profile(j.dump(), pid);
+            require(p.xp == 12 && p.loadout.at("armor") == "test", "Player profile fields lost");
+            rejects([&] { parse_player_profile(j.dump(), std::string(32, 'b')); });
+            auto bad = j;
+            bad["xp"] = -1;
+            rejects([&] { parse_player_profile(bad.dump(), pid); });
+            bad = j;
+            bad["xp"] = uint64_t(INT64_MAX) + 1;
+            rejects([&] { parse_player_profile(bad.dump(), pid); });
+            bad = j;
+            bad["loadout"] = {{"blob", std::string(8192, 'x')}};
+            rejects([&] { parse_player_profile(bad.dump(), pid); });
+            rejects([&] {
+                parse_player_profile("{\"loadout\":" + std::string(2000, '[') + "0" +
+                                         std::string(2000, ']') + "}",
+                                     pid);
+            });
+            bad = j;
+            bad["name"] = "hidden\nline";
+            rejects([&] { parse_player_profile(bad.dump(), pid); });
+        });
         test("exact client fingerprint catalog never grants integration", [] {
             ClientIdentity identity;
             identity.installation.valid = true;

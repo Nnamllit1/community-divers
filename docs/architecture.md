@@ -16,7 +16,9 @@ from a real community service. Empty campaigns remain empty until configured. Th
 client integration capability is unavailable, so a remote service claiming to
 support a build cannot enable game launch by itself.
 
-Settings and mod manifests stay in the launcher's own user-data directory. Merely
+Settings and mod manifests stay in the launcher's own user-data directory.
+Player sign-ins use scoped Windows Credential Manager entries; authenticated
+profile requests verify community/player identity and never follow redirects. Merely
 discovering an installation never changes the game, its settings or Steam Cloud.
 
 ## Planned game integration

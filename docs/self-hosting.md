@@ -84,9 +84,10 @@ Create a player credential file without printing its token:
 CommunityDiversService player community-data --name "Player name" --output player.credential.json
 ```
 
-Deliver that file privately to its owner. Launcher profile login and self-service
-registration/revocation are not implemented yet; the current profile API is for
-adapter/service development. Protect credentials as passwords.
+Deliver that file privately to its owner. Players import it from the launcher's
+Campaign view after checking the community connection. See [player profiles](player-profiles.md)
+for remembered sign-in and sign-out. Self-service registration and server-side
+credential rotation/revocation are not implemented yet. Protect credentials as passwords.
 
 Operators can configure arbitrary bounded content identifiers through the JSON
 API. Identifiers are community configuration until a supported game adapter maps

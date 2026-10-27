@@ -348,7 +348,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             graphics_context->ClearRenderTargetView(target.Get(), clear);
             ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
             if (!capture_path.empty() && ++frames >= 4 &&
-                (!check_selected || !app.pending.valid())) {
+                (!check_selected || (!app.pending.valid() && !app.pending_player.valid()))) {
                 capture(capture_path);
                 done = true;
             }

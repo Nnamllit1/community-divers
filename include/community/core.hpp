@@ -91,6 +91,17 @@ struct CampaignSnapshot {
     std::vector<CampaignTemplate> templates;
 };
 CampaignSnapshot parse_campaign(const std::string &body, const std::string &community_id);
+struct PlayerCredential {
+    std::string community_id, player_id, token;
+};
+struct PlayerProfile {
+    std::string id, name;
+    uint64_t xp = 0, missions_completed = 0;
+    json loadout = json::object();
+};
+PlayerCredential parse_player_credential(const std::string &body, const std::string &community_id);
+json encode_player_credential(const PlayerCredential &credential);
+PlayerProfile parse_player_profile(const std::string &body, const std::string &player_id);
 ServiceStatus parse_status(const std::string &body);
 std::string launch_blocker(const Installation &game, const ServiceStatus *service);
 } // namespace cd

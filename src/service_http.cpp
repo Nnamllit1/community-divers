@@ -13,7 +13,11 @@ json body(const httplib::Request &request) {
     if (type != "application/json" && !type.starts_with("application/json;"))
         throw Error(415, "content_type", "Use application/json");
     try {
-        return json::parse(request.body);
+        return json::parse(request.body, [](int depth, json::parse_event_t, json &) {
+            if (depth > 32)
+                throw Error(400, "invalid_json", "JSON nesting exceeds 32 levels");
+            return true;
+        });
     } catch (const json::exception &) {
         throw Error(400, "invalid_json", "Request is not valid JSON");
     }

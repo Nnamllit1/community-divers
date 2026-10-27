@@ -64,7 +64,7 @@ The payload is persisted service state, not a proof of native game compatibility
 ## Authenticated service operations
 
 Use `Authorization: Bearer TOKEN`. No cookies, query-string credentials or official
-account identifiers are used. Mutation bodies must be JSON and at most 64 KiB.
+account identifiers are used. Mutation bodies must be JSON, at most 64 KiB and no more than 32 levels deep.
 Errors return a JSON `error` code and `message`; secrets and SQL details are omitted.
 
 | Method/path | Credential | Behavior |
@@ -96,3 +96,7 @@ is the original result snapshot; GET `/v1/me` provides the latest profile.
 Live mission execution, contribution validation against game callbacks, campaign
 scheduling, operations, voting and realtime gameplay transport are not implemented.
 See [self-hosting](self-hosting.md) for initialization, credentials and recovery.
+
+The native launcher imports an operator-issued player credential and checks the
+community/player identities before remembering it. See [player profiles](player-profiles.md)
+for the sign-in, storage and local sign-out contract.

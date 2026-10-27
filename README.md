@@ -37,6 +37,7 @@ and verify it with the accompanying SHA-256 file.
 - Export read-only client fingerprints for exact-build integration analysis.
 - Prepare and verify an independent game-file copy using installed Steam depot inventories.
 - Display a connected community service's persisted campaign and mission templates.
+- Import community player credentials, remember sign-in securely and read live progression.
 
 Current builds check a signed preview feed and stage verified downloads. Portable
 packages support Install and restart with startup checks, rollback and interrupted
@@ -63,8 +64,8 @@ are deduplicated transactionally, and backups/restores use verified snapshots.
 The service binds to loopback behind an operator-managed HTTPS proxy.
 
 See [self-hosting](docs/self-hosting.md) and [the service contract](docs/service-contract.md).
-The game adapter, lobby transport, scheduling/voting and launcher account login
-remain in development. API mission results are not native gameplay verification.
+See [player profiles](docs/player-profiles.md) for launcher sign-in.
+The game adapter, lobby transport and scheduling/voting remain in development. API mission results are not native gameplay verification.
 
 ## Development
 

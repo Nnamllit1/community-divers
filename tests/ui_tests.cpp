@@ -342,6 +342,7 @@ int main() {
                     "Community version requirements did not reach the launcher view");
             std::cout << "PASS add, save and check community through widgets\n";
             auto connected = *ui.app->service;
+            connected.capabilities = {"campaign.read", "profiles"};
             cd::CampaignSnapshot snapshot;
             snapshot.community_id = connected.id;
             snapshot.name = "Persisted test war";
@@ -364,6 +365,112 @@ int main() {
                     "Refreshed campaign did not reach the actual Campaign view");
             ui.app->community_checker = cd::probe_service;
             std::cout << "PASS campaign refresh and persisted snapshot view\n";
+
+            std::optional<cd::PlayerCredential> saved_credential;
+            int credential_saves = 0, credential_forgets = 0, profile_requests = 0;
+            cd::PlayerCredential credential{connected.id, std::string(32, 'a'),
+                                            "cdp_" + std::string(64, 'b')};
+            auto credential_file = fixture.data / "player.credential.json";
+            write(credential_file, cd::encode_player_credential(credential).dump());
+            ui.app->credential_picker = [&](void *) { return std::optional{credential_file}; };
+            ui.app->player_loader = [&](const auto &, const auto &, const auto &) {
+                return saved_credential;
+            };
+            ui.app->player_saver = [&](const auto &, const auto &, const auto &value) {
+                saved_credential = value;
+                ++credential_saves;
+            };
+            ui.app->player_forgetter = [&](const auto &, const auto &, const auto &) {
+                saved_credential.reset();
+                ++credential_forgets;
+            };
+            cd::PlayerProfile account;
+            account.id = credential.player_id;
+            account.name = "Widget player";
+            account.xp = 120;
+            account.missions_completed = 3;
+            account.loadout = {{"helmet", "test"}};
+            ui.app->player_reader = [&](const std::string &, cd::PlayerCredential value) {
+                ++profile_requests;
+                std::promise<cd::PlayerResult> promise;
+                promise.set_value({account, std::move(value), {}});
+                return promise.get_future();
+            };
+            ui.click("Import player credential...");
+            ui.frame();
+            require(ui.app->player && ui.app->player->name == account.name && saved_credential &&
+                        credential_saves == 1,
+                    "Credential import did not authenticate and remember the profile");
+            require(cd::read_text(fixture.data / "launcher.json").find(credential.token) ==
+                        std::string::npos,
+                    "Credential leaked into launcher settings");
+            account.xp = 150;
+            ui.click("Refresh profile");
+            ui.frame();
+            require(ui.app->player->xp == 150 && credential_saves == 1 && profile_requests == 2,
+                    "Profile refresh did not use authenticated state");
+            std::cout
+                << "PASS profile import, remembered sign-in and authenticated refresh widgets\n";
+            ImGui::GetIO().DisplaySize = {1040, 730};
+            ui.frame();
+            for (const auto *label : {"Refresh profile", "Sign out and forget"}) {
+                auto item = ui.find(label);
+                auto *window = ImGui::FindWindowByName(item.window.c_str());
+                require(window && window->ClipRect.Contains(item.rect),
+                        "Profile actions are clipped at minimum size");
+            }
+            ImGui::GetIO().DisplaySize = {1440, 900};
+            ui.frame();
+            std::cout << "PASS compact signed-in profile and actions at minimum window size\n";
+            ui.click("Sign-in options");
+            auto wrong = cd::encode_player_credential(credential);
+            wrong["community_id"] = "wrong-community";
+            write(credential_file, wrong.dump());
+            ui.click("Import player credential...");
+            require(ui.app->player_error && profile_requests == 2 && credential_saves == 1,
+                    "Wrong-community credential reached the request or vault");
+            write(credential_file, cd::encode_player_credential(credential).dump());
+            ui.click("Remember sign-in");
+            ui.click("Import player credential...");
+            ui.frame();
+            require(ui.app->player && !saved_credential && !ui.app->player_remembered,
+                    "Session-only import retained a saved credential");
+            std::cout << "PASS credential identity errors and session-only sign-in\n";
+
+            ui.click("Sign-in options");
+            auto deferred = std::make_shared<std::promise<cd::PlayerResult>>();
+            ui.app->player_reader = [deferred](auto, auto) { return deferred->get_future(); };
+            ui.click("Import player credential...");
+            ui.click("Sign out and forget");
+            deferred->set_value({account, credential, {}});
+            ui.frame();
+            require(!ui.app->player && !saved_credential && credential_saves == 1,
+                    "Late sign-in undid explicit sign-out");
+            std::cout << "PASS in-flight sign-in cannot undo sign-out\n";
+
+            auto switched = std::make_shared<std::promise<cd::PlayerResult>>();
+            ui.app->player_reader = [switched](auto, auto) { return switched->get_future(); };
+            ui.click("Import player credential...");
+            ui.page(2);
+            ui.type("##name", "Other profile community");
+            ui.type("##url", "http://localhost:1");
+            ui.click("Add community");
+            ui.click("Remove selected");
+            ui.app->community_checker = [connected, snapshot](auto) {
+                std::promise<cd::ProbeResult> p;
+                cd::ProbeResult result{connected, {}};
+                result.campaign = snapshot;
+                p.set_value(std::move(result));
+                return p.get_future();
+            };
+            ui.click("Check selected");
+            ui.wait_for_probe();
+            switched->set_value({account, credential, {}});
+            ui.frame();
+            require(!ui.app->player && !saved_credential && credential_saves == 1,
+                    "Switching away and back accepted an old sign-in");
+            ui.app->community_checker = cd::probe_service;
+            std::cout << "PASS community switches discard old authenticated responses\n";
 
             ui.page(3);
             ui.type("##profile", "Solo");

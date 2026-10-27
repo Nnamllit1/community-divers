@@ -75,6 +75,7 @@ objective can stay stable while the roadmap evolves.
 - [x] Add a native SQLite/HTTP service with scoped community credentials, profile/
   loadout storage, operator-configured planets/templates and deduplicated solo results.
 - [x] Display real persisted campaign snapshots in the launcher.
+- [x] Import community player credentials, remember sign-in securely and display live profiles.
 - [x] Verify process restart continuity and the initial native backup/restore path.
 - [x] Publish a versioned launcher/service contract and a self-hosting guide.
 - [ ] Persist accounts, profile ownership, loadouts, progression and mission results.
