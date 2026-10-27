@@ -53,6 +53,15 @@ The job was then terminated by the probe; its timeout exit code is not a game
 crash code. All 180 checked copy-file/directory access descriptors matched their
 pre-probe values after cleanup.
 
+A subsequent bounded probe captured the runtime child's main thread in the
+Windows dialog message loop, with frames in `DialogBoxParamW`. Static resources
+include a crash-report dialog and a hardware-test dialog, but the displayed dialog
+and any underlying exception have not been identified. This distinguishes the
+observed wait from engine startup without assigning an unverified failure cause.
+A separate fixture proved descendant cleanup after the parent had already exited.
+The probe verified an empty job before restoring access and removing its profile;
+all 180 checked access descriptors and five bootstrap file hashes were unchanged.
+
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The
 remaining runtime dependency or failure must be identified before selecting an
