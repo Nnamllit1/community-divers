@@ -84,6 +84,9 @@ are separate transport options with different integration and latency costs.
 
 Mod support does not imply every mod combination is network-compatible. Lobbies
 will advertise their required client and gameplay mod profile before joining.
+The [mod trust design](mod-trust.md) keeps server requirements separate from local
+execution approval; the [HellForge evaluation](hellforge-evaluation.md) records
+loader reuse, license boundaries and the unresolved current-build dependency.
 
 The [client inspection contract](client-integration.md) separates observed binary
 identity from adapter availability. Identity reports never grant game launch.

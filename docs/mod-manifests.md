@@ -20,3 +20,7 @@ execute mod code. Enabled IDs are persisted separately in each named profile.
 
 Deployment into an isolated game copy is not implemented yet. An enabled profile
 entry is a saved selection, not proof that a mod has been loaded into the game.
+
+Community-required profiles and code approval are specified in the planned
+[mod trust model](mod-trust.md). Schema 1 above is metadata only and does not
+grant execution permission or describe a deployable package.

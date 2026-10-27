@@ -33,6 +33,14 @@ objective can stay stable while the roadmap evolves.
   profiles, joins/rejoins and relays that avoid player-side port forwarding.
 - HTTPS for account/campaign services. Study Steam relays and a WSS/TCP-443
   alternative for gameplay; document measured limits rather than assuming parity.
+- Communities may require exact compatible mod profiles, but a remote requirement
+  must not authorize native-code execution. Follow the [mod trust design](docs/mod-trust.md):
+  locally validated data, bounded sandboxed logic and separate approval for native mods.
+- Reuse HellForge's GPL loader where compatible, preserving its mod exception;
+  keep independently written backend/service code separate. Follow the
+  [licensing plan](docs/licensing-plan.md) before changing license grants or publishing
+  the transition. The plan includes reciprocity, donations/cost recovery and restrictions
+  on gambling and exploitative monetization; the surplus definition remains to be finalized.
 - Mod-friendly community sessions without mandatory client-side anti-cheat.
   Client protection changes may be researched for the isolated community client.
   Authentication, profile ownership and service access remain separate concerns.
@@ -115,6 +123,12 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 
 - [ ] Install/update/remove mods transactionally in the isolated game copy.
 - [ ] Detect incompatible profiles before joining rather than during gameplay.
+- [ ] Validate required mod packages locally and obtain separate, version-specific
+  approval for native code; a community cannot grant itself execution permission.
+- [ ] Verify sandbox limits, package integrity, consent revocation and refusal/rejoin
+  behavior before enabling community-driven mod setup.
+- [ ] Complete the component license transition and GPL-loader distribution obligations
+  without retroactively restricting published MIT code or independently licensed mods.
 - [ ] Provide optional progression snapshot import with a preview and field mapping.
 - [x] Authenticate a signed update channel and stage size/hash-verified package downloads.
 - [x] Install launcher-owned files with process-instance handoff, startup checks,
