@@ -23,3 +23,16 @@ will notice. Use headings, bold emphasis and concise lists. Optional PNG/JPEG im
 use paths under `docs/images/`, referenced as `images/name.png`. The native viewer
 and GitHub release use the same file; publication rejects a component push that
 does not update its release notes. Avoid private development history or test logs.
+
+## Contribution licenses
+
+Submit only work you have permission to contribute. Contributions are offered
+under the terms of the component they modify: MIT for the launcher/shared code,
+Community Divers Service License 1.0 for designated independent service files,
+and the existing GPL/mod-exception terms for HellForge-derived loader work.
+See [component licensing](docs/licensing-plan.md) for the exact file scope.
+
+Preserve attribution, legacy MIT grants and third-party notices. Identify borrowed
+code and its license in the change description. Do not copy GPL code into the
+restricted service or apply service restrictions to independent mods. No copyright
+assignment or permission for arbitrary future relicensing is implied by contributing.

@@ -1030,7 +1030,10 @@ void App::draw(void *owner) {
         gap(18);
         section_head("Project");
         text("https://github.com/Nnamllit1/community-divers");
-        text("Project code: MIT license");
+        text("Launcher and shared code: MIT");
+        wrap("Independent service: Community Divers Service License 1.0. "
+             "Standalone HellForge loader: GPLv3 with its mod exception. "
+             "See docs/licensing-plan.md for component terms and earlier MIT grants.");
         gap(10);
         subdued("An independent community project, unaffiliated with Arrowhead Game Studios or "
                 "Sony Interactive Entertainment.");

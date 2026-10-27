@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+// Copyright (c) 2026 Community Divers contributors
+// Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 #include "community/service.hpp"
 #include <httplib.h>
 namespace cd::service {
@@ -59,6 +62,23 @@ struct Server::Impl {
         http.Get("/healthz",
                  route([](const auto &) { return json{{"ok", true}, {"protocol", 1}}; }));
         http.Get("/v1/status", route([this](const auto &) { return store.status(); }));
+        http.Get("/v1/source", route([this](const auto &) {
+                     return source_information(store.config());
+                 }));
+        http.Get("/", [this](const auto &, auto &response) {
+            const auto url = source_information(store.config())["url"].get<std::string>();
+            // Config validation excludes HTML delimiters and permits only HTTPS URLs.
+            const auto link = url.empty()
+                                  ? std::string("Source link not configured by the operator.")
+                                  : "<a href=\"" + url + "\">Source for this service version</a>";
+            response.set_header("Content-Security-Policy", "default-src 'none'");
+            response.set_header("X-Content-Type-Options", "nosniff");
+            response.set_content(
+                "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\">"
+                "<title>Community Divers service</title><h1>Community Divers service</h1>"
+                "<p>Community Divers Service License 1.0</p><p>" + link + "</p></html>",
+                "text/html; charset=utf-8");
+        });
         http.Get("/v1/campaign", route([this](const auto &) { return store.campaign(); }));
         http.Get("/v1/me", route([this](const auto &r) { return store.profile(bearer(r)); }));
         http.Put("/v1/me/loadout",

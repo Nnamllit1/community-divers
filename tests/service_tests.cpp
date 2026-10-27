@@ -1,5 +1,9 @@
+// SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+// Copyright (c) 2026 Community Divers contributors
+// Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 #include "community/service.hpp"
 #include <httplib.h>
+#include "community/version.hpp"
 #ifdef _WIN32
 #include "community/platform.hpp"
 #include "profile_http_fixture.hpp"
@@ -84,9 +88,30 @@ int main() {
         config.id = "test-community";
         config.name = "Test Community";
         config.campaign = "Persistent war";
+        config.source_url = "https://example.org/source/test-revision";
         config.game_builds = {"12345"};
         config.required_launcher_release = "test-launcher";
         config.required_release_set = "test-set";
+        test("service source identity and configuration", [&] {
+            require(parse_config(encode_config(config)).source_url == config.source_url,
+                    "Source URL lost during configuration round trip");
+            auto default_source = config;
+            default_source.source_url.clear();
+            auto source = source_information(default_source);
+            if (version::source_dirty || version::source_commit.size() != 40)
+                require(source["url"] == "", "Dirty build claims published exact source");
+            else
+                require(source["url"] == "https://github.com/Nnamllit1/community-divers/tree/" +
+                                            std::string(version::source_commit),
+                        "Clean source link is not pinned to the built revision");
+            for (const auto *url : {"http://127.0.0.1/source", "javascript:alert(1)",
+                                    "https://user@example.org/source", "https://example.org/<script>",
+                                    "https://example.org/\"onclick=evil", "https://example.org/a\n"}) {
+                auto bad = encode_config(config);
+                bad["source_url"] = url;
+                rejects([&] { parse_config(bad); });
+            }
+        });
         auto data = root / "state";
         initialize(data, config);
         auto admin = read_text(data / "operator.token");
@@ -118,6 +143,19 @@ int main() {
             httplib::Client client("127.0.0.1", live.port);
             client.set_connection_timeout(2, 0);
             client.set_read_timeout(5, 0);
+            test("public source link uses the running configuration", [&] {
+                auto source = response(client.Get("/v1/source"));
+                require(source["url"] == config.source_url &&
+                            source["license"] == "LicenseRef-Community-Divers-Service-1.0",
+                        "Service source notice is missing or incorrect");
+                require(response(client.Get("/v1/status"))["source"] == source,
+                        "Status and source endpoints disagree");
+                auto page = client.Get("/");
+                require(page && page->status == 200 &&
+                            page->body.find("href=\"" + config.source_url + "\"") != std::string::npos &&
+                            page->get_header_value("Content-Security-Policy") == "default-src 'none'",
+                        "User-facing source link is missing");
+            });
             test("real HTTP status and empty persisted campaign", [&] {
                 auto status = response(client.Get("/v1/status"));
                 require(parse_status(status.dump()).id == config.id,

@@ -1,3 +1,17 @@
+Community Divers license scope
+
+The MIT grant below is the default for project material, except:
+- src/service/, include/community/service.hpp, tests/service_tests.cpp, and
+  examples/service/: Community Divers Service License 1.0, in
+  docs/licenses/community-divers-service-1.0.md.
+- integrations/hellforge-loader/: its GPLv3, mod exception and SDK notices.
+- Third-party material: its own notices and grants.
+
+See docs/licensing-plan.md for the exact transition and coverage. Earlier MIT
+permissions remain valid for previously supplied material, including unchanged
+material carried forward. This notice does not revoke or narrow those grants.
+The following notice is retained for default-MIT and legacy MIT material.
+
 MIT License
 
 Copyright (c) 2026 Community Divers contributors

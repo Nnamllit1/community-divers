@@ -1,110 +1,74 @@
-# Component licensing plan
+# Component licensing
 
-This is a policy design, not a replacement license grant. The repository's current
-[LICENSE](../LICENSE) remains MIT for the existing launcher/service. The separate
-[loader build integration](../integrations/hellforge-loader/README.md) now carries
-GPLv3 and the mod exception; it is not part of the launcher distribution. Already
-published MIT copies retain their existing permissions. Third-party components
-retain their own licenses. The [review draft](service-license-draft.md) makes the
-proposed funding and source-sharing rules concrete; it is not in force.
+The Community Divers Service License 1.0 is effective for the designated service
+component from the commit titled **Adopt Community Divers Service License 1.0**.
+The launcher remains MIT. The standalone HellForge loader retains GPLv3 and its
+mod exception. No service restrictions apply to that loader, its permissive SDK,
+or independent mods and clients.
 
-## Intended split
+## Coverage
 
-- General launcher, patch-note components and reusable shared utilities: retain MIT.
-- Reused HellForge loader and modifications: GPLv3 with HellForge's mod exception,
-  including corresponding-source and notice obligations. The permissive SDK may
-  be used under its MIT-0 grant. See the [component review](hellforge-evaluation.md).
-- Independently written campaign/backend services: a reciprocal source-available
-  license with defined monetization restrictions. Do not apply those restrictions
-  to HellForge-derived code or independent mods through a blanket repository notice.
-
-Reciprocity should require distributors to provide corresponding source and
-operators of modified network services to offer that source to their users,
-including changes and the material needed to build the covered service. Independent
-mods and unrelated programs should retain their own licenses. The precise covered
-files, interfaces, notices and packaging rules must be documented before adoption.
-
-## Funding policy
-
-Genuine voluntary donations are unlimited, including amounts retained by the
-operator. They must not purchase or be expected in exchange for a benefit. Paid
-purely decorative ranks, titles and profile badges are permitted within a separate
-cap, along with disclosed shared hosting-cost contributions. Paid pets and other
-cosmetics remain a possible future extension.
-
-The paid-revenue allowance is **twice actual monthly eligible operating costs**.
-This is a revenue cap, not permission for profit of twice the costs: EUR 100 in
-hosting permits EUR 200 of monthly sales, leaving EUR 100 after hosting. Saving
-that margin for four months builds EUR 400 to pay for another four months without
-sales at the same cost. Donations are outside the cap and do not increase it.
-
-The draft defines prorated infrastructure costs, calendar-month accounting and
-refunds of over-cap sales. The retained lawful margin may be saved without a
-balance cap or taken as operator income. Paying operator salaries or relabeling
-purchases as donations must not enlarge the allowance. Aggregate reporting keeps
-donation and sales income separate without publishing donor identities.
-
-The intended prohibited activities are:
-
-- real-money gambling, paid randomized rewards and cash-out schemes involving the
-  covered service;
-- selling gameplay advantages, progression, equipment, stats, priority access or
-  privileged influence over the shared campaign;
-- disguising purchases through donation tiers, third parties or bundled memberships
-  to avoid benefit restrictions or the paid-revenue cap.
-
-The [review draft](service-license-draft.md) includes worked examples and the
-source-sharing conditions. These terms have not changed the effective license.
-
-## Proposed coverage and adoption boundary
-
-No file changes license merely because it appears in this table. An adopted
-release needs explicit notices and an exact revision identifying the transition.
-Previously granted MIT permissions and notices must be preserved.
-
-| Material | Proposed treatment |
+| Material | License |
 | --- | --- |
-| Original service implementation in `src/service/`, service implementation API in `include/community/service.hpp`, dedicated `tests/service_tests.cpp`, and service examples | Candidate service-license scope for new copyrightable material; inventory rights and preserve existing MIT grants before adoption. |
-| Launcher, shared data contracts, patch-note renderer, update/installer code and general documentation | Remain MIT; no service restrictions on independent clients or implementations. |
-| `integrations/hellforge-loader/` and fetched HellForge native loader | Existing GPLv3 and mod exception; never add this draft's commercial restrictions. |
-| Third-party libraries, SDK and game files | Their own terms; no relicensing through this proposal. |
+| Original files under `src/service/`, `include/community/service.hpp`, `tests/service_tests.cpp`, and `examples/service/` | [Community Divers Service License 1.0](licenses/community-divers-service-1.0.md); identifier `LicenseRef-Community-Divers-Service-1.0` |
+| Launcher, shared HTTP/data contracts and utilities, client preparation, patch notes, updates, installer, general build scripts and documentation | [MIT](../LICENSE), unless a file supplies its own notice |
+| `integrations/hellforge-loader/` and fetched HellForge native loader | GPLv3 with HellForge's mod exception; SDK portions retain MIT-0 as specified upstream |
+| Third-party dependencies and game files | Their own terms; see [third-party notices](../THIRD_PARTY.md) |
 
-The source-sharing requirement covers modifications derived from the service code,
-not every program on the same network. Separate processes and HTTP interfaces do
-not by themselves establish that code is independent; copied or derived GPL code
-cannot be moved into the restricted service by changing its deployment layout.
-See [GNU's explanation of combined works and communication](https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation).
+The service's C++ implementation API is covered. The public HTTP protocol and
+shared launcher data types remain MIT: an independent service implementation does
+not become covered by implementing the same protocol. Code derived from the
+service remains covered even if placed in a different directory or process.
 
-The draft permits decorative paid ranks and disclosed shared access-cost
-contributions, but no paid gameplay tiers or donor priority. Genuine donations
-remain uncapped. Operator compensation does not increase the cost base used to
-calculate the paid-revenue cap.
+## Earlier MIT permissions remain available
 
-Before adoption, review contributor rights and the final wording with qualified
-legal advice. The draft is a proposal, not a legal opinion or an enforcement
-guarantee. Do not change package licenses, contributor terms or active source
-notices until the transition is actually adopted.
+Service material through commit
+[`7b5c16d7`](https://github.com/Nnamllit1/community-divers/tree/7b5c16d77d12fee071309179e74e7251cfa03453)
+was supplied under MIT. Those permissions and notices remain valid, including for
+unchanged material carried forward. This transition cannot force recipients of
+MIT-licensed material to abandon that grant or prevent an MIT fork of that code.
+The new terms govern new covered material for which no separate MIT permission
+has been given. Do not treat the adoption notice as retroactive exclusivity.
 
-## Transition and compatibility
+The existing service history contains project-authored changes in `8399a73`,
+`ee4fd16` and `502cdeb`; no HellForge backend implementation is incorporated.
+Dependencies keep their notices. Repository authorship history is not a substitute
+for a contributor's assurance that they have permission to submit their work.
 
-This design combines source reciprocity with use restrictions, so the service
-would be source-available rather than OSI open source. Plain GPL/AGPL copyleft does
-not prohibit commercial operation or gambling. See the
-[Open Source Definition](https://opensource.org/osd) and
-[GNU's network-source explanation](https://www.gnu.org/licenses/gpl-faq.en.html#UnreleasedModsAGPL).
+## Operator terms
 
-Before changing effective terms:
+Read the [full license](licenses/community-divers-service-1.0.md) before deploying
+or distributing the service. Its funding rules permit unlimited genuine donations
+and optional decorative ranks, titles and profile badges. Paid monthly revenue,
+including shared access-cost contributions, may not exceed **twice actual monthly
+eligible operating costs**. Donations neither consume nor enlarge that allowance.
 
-1. Identify covered original code and any contributor rights; preserve legacy MIT
-   and third-party notices. New restrictions cannot revoke existing grants.
-2. Review the separate service/loader interfaces and avoid importing GPL code into
-   a component intended to carry incompatible restrictions.
-3. Review the draft definitions, source obligations, donation/sales distinction,
-   monthly paid-revenue cap, prohibited conduct and compliance/remedies.
-4. Review enforceability and compatibility with qualified legal advice, then update
-   file-level notices, contributor terms, installer/package notices and public docs
-   together. Do not label the restricted service as open source.
+At EUR 100 monthly costs, EUR 200 monthly sales leaves EUR 100. Saving four months
+of that margin funds another four months at the same cost without sales. Lawfully
+retained savings have no balance cap. The license defines cost allocation, refunds
+of excess receipts and aggregate reporting. Paid pets and other cosmetics are not
+authorized by version 1.0; they remain a future policy option.
 
-A license provides legal terms, not a technical guarantee against abusive operators.
-Community listing and branding rules can additionally govern the project's own
-directory, but cannot replace the license or prevent independent implementations.
+Gambling, paid randomized rewards, gameplay advantages, donor priority and
+privileged campaign influence are prohibited. Calling a purchase a donation does
+not change its treatment.
+
+Distributors provide the exact corresponding source and notices. Network operators
+make that source available to users, including modifications and build instructions,
+without exposing secrets or player data. See [self-hosting](self-hosting.md).
+
+## Contributions and compatibility
+
+Contributions use the owning component's terms; see [CONTRIBUTING](../CONTRIBUTING.md).
+Do not import GPL-derived code into the restricted service. Communicating over an
+interface does not by itself establish independence if code was copied or derived;
+see [GNU's combined-work guidance](https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation).
+
+The service is source-available, not OSI open source, because it restricts use and
+monetization. See the [Open Source Definition](https://opensource.org/osd).
+The custom text has not received independent legal review and is not an enforcement
+guarantee. Adoption records the project's terms; it does not certify enforceability
+or confer rights to third-party content.
+
+Version 1.0 remains available for material received under it. A future version is a
+separate grant, not a unilateral replacement for existing compliant permissions.

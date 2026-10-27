@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+// Copyright (c) 2026 Community Divers contributors
+// Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 #include "community/service.hpp"
 #include "community/version.hpp"
 #include <sqlite3.h>
@@ -138,6 +141,13 @@ Config parse_config(const json &j) {
     c.game_builds = j.at("game_builds").get<std::vector<std::string>>();
     c.required_release_set = j.value("required_release_set", "");
     c.required_launcher_release = j.value("required_launcher_release", "");
+    c.source_url = j.value("source_url", "");
+    if (!c.source_url.empty()) {
+        auto endpoint = parse_endpoint(c.source_url);
+        if (!endpoint.secure || c.source_url.find_first_of("\"<>&'") != std::string::npos)
+            throw std::runtime_error("Source URL must be a public HTTPS source link");
+        c.source_url = endpoint.canonical;
+    }
     json status{{"protocol", 1}, {"id", c.id}, {"name", c.name}, {"game_builds", c.game_builds}};
     if (!c.required_release_set.empty())
         status["required_release_set"] = c.required_release_set;
@@ -157,7 +167,19 @@ json encode_config(const Config &c) {
         j["required_release_set"] = c.required_release_set;
     if (!c.required_launcher_release.empty())
         j["required_launcher_release"] = c.required_launcher_release;
+    if (!c.source_url.empty())
+        j["source_url"] = c.source_url;
     return j;
+}
+json source_information(const Config &c) {
+    std::string url = c.source_url;
+    if (url.empty() && !version::source_dirty && version::source_commit.size() == 40)
+        url = "https://github.com/Nnamllit1/community-divers/tree/" +
+              std::string(version::source_commit);
+    return {{"license", "LicenseRef-Community-Divers-Service-1.0"},
+            {"url", url},
+            {"source_commit", version::source_commit},
+            {"source_dirty", version::source_dirty}};
 }
 struct Store::Impl {
     sqlite3 *db = nullptr;
@@ -280,7 +302,8 @@ json Store::status() {
            {"game_builds", impl->config.game_builds},
            {"campaign", {{"name", q.str(1)}}},
            {"capabilities", {"campaign.read", "profiles", "mission-ledger"}},
-           {"service_version", version::release_id}};
+           {"service_version", version::release_id},
+           {"source", source_information(impl->config)}};
     if (!impl->config.required_release_set.empty())
         j["required_release_set"] = impl->config.required_release_set;
     if (!impl->config.required_launcher_release.empty())

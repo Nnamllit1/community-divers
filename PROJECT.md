@@ -38,13 +38,12 @@ objective can stay stable while the roadmap evolves.
   locally validated data, bounded sandboxed logic and separate approval for native mods.
 - Reuse HellForge's GPL loader where compatible, preserving its mod exception;
   keep independently written backend/service code separate. Follow the
-  [licensing plan](docs/licensing-plan.md) before changing license grants or publishing
-  the transition. The plan includes reciprocity, unlimited genuine donations and
-  optional decorative ranks, with paid monthly revenue capped at twice actual
-  monthly operating costs, plus restrictions on gambling and paid advantages.
-  The [service license draft](docs/service-license-draft.md) defines the proposed
-  terms; the effective license transition remains unfinished. Paid pets and other
-  cosmetics remain a future policy option.
+  [component licensing](docs/licensing-plan.md). The adopted
+  [Service License 1.0](docs/licenses/community-divers-service-1.0.md) requires source
+  sharing, permits unlimited genuine donations and decorative ranks with paid
+  monthly revenue capped at twice actual monthly operating costs, and prohibits
+  gambling and paid advantages. Earlier MIT grants remain intact. Paid pets and
+  other cosmetics remain a future policy option.
 - Mod-friendly community sessions without mandatory client-side anti-cheat.
   Client protection changes may be researched for the isolated community client.
   Authentication, profile ownership and service access remain separate concerns.
@@ -134,8 +133,10 @@ The [coordinated update design](docs/updates.md) defines channels and release se
   approval for native code; a community cannot grant itself execution permission.
 - [ ] Verify sandbox limits, package integrity, consent revocation and refusal/rejoin
   behavior before enabling community-driven mod setup.
-- [ ] Complete the component license transition and GPL-loader distribution obligations
-  without retroactively restricting published MIT code or independently licensed mods.
+- [x] Adopt the independent service license with explicit component coverage,
+  source/package notices and preserved earlier MIT grants.
+- [ ] Complete GPL-loader distribution obligations before distributing game integration;
+  do not restrict independently licensed mods.
 - [ ] Provide optional progression snapshot import with a preview and field mapping.
 - [x] Authenticate a signed update channel and stage size/hash-verified package downloads.
 - [x] Install launcher-owned files with process-instance handoff, startup checks,

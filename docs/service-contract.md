@@ -100,3 +100,12 @@ See [self-hosting](self-hosting.md) for initialization, credentials and recovery
 The native launcher imports an operator-issued player credential and checks the
 community/player identities before remembering it. See [player profiles](player-profiles.md)
 for the sign-in, storage and local sign-out contract.
+
+## Service source notice
+
+The reference service adds a `source` object to `/v1/status` and returns that same
+object at unauthenticated `GET /v1/source`: `license`, `url`, `source_commit` and
+`source_dirty`. These are informational fields, not authentication or a remote
+installation request. The homepage provides the source link for users in a browser.
+Existing protocol-1 clients ignore the additive fields. A missing source URL on a
+dirty development build is not a claim that upstream matches its modifications.

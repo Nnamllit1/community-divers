@@ -1,0 +1,27 @@
+# MIT: generic packaging support. Service source retains its component terms.
+# An exact Git archive includes source, notices, pins and build instructions;
+# ignored data, credentials, game files and build outputs are never included.
+if(@CD_SOURCE_DIRTY@ OR NOT EXISTS "@GIT_EXECUTABLE@")
+  message(FATAL_ERROR "Server packaging requires a clean Git build for exact corresponding source. Commit changes, reconfigure and rebuild first.")
+endif()
+execute_process(COMMAND "@GIT_EXECUTABLE@" rev-parse HEAD
+  WORKING_DIRECTORY "@PROJECT_SOURCE_DIR@" OUTPUT_VARIABLE current_commit
+  OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE git_result)
+execute_process(COMMAND "@GIT_EXECUTABLE@" status --porcelain
+  WORKING_DIRECTORY "@PROJECT_SOURCE_DIR@" OUTPUT_VARIABLE current_status
+  OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE status_result)
+if(NOT git_result EQUAL 0 OR NOT status_result EQUAL 0 OR
+   NOT current_commit STREQUAL "@CD_SOURCE_COMMIT@" OR NOT current_status STREQUAL "")
+  message(FATAL_ERROR "Source changed after configuration. Reconfigure and rebuild before packaging the service.")
+endif()
+set(source_dir "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/source")
+file(MAKE_DIRECTORY "${source_dir}")
+set(archive "${source_dir}/CommunityDivers-@CD_SOURCE_COMMIT@.zip")
+execute_process(COMMAND "@GIT_EXECUTABLE@" archive --format=zip
+  --prefix=community-divers/ "--output=${archive}" "@CD_SOURCE_COMMIT@"
+  WORKING_DIRECTORY "@PROJECT_SOURCE_DIR@" RESULT_VARIABLE archive_result)
+if(NOT archive_result EQUAL 0)
+  message(FATAL_ERROR "Cannot package corresponding service source.")
+endif()
+file(SHA256 "${archive}" source_sha)
+file(WRITE "${archive}.sha256" "${source_sha}  CommunityDivers-@CD_SOURCE_COMMIT@.zip\n")

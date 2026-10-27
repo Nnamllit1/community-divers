@@ -132,3 +132,26 @@ versions are rejected; no downgrade or destructive recovery is attempted.
 The service refuses unrelated databases and a configuration with another
 community ID. [SQLite's online backup API](https://www.sqlite.org/backup.html)
 provides the underlying consistent database snapshot mechanism.
+
+## License and corresponding source
+
+The independent service uses [Community Divers Service License 1.0](licenses/community-divers-service-1.0.md).
+Its source-sharing and funding terms apply to covered code; earlier MIT grants
+remain intact. Read [component licensing](licensing-plan.md) for scope and the
+unlimited-donation/capped-paid-revenue distinction.
+
+The explicit Server install component requires a clean, committed Git build. It
+includes a `source/` ZIP of that exact revision, a checksum, dependency pins and
+build instructions, plus license notices. Reconfigure and rebuild after changing
+source before installing; packaging rejects dirty or mismatched revisions.
+No credentials, game files, databases or ignored build directories enter the archive.
+
+The service homepage and `GET /v1/source` publish a source link. A clean upstream
+build defaults to its exact GitHub commit. For a fork, modified build or another
+source host, set `source_url` in `config.json` to an accessible HTTPS page/archive
+for the **running version**, including modifications and build instructions. This
+field is retained in backups/restores. Publish that source before serving remote
+users, and keep the link available while providing the service or binary. A dirty
+build has no automatic exact-source link; the CLI prints a configuration reminder.
+The service does not fetch or verify the link, and a Git commit alone does not prove
+that a fork's source was published. Verify availability as part of deployment.

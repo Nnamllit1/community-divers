@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+# Copyright (c) 2026 Community Divers contributors
+# Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 FetchContent_Declare(sqlite URL https://www.sqlite.org/2026/sqlite-amalgamation-3540100.zip
   URL_HASH SHA256=0a9c8e34352dad46006aa82836d5383bff9dc6bc9ce5a60553c05aa30e6ad1f9 DOWNLOAD_EXTRACT_TIMESTAMP TRUE SOURCE_SUBDIR not-added)
 FetchContent_Declare(http URL https://codeload.github.com/yhirose/cpp-httplib/tar.gz/refs/tags/v0.63.0
@@ -27,8 +30,17 @@ else()
 endif()
 add_executable(CommunityDiversService service_main.cpp)
 target_link_libraries(CommunityDiversService PRIVATE community_service)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/service_source.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/service_source.cmake @ONLY)
+install(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/service_source.cmake COMPONENT Server EXCLUDE_FROM_ALL)
 install(TARGETS CommunityDiversService RUNTIME DESTINATION . COMPONENT Server EXCLUDE_FROM_ALL)
 install(FILES ${PROJECT_SOURCE_DIR}/docs/self-hosting.md ${PROJECT_SOURCE_DIR}/docs/service-contract.md ${PROJECT_SOURCE_DIR}/docs/player-profiles.md ${PROJECT_SOURCE_DIR}/LICENSE ${PROJECT_SOURCE_DIR}/THIRD_PARTY.md DESTINATION docs COMPONENT Server EXCLUDE_FROM_ALL)
+install(FILES ${PROJECT_SOURCE_DIR}/docs/licensing-plan.md DESTINATION docs COMPONENT Server EXCLUDE_FROM_ALL)
+install(FILES ${PROJECT_SOURCE_DIR}/docs/licenses/community-divers-service-1.0.md
+  DESTINATION docs/licenses COMPONENT Server EXCLUDE_FROM_ALL)
+install(FILES ${CMAKE_BINARY_DIR}/build-info.json ${PROJECT_SOURCE_DIR}/LICENSE
+  ${PROJECT_SOURCE_DIR}/THIRD_PARTY.md ${PROJECT_SOURCE_DIR}/CONTRIBUTING.md
+  DESTINATION . COMPONENT Server EXCLUDE_FROM_ALL)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/examples/service DESTINATION examples COMPONENT Server EXCLUDE_FROM_ALL)
 install(FILES ${http_SOURCE_DIR}/LICENSE DESTINATION licenses RENAME cpp-httplib.txt COMPONENT Server EXCLUDE_FROM_ALL)
 install(FILES ${json_SOURCE_DIR}/LICENSE.MIT DESTINATION licenses RENAME nlohmann-json.txt COMPONENT Server EXCLUDE_FROM_ALL)

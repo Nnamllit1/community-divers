@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+// Copyright (c) 2026 Community Divers contributors
+// Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 #ifdef _WIN32
 #include <windows.h>
 #include <bcrypt.h>

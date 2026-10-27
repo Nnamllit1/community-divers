@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+// Copyright (c) 2026 Community Divers contributors
+// Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 #include "community/service.hpp"
 #include "community/version.hpp"
 #include <csignal>
@@ -79,6 +82,9 @@ int run_service(int argc, char **argv) {
         }
         if (action != "serve")
             throw std::runtime_error("Unknown service action");
+        if (cd::service::source_information(config)["url"].get<std::string>().empty())
+            std::cerr << "Set source_url in config.json before serving remote users; "
+                         "this build has no exact published source link.\n";
         cd::service::Server server(store);
         int port = server.bind();
         if (port < 1)

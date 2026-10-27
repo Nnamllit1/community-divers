@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LicenseRef-Community-Divers-Service-1.0
+// Copyright (c) 2026 Community Divers contributors
+// Earlier MIT grants remain valid; see LICENSE and docs/licensing-plan.md.
 #pragma once
 #include "community/core.hpp"
 #include <memory>
@@ -11,12 +14,13 @@ struct Error : std::runtime_error {
 };
 struct Config {
     std::string id, name, campaign, host = "127.0.0.1", required_release_set,
-                                    required_launcher_release;
+                                    required_launcher_release, source_url;
     int port = 8080;
     std::vector<std::string> game_builds;
 };
 Config parse_config(const json &value);
 json encode_config(const Config &config);
+json source_information(const Config &config);
 std::string random_hex(size_t bytes);
 std::string sha256_text(std::string_view body);
 std::string sha256_file(const fs::path &file);

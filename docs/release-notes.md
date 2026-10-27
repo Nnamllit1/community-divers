@@ -1,22 +1,23 @@
 # Launcher preview
 
-## Fixed
+## Licensing
 
-  * **Prepared-copy build identification.** Inspect client files now recognizes a
-    prepared game copy without Steam's external manifest. It checks the receipt
-    against all four current binary fingerprints and displays the copied build.
-    Stale or conflicting receipts produce an actionable error.
+  * **Service license 1.0 is adopted.** The independent backend now has explicit
+    source-sharing and funding terms: unlimited genuine donations, capped paid
+    decorative ranks, and no paid gameplay advantages or gambling. Earlier MIT
+    permissions remain valid. The launcher and shared components remain MIT.
+  * Server packages include their exact source archive and license notices.
+    Operators can publish the running service's source link through its public
+    information page. Modified builds can supply their own source URL.
 
 ## For contributors
 
-  * Identity reports distinguish Steam metadata from preparation receipts and
-    include metadata errors. Inspection hashes the same file handles held open
-    throughout the check.
-  * Prepared-copy checks cover receipt validation, changed binaries, metadata
-    conflicts and the build display in the launcher.
+  * The GPL HellForge loader has a separate pinned build and synthetic checks for
+    mod callbacks and hook chaining. It is not included in launcher packages.
+  * Component license coverage, contribution terms and native-mod approval
+    boundaries are documented separately.
 
 ## Current limits
 
-Receipt inspection checks the four diagnostic binaries. Use the copy verifier to
-check every prepared asset. The community game adapter and multiplayer are
-**still in development**; identifying a prepared copy does not enable game launch.
+The launcher remains a **preview**. Current-game startup and community multiplayer
+are still in development. Synthetic loader tests do not establish game compatibility.

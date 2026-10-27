@@ -135,10 +135,13 @@ by Arrowhead Game Studios or Sony Interactive Entertainment.
 
 ## License
 
-Project code is [MIT licensed](LICENSE) except where a component supplies its own
-license. The separate [HellForge loader integration](integrations/hellforge-loader/README.md)
+The launcher and shared components are [MIT licensed](LICENSE). The independent
+backend uses the [Community Divers Service License 1.0](docs/licenses/community-divers-service-1.0.md),
+a source-available license with source-sharing and funding conditions. It permits
+unlimited genuine donations and capped decorative-rank sales, while excluding
+paid gameplay advantages and gambling. Earlier MIT grants remain valid.
+
+The separate [HellForge loader integration](integrations/hellforge-loader/README.md)
 is GPLv3 with HellForge's mod exception and is not included in the launcher package.
-Third-party components retain their own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md).
-The [service licensing plan](docs/licensing-plan.md) and
-[review draft](docs/service-license-draft.md) are proposals; they have not changed
-the service's current MIT terms.
+See [component licensing](docs/licensing-plan.md) for exact scope and
+[THIRD_PARTY.md](THIRD_PARTY.md) for dependency terms.
