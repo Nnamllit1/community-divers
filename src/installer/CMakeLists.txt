@@ -11,5 +11,10 @@ target_compile_definitions(community_zip PUBLIC MINIZ_NO_STDIO MINIZ_NO_ZLIB_COM
 # Setup and portable updates use the same lock, inventory and ownership implementation.
 target_sources(community_maintenance PRIVATE setup_win.cpp)
 if(COMMUNITY_BUILD_LAUNCHER)
+  enable_language(RC)
+  add_executable(CommunityDiversSetup WIN32 setup_main.cpp setup_bundle_win.cpp
+    setup_registration_win.cpp setup.rc setup.manifest)
+  target_compile_definitions(CommunityDiversSetup PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(CommunityDiversSetup PRIVATE community_maintenance dwmapi windowscodecs shell32 ole32)
   install(FILES ${miniz_SOURCE_DIR}/LICENSE DESTINATION licenses RENAME miniz.txt)
 endif()

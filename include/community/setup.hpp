@@ -6,6 +6,11 @@ void require_setup_complete(const fs::path &root);
 void begin_setup_install(const fs::path &root, const std::string &registry_key);
 void verify_setup_files(const fs::path &root);
 void register_setup_install(const fs::path &root, const std::string &registry_key);
+using SetupProgress = std::function<void(size_t, size_t, const std::string &)>;
+void install_setup_payload(const fs::path &payload, const fs::path &root,
+                           const fs::path &uninstaller, const std::string &registry_key,
+                           const SetupProgress &progress = {}, bool interrupt_fixture = false);
+std::string setup_registration_key(const fs::path &root);
 struct UninstallReport {
     size_t deleted = 0, preserved = 0;
 };

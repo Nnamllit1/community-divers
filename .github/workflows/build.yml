@@ -22,6 +22,8 @@ jobs:
           $qa = Get-ChildItem dist-setup-test -Filter '*.exe' | Select-Object -First 1
           python tests/setup_smoke.py --installer $qa.FullName --work "$env:RUNNER_TEMP/community-divers-setup-smoke" --registry-key CommunityDivers-QA --display-name "Community Divers QA"
           if ($LASTEXITCODE -ne 0) { throw 'Installer/uninstaller smoke test failed.' }
+          python tests/setup_native_smoke.py --installer $qa.FullName --work "$env:RUNNER_TEMP/community-divers-native-setup"
+          if ($LASTEXITCODE -ne 0) { throw 'Native setup capture, payload integrity or handoff check failed.' }
           ./tools/build-setup.ps1 -PortableZip $zip.FullName -OutputDirectory dist-setup-interruption -TestIdentity -TestInterrupt
           $interrupted = Get-ChildItem dist-setup-interruption -Filter '*.exe' | Select-Object -First 1
           python tests/setup_repair_smoke.py --installer $qa.FullName --interrupted-installer $interrupted.FullName --work "$env:RUNNER_TEMP/community-divers-setup-repair"

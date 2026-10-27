@@ -18,7 +18,7 @@ application composes these interfaces instead of embedding their implementations
 | `src/client/` | `community_client`: exact-build identity and depot parsing; `CommunityDiversInspect`: inspection/copy CLI |
 | `src/platform/` | `community_platform`: Windows paths, dialogs, credentials, HTTP, hashing and native client-copy preparation |
 | `src/updates/` | `community_update_core`: payload/inventory validation; `community_maintenance`: signed transport, staging and update transactions |
-| `src/installer/` | Setup ownership, verified removal and app-list registration, integrated into `community_maintenance` |
+| `src/installer/` | `CommunityDiversSetup`: native setup/removal UI, embedded package verification and Windows registration; shared ownership/removal policy in `community_maintenance` |
 | `src/service/` | `community_service` and `CommunityDiversService`: independent SQLite/HTTP campaign backend |
 
 `integrations/hellforge-loader/` is an independent GPL native-loader build with
@@ -26,8 +26,8 @@ its own dependency pins, licenses and synthetic fixtures. It is not linked into
 application/service targets or deployed by the launcher. Its current-build port
 and execution-approval integration remain unimplemented.
 
-`installer/` at the repository root holds the NSIS wizard, while `tools/` holds
-packaging/publication commands. Release content is `docs/release-notes.md`, separate
+`tools/` holds packaging/publication commands. The installer is a separate native
+C++ executable with Win32 controls and rendering. Release content is `docs/release-notes.md`, separate
 from its renderer. `tests/` owns the CTest executables. Binaries still go to the
 preset's build directory, so packaging paths and existing update clients stay stable.
 

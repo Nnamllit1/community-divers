@@ -22,7 +22,8 @@ objective can stay stable while the roadmap evolves.
   The pre-EAC game is reference material, not the target implementation.
 - Human-readable notes for every release, rendered inside the launcher with text
   emphasis, headings, lists and optional images, and published with the release.
-- A simple per-user Windows launcher installer/uninstaller. Preserve user profiles,
+- A native C++ per-user Windows installer/uninstaller styled like the launcher,
+  replacing the legacy installer interface. Preserve user profiles,
   mods, campaign databases and game copies when uninstalling.
 - Automatic, CI-gated launcher/client updates after publishing a pushed revision.
   Each community pins a release set so players update before joining.
@@ -154,6 +155,11 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [x] Render formatted per-release notes, including optional images, inside the launcher.
 - [x] Publish the same release notes with each versioned GitHub release.
 - [x] Provide and verify a Windows installer, app-list entry, shortcut and safe uninstaller.
+- [x] Replace the legacy installer frontend with native C++ setup and uninstall
+  interfaces matching the launcher; retain and reverify repair, interrupted-install
+  recovery, ownership checks and preservation of profiles/mods/game copies.
+  Packaged setup/removal, interruption recovery, payload integrity and native screen
+  captures are checked; desktop input and DPI verification remain open above.
 - [x] Finish repair, uninstall and release packaging.
   [Repair-verified launcher preview](https://github.com/Nnamllit1/community-divers/releases/tag/preview-95e62b2487e7)
 - [ ] Verify the complete install -> join -> mission -> progression -> restart flow.

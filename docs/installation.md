@@ -11,6 +11,10 @@ Windows account without elevation. The default folder is
 `%LOCALAPPDATA%/Programs/CommunityDivers`. Choose an empty folder or an installation
 created by this setup; close the launcher and any pending updater first.
 
+The native C++ setup uses the launcher's dark panels and yellow controls. Choose
+the destination, install, then launch directly from the completion screen. The
+uninstaller uses the same interface and shows the location before removal.
+
 Setup adds a Start Menu shortcut and a Windows installed-apps entry. It does not
 install a service, create a desktop shortcut, change Steam or modify your game.
 Launcher settings and profiles remain in `%LOCALAPPDATA%/CommunityDivers`.
@@ -58,7 +62,22 @@ cpack --config out/windows-dev/CPackConfig.cmake -B dist
 ./tools/build-setup.ps1 -PortableZip dist/CommunityDivers-<version>-windows-x64.zip
 ```
 
-The builder downloads the pinned NSIS archive, checks its digest, verifies the
-portable inventory and emits a setup executable plus its SHA-256 file.
-`-AllowDirty` is for local development packages. `-TestIdentity` creates a separate
-QA registration/shortcut for automated install/uninstall checks.
+The build produces `CommunityDiversSetup.exe`, a native setup stub. The packaging
+command verifies the portable ZIP's complete inventory and exact source identity,
+then embeds it in a self-contained executable with its SHA-256 file. No separate
+installer compiler is downloaded. Use `-BuildDirectory` for a different build
+directory; the stub and ZIP must be built from the same source revision.
+
+`-TestIdentity` creates a separate QA registration/shortcut. `-AllowDirty` and
+`-TestInterrupt` are available only with that QA identity. Production setup requires
+clean sources. Automated checks exercise the packaged executable, interrupted
+install/repair, corrupted payload refusal, uninstall preservation and rendered
+setup screens. Desktop keyboard input and monitor DPI transitions still need
+interactive verification.
+
+For unattended installation, use `--silent --install-dir "C:\path\CommunityDivers"`.
+The installed `Uninstall.exe --silent` hands removal to a separate temporary
+process so Windows can release its executable. The temporary helper may remain
+in the Windows temporary folder until that folder is cleaned. Developer checks
+can invoke an external copy with `--silent --uninstall-dir "C:\path\CommunityDivers"`
+and wait directly for the removal result.

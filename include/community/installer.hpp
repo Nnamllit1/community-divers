@@ -9,7 +9,8 @@ bool managed_update_path(const std::string &path);
 std::vector<ManagedFile> parse_install_inventory(const std::string &body);
 std::vector<ManagedFile> extract_update_bundle(const fs::path &package,
                                                const UpdateRelease &release,
-                                               const fs::path &destination);
+                                               const fs::path &destination,
+                                               bool allow_dirty_fixture = false);
 // A lock handle is retained by the launcher for its entire lifetime and passed to its replacement.
 class LauncherLock {
     uintptr_t value_ = 0;

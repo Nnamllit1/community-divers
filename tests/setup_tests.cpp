@@ -106,6 +106,41 @@ int main() {
                 "Uninstall removed custom/user/game files");
         std::cout << "PASS inventory uninstall preserves modified files, mods, profiles and game "
                      "copies\n";
+        auto payload = root / "native-payload";
+        package(payload);
+        auto stub = root / "setup-stub.exe";
+        write(stub, "native setup fixture");
+        auto native = root / "native-install";
+        rejects([&] {
+            install_setup_payload(payload, native, stub, "CommunityDivers-QA",
+                                  [](size_t done, size_t, const std::string &) {
+                                      if (done == 1)
+                                          throw std::runtime_error("Interrupted fixture");
+                                  });
+        });
+        rejects([&] { require_setup_complete(native); });
+        require(fs::exists(native / "CommunityDivers.exe"), "No partial native payload installed");
+        write(native / "mods/keep.txt", "keep");
+        install_setup_payload(payload, native, stub, "CommunityDivers-QA");
+        require_setup_complete(native);
+        require(setup_registration_key(native) == "CommunityDivers-QA", "Native identity lost");
+        rejects([&] { install_setup_payload(payload, native, stub, "CommunityDivers"); });
+        require_setup_complete(native);
+        std::cout << "PASS native payload interruption, repair and registration identity\n";
+        auto hardlink = root / "unrelated-hardlink.txt";
+        fs::create_hard_link(native / "docs/example.md", hardlink);
+        rejects([&] { install_setup_payload(payload, native, stub, "CommunityDivers-QA"); });
+        require(read_text(hardlink) == "abc", "Native install wrote through a hard link");
+        fs::remove(hardlink);
+        install_setup_payload(payload, native, stub, "CommunityDivers-QA");
+        write(native / "Uninstall.exe", "modified helper");
+        auto native_result = uninstall_managed_launcher(native);
+        require(native_result.preserved == 1 &&
+                    read_text(native / "Uninstall.exe") == "modified helper" &&
+                    read_text(native / "mods/keep.txt") == "keep",
+                "Native uninstall removed modified/user files");
+        std::cout
+            << "PASS native installer refuses hardlinks and preserves modified uninstallers\n";
         require(fs::weakly_canonical(root.parent_path()) ==
                         fs::weakly_canonical(fs::temp_directory_path()) &&
                     to_utf8(root.filename()).starts_with("community-divers-setup-"),

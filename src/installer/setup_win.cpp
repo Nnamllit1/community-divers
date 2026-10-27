@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <objbase.h>
 #include "community/setup.hpp"
 #include "community/platform.hpp"
 #include "community/version.hpp"
@@ -26,6 +27,14 @@ struct Handle {
             CloseHandle(h);
             h = INVALID_HANDLE_VALUE;
         }
+    }
+};
+struct TemporaryFile {
+    fs::path path;
+    Handle &file;
+    ~TemporaryFile() {
+        file.close();
+        DeleteFileW(path.c_str());
     }
 };
 bool within(const fs::path &parent, const fs::path &child) {
@@ -201,20 +210,127 @@ void register_setup_install(const fs::path &input, const std::string &key) {
     auto root = root_path(input);
     need(key == "CommunityDivers" || key == "CommunityDivers-QA",
          "Unrecognized setup registration");
-    if (fs::exists(root / marker_name))
-        marker(root);
+    json ownership;
+    if (fs::exists(root / marker_name)) {
+        ownership = marker(root);
+        need(ownership.at("registry_key") == key,
+             "Setup identity differs from the installed application");
+    }
     verify_setup_files(root);
     Pins pins;
     pins.hold(root);
-    atomic_marker(root, {{"schema", 1},
-                         {"product", "community-divers-launcher"},
-                         {"root", to_utf8(root)},
-                         {"registry_key", key},
-                         {"state", "installed"}});
+    json installed = {{"schema", 1},
+                      {"product", "community-divers-launcher"},
+                      {"root", to_utf8(root)},
+                      {"registry_key", key},
+                      {"state", "installed"}};
+    if (ownership.contains("uninstaller"))
+        installed["uninstaller"] = ownership["uninstaller"];
+    atomic_marker(root, installed);
+}
+std::string setup_registration_key(const fs::path &input) {
+    return marker(root_path(input)).at("registry_key").get<std::string>();
+}
+void install_setup_payload(const fs::path &payload, const fs::path &input,
+                           const fs::path &uninstaller, const std::string &key,
+                           const SetupProgress &progress, bool interrupt_fixture) {
+    need(!interrupt_fixture || key == "CommunityDivers-QA",
+         "Interruption fixtures require QA identity");
+    verify_setup_files(payload);
+    check_setup_destination(input);
+    auto root = root_path(input);
+    fs::create_directories(root);
+    Pins pins;
+    pins.hold(root);
+    LauncherLock lock(root);
+    if (fs::exists(root / marker_name))
+        need(marker(root).at("registry_key") == key,
+             "Setup identity differs from the installed application");
+    auto files = parse_install_inventory(read_text(payload / "install-inventory.json"));
+    auto extra = [&](const fs::path &path, const std::string &name) {
+        auto info = fingerprint_file(path, name);
+        need(info.error.empty(), "Cannot read setup input");
+        files.push_back({name, info.sha256, info.bytes});
+    };
+    extra(payload / "install-inventory.json", "install-inventory.json");
+    extra(uninstaller, "Uninstall.exe");
+    GUID transaction{};
+    need(SUCCEEDED(CoCreateGuid(&transaction)), "Cannot create setup transaction identity");
+    wchar_t transaction_name[40]{};
+    need(StringFromGUID2(transaction, transaction_name, 40) != 0,
+         "Cannot encode setup transaction identity");
+    begin_setup_install(root, key);
+    size_t completed = 0;
+    // Put the launcher first so the interruption test exercises its incomplete-state refusal.
+    std::stable_sort(files.begin(), files.end(), [](const auto &a, const auto &b) {
+        return a.path == "CommunityDivers.exe" && b.path != "CommunityDivers.exe";
+    });
+    for (const auto &expected : files) {
+        const auto source =
+            expected.path == "Uninstall.exe" ? uninstaller : payload / from_utf8(expected.path);
+        auto input_file = file_handle(source, pins);
+        auto actual = fingerprint_handle(reinterpret_cast<uintptr_t>(input_file->h), expected.path);
+        need(actual.error.empty() && actual.bytes == expected.bytes &&
+                 actual.sha256 == expected.sha256,
+             "Setup input changed after verification");
+        auto destination = root / from_utf8(expected.path);
+        fs::path parent = root;
+        for (const auto &part : from_utf8(expected.path).parent_path()) {
+            parent /= part;
+            if (!fs::exists(parent))
+                fs::create_directory(parent);
+            pins.hold(parent);
+        }
+        if (fs::exists(destination)) {
+            auto previous = file_handle(destination, pins);
+        }
+        auto temporary = parent / (std::wstring(L".setup-file-") + transaction_name + L"-" +
+                                   std::to_wstring(completed));
+        Handle output(CreateFileW(temporary.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
+                                  FILE_ATTRIBUTE_NORMAL, nullptr));
+        // Adopt for cleanup only after CREATE_NEW succeeds. Unique names avoid
+        // collisions with partial files from a stopped installer.
+        TemporaryFile cleanup{temporary, output};
+        LARGE_INTEGER zero{};
+        need(SetFilePointerEx(input_file->h, zero, nullptr, FILE_BEGIN) != FALSE,
+             "Cannot rewind setup input");
+        char buffer[65536];
+        uint64_t remaining = expected.bytes;
+        while (remaining) {
+            DWORD got = 0, written = 0;
+            auto count = static_cast<DWORD>((std::min)(remaining, uint64_t(sizeof(buffer))));
+            need(ReadFile(input_file->h, buffer, count, &got, nullptr) && got == count &&
+                     WriteFile(output.h, buffer, got, &written, nullptr) && written == got,
+                 "Cannot copy a launcher file; run setup again to repair");
+            remaining -= got;
+        }
+        need(FlushFileBuffers(output.h) != FALSE, "Cannot persist launcher file");
+        output.close();
+        input_file->close();
+        need(MoveFileExW(temporary.c_str(), destination.c_str(),
+                         MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != FALSE,
+             "Cannot replace a launcher file; close the launcher and retry setup");
+        ++completed;
+        if (progress)
+            progress(completed, files.size(), expected.path);
+        if (interrupt_fixture && expected.path == "CommunityDivers.exe") {
+            auto checkpoint = root / ".community-divers-test-ready";
+            Handle ready(CreateFileW(checkpoint.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
+                                     FILE_ATTRIBUTE_NORMAL, nullptr));
+            ready.close();
+            Sleep(60000);
+        }
+    }
+    auto state = marker(root);
+    const auto &own = files.back();
+    need(own.path == "Uninstall.exe", "Uninstaller inventory order is invalid");
+    state["uninstaller"] = {{"sha256", own.sha256}, {"bytes", own.bytes}};
+    atomic_marker(root, state);
+    register_setup_install(root, key);
 }
 UninstallReport uninstall_managed_launcher(const fs::path &input) {
     auto root = root_path(input);
-    marker(root);
+    auto installed = marker(root);
     need(!fs::equivalent(executable_directory(), root),
          "Uninstall helper must run outside the application folder");
     need(!fs::exists(root / ".community-divers-update.json"),
@@ -228,6 +344,11 @@ UninstallReport uninstall_managed_launcher(const fs::path &input) {
         auto inventory = file_handle(root / "install-inventory.json", pins, true);
         auto ownership = file_handle(root / marker_name, pins, true);
         auto files = parse_install_inventory(contents(inventory->h, 2 * 1024 * 1024));
+        if (installed.contains("uninstaller")) {
+            auto &own = installed.at("uninstaller");
+            files.push_back({"Uninstall.exe", own.at("sha256").get<std::string>(),
+                             own.at("bytes").get<uint64_t>()});
+        }
         std::vector<std::unique_ptr<Handle>> removing;
         for (const auto &expected : files) {
             auto path = root / from_utf8(expected.path);

@@ -26,13 +26,12 @@ def run(args,expected=0):
     assert (r.returncode==0)==(expected==0),'Unexpected setup result: '+str(r.returncode)+' '+r.stderr
     return r
 def setup(destination,expected=0):
-    # NSIS /D= consumes the final, unquoted command-line tail. No shell is involved.
-    command='"'+str(a.installer.resolve())+'" /S /D='+str(destination)
+    command=[str(a.installer.resolve()),'--silent','--install-dir',str(destination)]
     r=subprocess.run(command,executable=str(a.installer.resolve()),capture_output=True,timeout=60)
     assert (r.returncode==0)==(expected==0),'Unexpected setup exit code: '+str(r.returncode)
     return r
 def uninstall(executable,destination,expected=0):
-    command='"'+str(executable)+'" /S _?='+str(destination)
+    command=[str(executable),'--silent','--uninstall-dir',str(destination)]
     r=subprocess.run(command,executable=str(executable),capture_output=True,timeout=60)
     assert (r.returncode==0)==(expected==0),'Unexpected uninstall exit code: '+str(r.returncode)
     return r

@@ -1,18 +1,20 @@
 # Launcher preview
 
-## Clearer versions
+## Native Windows setup
 
-  * **Numbered previews** replace commit hashes in release titles and download
-    names: for example, `0.1.0-preview.45`. About displays the same version.
-    The commit hash remains available in build information for diagnostics.
-  * A larger preview number means a newer main revision. Numbers can skip when
-    source changes do not produce a release.
-  * Late CI builds are checked before publication so an older build cannot be
-    newly published after a newer preview. Existing updater installations accept
-    the new versions; older download links continue to work.
+  * **A new C++ installer and uninstaller** match the launcher's dark panels,
+    condensed headings and yellow controls. Choose an installation folder, follow
+    progress and open the launcher from the completion screen.
+  * Setup remains **per user**, with a Start menu shortcut and Windows app-list
+    entry. The full launcher package is embedded and verified before installation.
+  * Rerun setup to repair an interrupted installation. Uninstall preserves profiles,
+    mods, campaigns, game copies and modified launcher files.
+  * Portable downloads and the launcher's signed update system continue to work.
+    Existing installations do not need the installer to receive launcher updates.
 
 ## Current limits
 
 The launcher remains a **preview**. Current-game startup and community multiplayer
-are still in development. This release changes versioning and publication, not
-game compatibility.
+are still in development. This release updates setup; it does not establish game
+compatibility. Native setup keyboard navigation and monitor DPI transitions still
+need interactive verification.

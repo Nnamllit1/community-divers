@@ -54,7 +54,8 @@ std::string folded(std::string s) {
 } // namespace
 std::vector<ManagedFile> extract_update_bundle(const fs::path &package,
                                                const UpdateRelease &release,
-                                               const fs::path &destination) {
+                                               const fs::path &destination,
+                                               bool allow_dirty_fixture) {
     if (fs::exists(destination))
         throw std::runtime_error("Update extraction directory already exists");
     Reader in;
@@ -144,7 +145,8 @@ std::vector<ManagedFile> extract_update_bundle(const fs::path &package,
     auto build = json::parse(read_text(destination / "build-info.json"));
     if (build.at("source_commit") != release.source_commit ||
         build.at("release_id") != release.release_id ||
-        build.at("source_revision") != release.revision || build.at("source_dirty") != false ||
+        build.at("source_revision") != release.revision ||
+        (!allow_dirty_fixture && build.at("source_dirty") != false) ||
         build.at("platform") != "windows-x64" ||
         build.at("service_protocol") != release.service_protocol ||
         build.value("launcher_update_protocol", 0) != 1)

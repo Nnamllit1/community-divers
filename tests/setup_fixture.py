@@ -28,10 +28,8 @@ class SetupFixture:
 
     def command(self, executable, uninstall=False):
         executable = Path(executable).resolve()
-        # NSIS consumes the final /D= or _?= tail unquoted, including spaces.
-        # Pass the raw command directly to CreateProcess; never involve a shell.
-        tail = " /S _?=" if uninstall else " /S /D="
-        return '"' + str(executable) + '"' + tail + str(self.app)
+        return [str(executable), "--silent",
+                "--uninstall-dir" if uninstall else "--install-dir", str(self.app)]
 
     def setup(self, executable):
         result = subprocess.run(self.command(executable), executable=str(Path(executable).resolve()),

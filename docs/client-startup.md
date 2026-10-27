@@ -129,14 +129,40 @@ no remaining fixture processes or rules. The ordinary parent/child isolation and
 actual temporary-directory write checks also passed with journaling enabled.
 This improves recovery from a lost tool session; it does not establish game startup.
 
-The next diagnostic needs the specific failed file or object lookup. An empty ETW
-session capability check returned `ERROR_ACCESS_DENIED` for the current token;
-no provider was enabled and no activity was collected. A file trace therefore
-needs an appropriately authorized controller and verified filtering to the owned
-processes before it can be used. Windows documents the permissions in
+An empty ETW session capability check returned `ERROR_ACCESS_DENIED` for the
+ordinary token. The subsequent trace used a separately authorized elevated
+observer; the game retained its unprivileged, zero-capability token. Windows
+documents the controller permissions in
 [StartTrace](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-starttracew)
 and [EnableTraceEx2](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-enabletraceex2).
 No tracing permissions or group memberships were changed.
+
+## File-lookup trace
+
+The realtime observer retained file-create and completion metadata for the exact
+root process instance. The kernel provider did **not** honor the requested PID
+scope filter in these checks. Its callback rejected unrelated event headers
+before decoding payloads; it wrote no ETL and retained no unrelated filenames or
+file contents. A fixture correlated a deliberate missing-file lookup with its
+completion status and verified that descendant and observer control paths were
+absent from the retained events. Event-loss and decode-error counters were zero.
+
+The game trace identified two `STATUS_OBJECT_PATH_NOT_FOUND` results for a literal
+`%ALLUSERSPROFILE%\Packer` path beneath the executable directory. The isolated
+environment lacked `ALLUSERSPROFILE`. A corrected fixture verified read/write
+access through both `ALLUSERSPROFILE` and `ProgramData`, redirected to the same
+private directory, while preserving the outside-file and network denials in
+parent and child processes.
+
+With that environment correction, the game resolved `Packer` beneath private
+ProgramData: its first lookup returned `STATUS_OBJECT_NAME_NOT_FOUND`, followed
+by a successful operation and creation of that directory. The root and runtime
+child still remained until the observation timeout, the child retained the same
+dialog-wait stack, and no engine module appeared. This removes an observed
+probe-environment error but does not fix startup or identify the remaining cause.
+Both game traces stopped their ETW sessions, emptied their owned jobs, removed
+temporary profiles and restored all 180 checked access descriptors; all five
+bootstrap hashes and the copy's path inventory remained unchanged.
 
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The

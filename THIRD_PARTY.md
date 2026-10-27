@@ -6,10 +6,9 @@ No third-party application, game asset or runtime binary is committed here.
 | Component | Version | License | Purpose |
 | --- | --- | --- | --- |
 | [imgui_markdown](https://github.com/enkisoftware/imgui_markdown) | 4acbf8058475 | zlib | Native formatted release notes |
-| [NSIS](https://nsis.sourceforge.io/) | 3.13 | zlib/libpng; see bundled notices | Windows installer and uninstaller |
 | [Dear ImGui](https://github.com/ocornut/imgui) | 1.93.0 | MIT | Native launcher UI and Win32/Direct3D 11 backends |
 | [JSON for Modern C++](https://github.com/nlohmann/json) | 3.12.0 | MIT | Settings, mod manifests and service messages |
-| [miniz](https://github.com/richgel999/miniz) | 3.1.2 | MIT | Bounded ZIP extraction for launcher updates |
+| [miniz](https://github.com/richgel999/miniz) | 3.1.2 | MIT | Bounded ZIP extraction for launcher updates and native setup |
 | [SQLite](https://www.sqlite.org/) | 3.54.1 | Public domain | Campaign/profile database and online backups |
 | [cpp-httplib](https://github.com/yhirose/cpp-httplib) | 0.63.0 | MIT | Loopback HTTP community service |
 
