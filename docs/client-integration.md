@@ -2,6 +2,8 @@
 
 Game integration is not implemented. The launcher includes an exact-file identity
 inspector to establish reproducible starting points for adapter development.
+The [current startup investigation](client-startup.md) records the observed
+preloader/runtime process dependency and the limits of an offline contained probe.
 
 ## Inspect an installed client
 

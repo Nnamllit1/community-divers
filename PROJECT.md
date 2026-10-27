@@ -74,6 +74,8 @@ objective can stay stable while the roadmap evolves.
 - [ ] Establish an exact-build integration contract and compatibility manifest.
 - [ ] Create and verify an isolated current-game installation and user data.
 - [ ] Establish current-client startup and native integration for community use.
+  [Bootstrap investigation](docs/client-startup.md) identified a separate runtime
+  process; engine startup remains unverified.
 - [ ] Ensure the modified client cannot connect to official gameplay/progression.
 - [ ] Isolate Steam Cloud data as well as the ordinary user-data directory.
 - [ ] Reach the ship against the community backend and complete a solo operation.

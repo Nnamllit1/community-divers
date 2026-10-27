@@ -243,3 +243,13 @@ asset verification or a game-start test. Portable identity tests cover malformed
 stale and conflicting receipts. Windows preparation tests exercise receipts made
 by the real copy tool, and widget tests verify the copied build reaches the
 launcher display and is cleared when the installation changes.
+
+The prepared-copy release [preview-dfe5c7b80b5d](https://github.com/Nnamllit1/community-divers/releases/tag/preview-dfe5c7b80b5d)
+passed Windows and Linux CI. Its downloaded ZIP passed native signature/inventory
+verification, the setup/ZIP hashes matched their published checksums, and its
+shipped inspector identified the prepared build through the receipt while keeping
+integration unavailable.
+
+The [current-client bootstrap probe](client-startup.md) documents a separate
+runtime process and the conditions of an offline startup observation. It did not
+reach engine startup and does not satisfy the adapter acceptance gates.
