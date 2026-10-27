@@ -62,6 +62,23 @@ A separate fixture proved descendant cleanup after the parent had already exited
 The probe verified an empty job before restoring access and removing its profile;
 all 180 checked access descriptors and five bootstrap file hashes were unchanged.
 
+A bounded diagnostic launch using standard Windows debug events recorded seven
+first-chance exceptions in the root process, including an execute access violation
+at the mapped runtime image base. No second-chance exception was reported before
+the probe's timeout. These notifications are not themselves proof of an unhandled
+crash: application exceptions were passed back for normal handling. Only the first
+startup breakpoint in each process's `ntdll` was consumed by the debugger. The
+runtime child again waited in `DialogBoxParamW`, and no engine module was observed.
+
+Synthetic fixtures verified handled exceptions, an application breakpoint, an
+unhandled child exception and descendant cleanup before this diagnostic launch.
+The debugged fixture and its child also retained the zero-network/file-access
+restrictions. The game probe left an empty job; access descriptors, copy paths and
+the five bootstrap hashes were unchanged after cleanup. Debugger instrumentation
+changes execution conditions, so this result does not prove that the same exception
+sequence occurs during an ordinary launch or identify the active dialog.
+See Microsoft's [exception continuation semantics](https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-continuedebugevent).
+
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The
 remaining runtime dependency or failure must be identified before selecting an
