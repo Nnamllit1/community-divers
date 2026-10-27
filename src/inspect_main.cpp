@@ -1,8 +1,14 @@
 #include "community/platform.hpp"
+#include "preparation_cli.hpp"
 #include <fstream>
 #include <algorithm>
 #include <iostream>
 int wmain(int argc, wchar_t **argv) {
+    if (argc > 1) {
+        std::wstring first = argv[1];
+        if (first == L"--plan" || first == L"--copy" || first == L"--verify")
+            return cd::run_preparation_cli(argc, argv);
+    }
     try {
         cd::fs::path game, output,
             catalog = cd::executable_directory() / L"compatibility/client-builds.json";

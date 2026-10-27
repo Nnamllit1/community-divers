@@ -57,3 +57,67 @@ The launcher currently returns `integration.available: false` for every inspecti
 A server's advertised build list and a local fingerprint match cannot override
 that implementation state. Old-build function addresses and loader support are
 insufficient evidence for any current-client gate.
+
+## Prepare an independent current-game copy
+
+`CommunityDiversInspect.exe` inventories the installed Steam depots and creates a
+new, independent copy for adapter development. It does not modify or start the
+game, redirect services, patch protection or configure a mod loader. Preparing a
+copy leaves game launch unavailable.
+
+First, inspect the proposed inventory:
+
+```console
+CommunityDiversInspect.exe --plan --source "C:/Games/Steam/steamapps/common/Helldivers 2" --depot-cache "C:/Games/Steam/depotcache" --output copy-plan.json
+```
+
+Use the `depotcache` directory belonging to the Steam client that installed the
+game, even when the game is in a separate library. Every depot manifest referenced
+by `InstalledDepots` in `appmanifest_553850.acf` must be present locally with
+readable filenames. Missing/encrypted manifests fail with no download or key
+request. Steam must report a fully installed game. Keep Steam closed during copy
+preparation so updates do not conflict with its read locks.
+
+The plan reports the build, depot IDs, manifest IDs/digests, expected byte count
+and content inventory. It checks file presence and sizes; `--copy` and `--verify`
+also check every file's content. Account identifiers and the source path are
+excluded from reports. Files absent from the depots, including stray mod patches,
+plugins and development workspaces, are not copied. Shared Steam redistributable
+depots are not bundled; the normal installed runtime prerequisites remain required.
+
+To create a new copy on a drive with enough space:
+
+```console
+CommunityDiversInspect.exe --copy --source "C:/Games/Steam/steamapps/common/Helldivers 2" --depot-cache "C:/Games/Steam/depotcache" --destination "D:/CommunityDivers/client"
+CommunityDiversInspect.exe --verify --destination "D:/CommunityDivers/client" --output copy-verification.json
+```
+
+The destination must be outside Steam libraries and must not overlap the source.
+The tool never overwrites an existing destination or staging directory. Files are
+copied normally, without hardlinks, symlinks or junctions. Existing path ancestors
+are locked against replacement, reparse points are refused, and resolved directory
+identities are checked for overlap. Ambiguous Windows path spellings are refused. Installed metadata
+and depot manifests stay read-locked during preparation. Each output is flushed
+and checked against its depot's SHA-1. The four diagnostic modules additionally
+receive SHA-256 fingerprints. SHA-1 here is Steam's legacy content-integrity field,
+not a publisher signature or proof of ownership. Cached manifests are local input;
+this tool does not authenticate their signatures or contact Steam.
+
+Work remains under `<destination>.preparing` until all files and the preparation
+receipt have been written successfully. A final rename publishes the completed
+copy. A failed or interrupted run retains its staging directory for diagnosis and
+never creates the requested completed destination. This first implementation does
+not resume a retained stage; inspect/remove that directory explicitly or choose a
+new destination before retrying. There is no automatic deletion or repair.
+
+The receipt is `.community-divers/preparation.json`. Verification rereads every
+listed file, rejects hardlinked files, unexpected files and reparse points, and
+compares the module fingerprints. This receipt establishes file-copy integrity at
+the time of the check. It is not a trusted adapter or a game-start authorization.
+Separate local user data, Steam Cloud isolation, official-network isolation and
+current-client startup remain unverified and are recorded as false in reports.
+
+The local manifest reader implements the framing and file/metadata fields described
+by [SteamKit's manifest implementation](https://github.com/SteamRE/SteamKit/blob/master/SteamKit2/SteamKit2/Types/DepotManifest.cs)
+and the [content manifest schema](https://github.com/SteamDatabase/Protobufs/blob/master/steam/content_manifest.proto).
+It accepts only the bounded, already decrypted format needed for local preparation.

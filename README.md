@@ -35,6 +35,7 @@ and verify it with the accompanying SHA-256 file.
 - Inspect local mod manifests and save selections in named profiles.
 - Recover settings without silently discarding a malformed original file.
 - Export read-only client fingerprints for exact-build integration analysis.
+- Prepare and verify an independent game-file copy using installed Steam depot inventories.
 - Display a connected community service's persisted campaign and mission templates.
 
 Current builds check a signed preview feed and stage verified downloads. Portable
@@ -82,7 +83,7 @@ ctest --preset windows-dev
 ```
 
 `Build.cmd` finds the installed Visual Studio tools and runs the same steps.
-Both dependencies are pinned by version and archive SHA-256.
+Dependencies are pinned by version and archive SHA-256.
 See [validation](docs/testing.md) for core, native HTTP and offscreen widget checks.
 
 To prepare a portable directory:

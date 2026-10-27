@@ -126,3 +126,20 @@ verified profile/campaign continuity and duplicate-result protection. Native
 backup/restore commands also passed while the service was running. The launcher
 render check fetched that persisted campaign through its production WinHTTP path.
 External HTTPS hosting and native game sessions remain unverified.
+
+## Native client-copy preparation
+
+`preparation_tests` checks bounded local depot parsing on Windows/Linux. Windows
+also tests the real filesystem/BCrypt path: Unicode directories, independent file
+copies, stray-mod exclusion, source/destination corruption, existing destinations,
+Steam/source overlap, NTFS junction rejection, hardlink detection, installed
+metadata read locks and interrupted-copy staging. Fixtures contain only synthetic
+`abc` file content and fabricated depot metadata. No Steam account, game launch,
+network connection or proprietary fixture is needed.
+
+The inspector's `--plan`, `--copy` and `--verify` commands are documented in
+[client integration](client-integration.md). A read-only plan of the installed
+build 26088801 resolved its three local depot manifests into 168 game files totaling
+24,150,575,918 bytes. This establishes inventory parsing/presence/size checks on
+that installation. The full current-game copy and native game startup have not
+been verified; the copy tests use synthetic fixtures.

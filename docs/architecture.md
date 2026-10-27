@@ -24,7 +24,10 @@ discovering an installation never changes the game, its settings or Steam Cloud.
 A separately versioned adapter will manage an isolated current-game copy,
 private profile storage, service routing and the client startup contract. A
 supported game build, verified isolation and a compatible community service will
-all be required before launch. Startup and native access remain unverified.
+all be required before launch. Startup and native access remain unverified. The
+native preparation tool can copy only installed depot files into a new directory
+and verify their content; this file-copy layer does not establish profile, Cloud
+or network isolation.
 
 ## Community service
 

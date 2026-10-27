@@ -59,6 +59,8 @@ objective can stay stable while the roadmap evolves.
 ### 2. Isolated current-client integration
 
 - [x] Add read-only client fingerprint inspection and an observed-build catalog.
+- [x] Provide native depot-based file-copy preparation and independent content verification.
+  Copy preparation alone does not verify game startup, user data or network isolation.
 
 - [ ] Establish an exact-build integration contract and compatibility manifest.
 - [ ] Create and verify an isolated current-game installation and user data.
