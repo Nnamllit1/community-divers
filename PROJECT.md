@@ -128,7 +128,8 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [x] Render formatted per-release notes, including optional images, inside the launcher.
 - [x] Publish the same release notes with each versioned GitHub release.
 - [x] Provide and verify a Windows installer, app-list entry, shortcut and safe uninstaller.
-- [ ] Finish repair, uninstall and release packaging.
+- [x] Finish repair, uninstall and release packaging.
+  [Repair-verified launcher preview](https://github.com/Nnamllit1/community-divers/releases/tag/preview-95e62b2487e7)
 - [ ] Verify the complete install -> join -> mission -> progression -> restart flow.
 
 ## Working order

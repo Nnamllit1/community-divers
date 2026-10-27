@@ -43,8 +43,9 @@ int wmain(int argc, wchar_t **argv) {
             file << report.dump(2) << '\n';
             std::cout << "Client identity report written. Integration remains unavailable.\n";
         }
-        return std::any_of(identity.files.begin(), identity.files.end(),
-                           [](const auto &f) { return !f.error.empty(); })
+        return !identity.metadata_error.empty() ||
+                       std::any_of(identity.files.begin(), identity.files.end(),
+                                   [](const auto &f) { return !f.error.empty(); })
                    ? 1
                    : 0;
     } catch (const std::exception &e) {

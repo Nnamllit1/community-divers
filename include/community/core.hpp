@@ -39,6 +39,7 @@ struct FileFingerprint {
 struct ClientIdentity {
     Installation installation;
     std::vector<FileFingerprint> files;
+    std::string build_source = "unknown", metadata_error;
 };
 json identity_report(const ClientIdentity &identity, const json &catalog);
 struct Endpoint {

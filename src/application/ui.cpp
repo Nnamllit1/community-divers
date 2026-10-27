@@ -485,14 +485,19 @@ void App::tick() {
                 file.exceptions(std::ios::failbit | std::ios::badbit);
                 file << report.dump(2) << '\n';
                 file.close();
-                bool errors = std::any_of(identity.files.begin(), identity.files.end(),
+                game = identity.installation;
+                bool errors = !identity.metadata_error.empty() ||
+                              std::any_of(identity.files.begin(), identity.files.end(),
                                           [](const auto &f) { return !f.error.empty(); });
-                identity_summary = errors ? "Inspection recorded missing or unreadable files."
+                identity_summary = !identity.metadata_error.empty() ? identity.metadata_error
+                                   : errors ? "Inspection recorded missing or unreadable files."
                                    : report["identity"]["known"].get<bool>()
                                        ? "Client fingerprints match an observed build. Game "
                                          "integration is not implemented."
                                        : "Client fingerprints recorded; this build is not in the "
                                          "identity catalog.";
+                if (!errors && identity.build_source == "preparation_receipt")
+                    identity_summary = "Prepared copy / build " + game.build + ". " + identity_summary;
                 notice = identity_summary + " Report saved as client-inspection.json.";
                 notice_error = errors;
             }

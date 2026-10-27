@@ -2,20 +2,21 @@
 
 ## Fixed
 
-  * **Interrupted setup recovery.** A partially installed launcher now explains
-    that setup must be run again, instead of trying to start with mixed or missing
-    application files. Rerunning setup repairs the launcher while retaining mods
-    and user data.
-  * Unknown setup states are rejected instead of being treated as completed
-    installations. Portable installations continue to work without a setup marker.
+  * **Prepared-copy build identification.** Inspect client files now recognizes a
+    prepared game copy without Steam's external manifest. It checks the receipt
+    against all four current binary fingerprints and displays the copied build.
+    Stale or conflicting receipts produce an actionable error.
 
 ## For contributors
 
-  * Installer checks now stop the real setup process midway through both a new
-    installation and a reinstall, then verify normal repair, startup and removal.
-    Fault-injection pauses are compiled only into separate QA artifacts.
+  * Identity reports distinguish Steam metadata from preparation receipts and
+    include metadata errors. Inspection hashes the same file handles held open
+    throughout the check.
+  * Prepared-copy checks cover receipt validation, changed binaries, metadata
+    conflicts and the build display in the launcher.
 
 ## Current limits
 
-The community game adapter and multiplayer are **still in development**. A verified
-file copy and a connected community account do not enable game launch yet.
+Receipt inspection checks the four diagnostic binaries. Use the copy verifier to
+check every prepared asset. The community game adapter and multiplayer are
+**still in development**; identifying a prepared copy does not enable game launch.

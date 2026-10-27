@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #ifdef _WIN32
+#include "community/platform.hpp"
 #include <windows.h>
 #include <winioctl.h>
 #include <cstring>
@@ -165,6 +166,32 @@ int main() {
                     !fs::exists(destination / "director-mode") &&
                     !fs::exists(destination / "data/unowned.patch_0"),
                 "Copy or official install separation failed");
+        auto copied_identity = inspect_client(destination);
+        require(copied_identity.installation.build == "12345" &&
+                    copied_identity.build_source == "preparation_receipt" &&
+                    copied_identity.metadata_error.empty(),
+                "Prepared copy lost its build without a Steam manifest");
+        const auto receipt_path = destination / ".community-divers/preparation.json";
+        const auto original_receipt = read_text(receipt_path);
+        write(receipt_path, "broken receipt");
+        auto bad_identity = inspect_client(destination);
+        require(bad_identity.installation.build.empty() && !bad_identity.metadata_error.empty(),
+                "Malformed receipt supplied a build");
+        write(receipt_path, original_receipt);
+        write(destination / "bin/helldivers2.exe", "xyz");
+        bad_identity = inspect_client(destination);
+        require(bad_identity.installation.build.empty() && !bad_identity.metadata_error.empty(),
+                "Changed binaries reused a stale receipt build");
+        write(destination / "bin/helldivers2.exe", "abc");
+        // Explicitly reject conflicting metadata even if all four hashes still match.
+        write(game / ".community-divers/preparation.json", original_receipt);
+        auto wrong = json::parse(original_receipt);
+        wrong["steam_build"] = "54321";
+        write(game / ".community-divers/preparation.json", wrong.dump());
+        require(!inspect_client(game).metadata_error.empty(), "Steam/receipt conflict was hidden");
+        fs::remove(game / ".community-divers/preparation.json");
+        fs::remove(game / ".community-divers");
+        std::cout << "PASS real prepared-copy identity and stale/malformed/conflicting receipts\n";
         write(destination / "data/example.bundle", "xyz");
         require(read_text(game / "data/example.bundle") == "abc", "Copy shares writable content");
         rejects([&] { verify_client_copy(destination); });

@@ -6,8 +6,8 @@
 namespace cd {
 namespace {
 bool complete(const ClientIdentity &identity) {
-    if (!identity.installation.valid || identity.installation.build.empty() ||
-        identity.files.size() != client_binary_paths.size())
+    if (!identity.metadata_error.empty() || !identity.installation.valid ||
+        identity.installation.build.empty() || identity.files.size() != client_binary_paths.size())
         return false;
     std::set<std::string> seen;
     for (const auto &file : identity.files) {
@@ -56,6 +56,7 @@ json identity_report(const ClientIdentity &identity, const json &catalog) {
     json out = {{"schema", 1},
                 {"installation_detected", identity.installation.valid},
                 {"steam_build", identity.installation.build},
+                {"build_source", identity.build_source},
                 {"files", json::array()},
                 {"integration",
                  {{"available", false},
@@ -68,6 +69,8 @@ json identity_report(const ClientIdentity &identity, const json &catalog) {
             item["error"] = file.error;
         out["files"].push_back(std::move(item));
     }
+    if (!identity.metadata_error.empty())
+        out["metadata_error"] = identity.metadata_error;
     out["launcher_release"] = std::string(version::release_id);
     out["identity"] = {{"known", false}, {"profile", ""}};
     try {

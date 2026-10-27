@@ -23,6 +23,10 @@ struct PreparationPlan {
     uint64_t bytes = 0;
 };
 json preparation_report(const PreparationPlan &plan);
+// Diagnostic metadata only: matches the receipt to the four freshly inspected binaries.
+// Does not verify the full copy, authenticate ownership or authorize game startup.
+std::string prepared_identity_build(std::string_view receipt,
+                                    const std::vector<FileFingerprint> &files);
 #ifdef _WIN32
 PreparationPlan plan_client_copy(const fs::path &source, const fs::path &depot_cache);
 using PreparationProgress = std::function<void(size_t, size_t, const std::string &)>;

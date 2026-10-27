@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <bcrypt.h>
 #include "community/platform.hpp"
+#include "community/preparation.hpp"
 #include <memory>
 #include <thread>
 namespace cd {
@@ -23,6 +24,17 @@ struct File {
             CloseHandle(value);
     }
 };
+std::string read_receipt(HANDLE handle) {
+    LARGE_INTEGER size{};
+    if (!GetFileSizeEx(handle, &size) || size.QuadPart < 0 || size.QuadPart > 32 * 1024 * 1024)
+        throw std::runtime_error("Preparation receipt exceeds its size limit or cannot be read.");
+    std::string body(static_cast<size_t>(size.QuadPart), '\0');
+    DWORD read = 0;
+    if (!ReadFile(handle, body.data(), static_cast<DWORD>(body.size()), &read, nullptr) ||
+        read != body.size())
+        throw std::runtime_error("Cannot read the complete preparation receipt.");
+    return body;
+}
 struct Algorithm {
     BCRYPT_ALG_HANDLE value = nullptr;
     ~Algorithm() {
@@ -99,6 +111,20 @@ FileFingerprint fingerprint_file(const fs::path &path, std::string relative_path
 ClientIdentity inspect_client(const fs::path &path) {
     ClientIdentity result;
     result.installation = inspect_installation(path);
+    if (!result.installation.build.empty())
+        result.build_source = "steam_manifest";
+    std::unique_ptr<File> receipt_guard;
+    std::string receipt;
+    try {
+        auto receipt_path = path / ".community-divers/preparation.json";
+        if (fs::exists(receipt_path)) {
+            receipt_guard = std::make_unique<File>(receipt_path);
+            receipt = read_receipt(receipt_guard->value);
+        }
+    } catch (const std::exception &) {
+        result.metadata_error =
+            "Cannot read the preparation receipt. Verify the prepared copy again.";
+    }
     result.files.resize(client_binary_paths.size());
     std::vector<std::unique_ptr<File>> guards(client_binary_paths.size());
     for (size_t i = 0; i < client_binary_paths.size(); ++i) {
@@ -112,8 +138,8 @@ ClientIdentity inspect_client(const fs::path &path) {
     }
     for (size_t i = 0; i < client_binary_paths.size(); ++i) {
         if (guards[i])
-            result.files[i] =
-                fingerprint_file(path / from_utf8(result.files[i].path), result.files[i].path);
+            result.files[i] = fingerprint_handle(reinterpret_cast<uintptr_t>(guards[i]->value),
+                                                 result.files[i].path);
     }
     auto after = inspect_installation(path);
     if (after.build != result.installation.build || after.valid != result.installation.valid) {
@@ -121,6 +147,21 @@ ClientIdentity inspect_client(const fs::path &path) {
             if (file.error.empty())
                 file.error =
                     "Installation metadata changed during inspection; run the check again.";
+    }
+    if (receipt_guard && result.metadata_error.empty()) {
+        try {
+            auto build = prepared_identity_build(receipt, result.files);
+            if (!result.installation.build.empty() && result.installation.build != build)
+                throw std::runtime_error(
+                    "Steam metadata and the preparation receipt disagree about the build.");
+            result.installation.build = std::move(build);
+            result.build_source = "preparation_receipt";
+            result.installation.detail =
+                "Prepared copy: build and four binary fingerprints match its receipt. "
+                "Game integration is not installed.";
+        } catch (const std::exception &e) {
+            result.metadata_error = e.what();
+        }
     }
     return result;
 }

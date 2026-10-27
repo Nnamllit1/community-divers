@@ -5,6 +5,8 @@ CTest runs these suites:
 
 - `core_tests`: Valve KeyValues, installation discovery, endpoint parsing,
   settings persistence/recovery and launch readiness.
+- `client_identity_tests`: prepared-copy build provenance, current binary matching,
+  malformed/stale receipts, metadata conflicts and unchanged game-launch readiness.
 - `mod_loader_tests`: independent manifest discovery and duplicate-ID rejection.
 - `patch_notes_tests`: immutable revision lookup, document/image limits, safe relative
   image paths and an injected asynchronous transport without updater/UI dependencies.
@@ -225,3 +227,19 @@ The pause is compiled only with `tools/build-setup.ps1 -TestIdentity -TestInterr
 it is absent from production installers. CI builds the normal and interruption
 fixtures in separate artifact folders and never publishes either QA installer.
 This process-level check does not automate installer wizard input.
+
+The setup-repair release `preview-95e62b2487e7` passed Windows and Linux CI,
+including both real interrupted-install recovery cases. The downloaded public
+ZIP passed native signature/inventory verification; its setup/ZIP SHA-256 values
+and packaged release notes matched the published assets.
+
+## Prepared-copy identity
+
+The native inspector also identified an existing independently prepared build
+`26088801` through its receipt, with all four current binary hashes matching the
+observed catalog. Its report retained `integration.available: false`. This check
+read only the four diagnostic modules and receipt; it was not a repeat of full
+asset verification or a game-start test. Portable identity tests cover malformed,
+stale and conflicting receipts. Windows preparation tests exercise receipts made
+by the real copy tool, and widget tests verify the copied build reaches the
+launcher display and is cleared when the installation changes.

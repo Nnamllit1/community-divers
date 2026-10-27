@@ -11,7 +11,8 @@ Use **Settings > Inspect client files**, or the packaged console tool:
 CommunityDiversInspect.exe --game "C:/Games/Helldivers 2" --output client-inspection.json
 ```
 
-The tool reads the Steam build ID and SHA-256/byte size of:
+The tool reads the build ID from Steam metadata or a completed preparation receipt,
+and calculates the SHA-256/byte size of:
 
 - `bin/helldivers2.exe`
 - `data/game/game.dll`
@@ -23,6 +24,14 @@ sharing across the inspected file set for the whole pass. Steam build metadata i
 checked again before accepting the result. Missing
 or unreadable files are reported individually. Reports contain relative binary
 paths and build metadata, without account identifiers or an installation path.
+
+For an independent copy, **Inspect client files** reads its preparation receipt and
+requires all four current binary fingerprints to match before using the recorded
+build. The report identifies `build_source` as `steam_manifest`,
+`preparation_receipt` or `unknown`; malformed, stale or conflicting metadata is
+reported as `metadata_error` and cannot match the catalog. Receipt inspection is
+not full-copy verification: use `--verify` to check every prepared asset. A matching
+receipt does not authenticate ownership or establish profile/network isolation.
 
 The Settings action runs asynchronously and saves `client-inspection.json` in the
 launcher's data directory. Changing the selected installation while an inspection

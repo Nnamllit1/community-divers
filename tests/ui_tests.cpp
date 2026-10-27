@@ -243,6 +243,40 @@ int main() {
             require(identity["files"].size() == 4 && identity["integration"]["available"] == false,
                     "Client inspection report is incomplete or grants launch");
             std::cout << "PASS asynchronous client inspection and report export\n";
+            auto copied = fixture.root / "prepared-copy";
+            cd::json receipt{{"schema", 1}, {"steam_build", "12345"}, {"state", "copied"},
+                             {"bytes", uint64_t(0)}, {"depots", cd::json::array({{{"depot", "99"}}})},
+                             {"files", cd::json::array()}, {"binary_fingerprints", cd::json::object()},
+                             {"integration_available", false}, {"profile_isolation_verified", false},
+                             {"official_network_isolation_verified", false}};
+            for (const auto &f : identity["files"]) {
+                auto path = f["path"].get<std::string>();
+                write(copied / path, cd::read_text(fixture.game / path));
+                receipt["files"].push_back({{"path", path}, {"bytes", f["bytes"]}});
+                receipt["bytes"] = receipt["bytes"].get<uint64_t>() + f["bytes"].get<uint64_t>();
+                receipt["binary_fingerprints"][path] = {{"sha256", f["sha256"]}, {"bytes", f["bytes"]}};
+            }
+            write(copied / ".community-divers/preparation.json", receipt.dump());
+            ui.type("##path", cd::path_text(copied));
+            ui.click("Use folder");
+            require(ui.app->game.build.empty(), "Prepared fixture unexpectedly found Steam metadata");
+            ui.click("Inspect client files");
+            inspection_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(4);
+            while (ui.app->pending_identity.valid() && std::chrono::steady_clock::now() < inspection_deadline) {
+                ui.frame();
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+            require(!ui.app->pending_identity.valid() && ui.app->game.build == "12345" &&
+                        !ui.app->notice_error && ui.app->identity_summary.starts_with("Prepared copy / build 12345"),
+                    "Prepared-copy build did not reach launcher state");
+            identity = cd::json::parse(cd::read_text(fixture.data / "client-inspection.json"));
+            require(identity["build_source"] == "preparation_receipt" && identity["integration"]["available"] == false,
+                    "Prepared inspection provenance or readiness changed");
+            ui.type("##path", cd::path_text(fixture.game));
+            ui.click("Use folder");
+            require(ui.app->identity_summary.empty() && ui.app->game.build == "12345",
+                    "Prepared-copy result survived switching back to Steam");
+            std::cout << "PASS prepared-copy inspection updates build display and preserves launch gate\n";
             ui.page(5);
             ui.click("Check for updates automatically");
             require(!ui.app->settings.check_updates &&
