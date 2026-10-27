@@ -211,3 +211,17 @@ real launcher note rendering and removal while retaining custom files and user
 data. Release-note bytes match between the ZIP and the published Markdown asset.
 The public installer check used its silent command interface; interactive wizard
 input and DPI behavior are still separate desktop checks.
+
+## Interrupted setup repair
+
+`tests/setup_repair_smoke.py` starts a separately named QA installer that pauses
+after writing its first executable, then terminates that exact process through
+its retained process handle. The normal installer repairs the interrupted state.
+The check covers a new installation and reinstall over a registered copy, refuses
+launcher startup while setup is incomplete, verifies native startup after repair,
+and removes the repaired installation while retaining custom mod files.
+
+The pause is compiled only with `tools/build-setup.ps1 -TestIdentity -TestInterrupt`;
+it is absent from production installers. CI builds the normal and interruption
+fixtures in separate artifact folders and never publishes either QA installer.
+This process-level check does not automate installer wizard input.

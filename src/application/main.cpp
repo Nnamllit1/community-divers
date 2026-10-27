@@ -1,4 +1,5 @@
 #include "community/installer.hpp"
+#include "community/setup.hpp"
 #include "community/version.hpp"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
@@ -236,6 +237,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
             data = cd::user_data_path();
         auto installation = cd::executable_directory();
         cd::LauncherLock instance_lock(installation, inherited_lock);
+        cd::require_setup_complete(installation);
         if (update_health) {
             auto info = cd::json::parse(cd::read_text(installation / "build-info.json"));
             if (info.at("source_commit").get<std::string>() != cd::version::source_commit ||

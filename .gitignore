@@ -41,3 +41,6 @@ operator.token
 *.sqlite-*
 *.credential.json
 /player-credential.json
+
+/dist-setup-test/
+/dist-setup-interruption/

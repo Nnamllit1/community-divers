@@ -3,9 +3,11 @@ param(
     [Parameter(Mandatory=$true)][string]$PortableZip,
     [string]$OutputDirectory='dist',
     [switch]$TestIdentity,
+    [switch]$TestInterrupt,
     [switch]$AllowDirty
 )
 $ErrorActionPreference='Stop'
+if($TestInterrupt -and -not $TestIdentity){throw 'Interruption fixtures require the separate QA identity.'}
 $root=Split-Path $PSScriptRoot -Parent
 $zip=(Resolve-Path -LiteralPath $PortableZip).Path
 $out=[IO.Path]::GetFullPath((Join-Path (Get-Location) $OutputDirectory))
@@ -73,12 +75,19 @@ foreach($file in @($inventory.files)+@([pscustomobject]@{path='install-inventory
     $parent=Split-Path $relative -Parent
     $lines.Add('SetOutPath "$INSTDIR'+$(if($parent){'\'+(Escape-Nsis $parent)}else{''})+'"')
     $lines.Add('File "'+(Escape-Nsis (Join-Path $payload $relative))+'"')
+    if($TestInterrupt -and $relative -eq 'CommunityDivers.exe'){
+        $lines.Add('FileOpen $0 "$INSTDIR\.community-divers-test-ready" w')
+        $lines.Add('FileWrite $0 "ready"')
+        $lines.Add('FileClose $0')
+        $lines.Add('Sleep 60000')
+    }
 }
 [IO.File]::WriteAllLines($list,$lines,[Text.UTF8Encoding]::new($false))
 $label='Community Divers'
 $key='CommunityDivers'
 $suffix=''
 if($TestIdentity){$key+='-QA';$label+=' QA';$suffix='-qa'}
+if($TestInterrupt){$suffix+='-interrupted'}
 $name='CommunityDiversSetup-'+$info.release_id.Replace('+','-')+$suffix+'-windows-x64.exe'
 $destination=Join-Path $out $name
 if(Test-Path -LiteralPath $destination){throw 'Setup output already exists.'}

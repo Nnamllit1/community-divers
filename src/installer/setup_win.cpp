@@ -113,6 +113,8 @@ json marker(const fs::path &root) {
     auto key = j.at("registry_key").get<std::string>();
     need(key == "CommunityDivers" || key == "CommunityDivers-QA",
          "Unrecognized application registration");
+    auto state = j.at("state").get<std::string>();
+    need(state == "preparing" || state == "installed", "Unrecognized setup state");
     return j;
 }
 void atomic_marker(const fs::path &root, const json &j) {
@@ -136,6 +138,17 @@ void disposition(HANDLE h, bool remove) {
          "Cannot remove an owned launcher file");
 }
 } // namespace
+void require_setup_complete(const fs::path &input) {
+    // Portable/source builds have no setup marker. A setup installation must be
+    // finalized before a partially replaced launcher can start or self-update.
+    if (!fs::exists(input / marker_name))
+        return;
+    auto root = root_path(input);
+    auto info = marker(root);
+    need(info.at("state") == "installed",
+         "Launcher setup is incomplete. Close this window and run the installer again to repair "
+         "the installation. Your profiles and mods are preserved.");
+}
 void check_setup_destination(const fs::path &input) {
     auto root = root_path(input);
     if (!fs::exists(root))

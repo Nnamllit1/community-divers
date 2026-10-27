@@ -48,18 +48,29 @@ int main() {
         fs::create_directories(root);
         auto app = root / "application";
         check_setup_destination(app);
+        require_setup_complete(app); // No setup marker: portable/source builds still work.
         fs::create_directory(app);
         begin_setup_install(app, "CommunityDivers-QA");
+        rejects([&] { require_setup_complete(app); });
         write(app / "interrupted.txt", "partial");
         check_setup_destination(app);
         fs::remove(app / "interrupted.txt");
         package(app);
         register_setup_install(app, "CommunityDivers-QA");
         verify_setup_files(app);
+        require_setup_complete(app);
         require(json::parse(read_text(app / ".community-divers-installed.json")).at("state") ==
                     "installed",
                 "Setup was not finalized");
         std::cout << "PASS setup ownership, Unicode paths and interrupted-install repair\n";
+        auto installed = json::parse(read_text(app / ".community-divers-installed.json"));
+        auto invalid = installed;
+        invalid["state"] = "unknown";
+        write(app / ".community-divers-installed.json", invalid.dump());
+        rejects([&] { require_setup_complete(app); });
+        write(app / ".community-divers-installed.json", installed.dump());
+        require_setup_complete(app);
+        std::cout << "PASS launcher refuses incomplete or unknown setup state\n";
         auto unknown = root / "unknown";
         write(unknown / "user.txt", "keep");
         rejects([&] { check_setup_destination(unknown); });

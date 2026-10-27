@@ -19,7 +19,9 @@ files identify the release artifacts, and in-app updates use a separate pinned
 publisher signature.
 
 If file installation is interrupted, close the launcher and rerun the same setup.
-The ownership marker permits repair of an incomplete installation. A running
+The ownership marker permits repair of an incomplete installation. Until repair
+finishes, starting the launcher explains that setup is incomplete and exits; it
+does not try to update or run partially installed application files. A running
 launcher or unresolved update transaction prevents replacement.
 
 ## Portable use and updates
