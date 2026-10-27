@@ -1,6 +1,6 @@
 {
   "algorithm": "ecdsa-p256-sha256",
-  "payload": "{\r\n  \"schema\": 1,\r\n  \"channel\": \"preview\",\r\n  \"platform\": \"windows-x64\",\r\n  \"release_id\": \"0.1.0-preview.1+dfe5c7b8\",\r\n  \"source_commit\": \"dfe5c7b80b5d32c454a80b5cf93b9ebe949fa85f\",\r\n  \"source_revision\": 32,\r\n  \"service_protocol\": 1,\r\n  \"filename\": \"CommunityDivers-0.1.0-preview.1-dfe5c7b8-windows-x64.zip\",\r\n  \"bytes\": 5246009,\r\n  \"sha256\": \"d2c2c4b8759945c5b4878e9416631e8b1573b03d89db0e6ace8005cd1d5cef8f\",\r\n  \"url\": \"https://github.com/Nnamllit1/community-divers/releases/download/preview-dfe5c7b80b5d/CommunityDivers-0.1.0-preview.1-dfe5c7b8-windows-x64.zip\"\r\n}\n",
+  "payload": "{\r\n  \"schema\": 1,\r\n  \"channel\": \"preview\",\r\n  \"platform\": \"windows-x64\",\r\n  \"release_id\": \"0.1.0-preview.1+919cd3a1\",\r\n  \"source_commit\": \"919cd3a16f0e5614e4862437681b764147dc757f\",\r\n  \"source_revision\": 42,\r\n  \"service_protocol\": 1,\r\n  \"filename\": \"CommunityDivers-0.1.0-preview.1-919cd3a1-windows-x64.zip\",\r\n  \"bytes\": 5268507,\r\n  \"sha256\": \"5dd7eeab088c47a1d64390941fa7fceffe750a9110d538219c3e6199e8a7048a\",\r\n  \"url\": \"https://github.com/Nnamllit1/community-divers/releases/download/preview-919cd3a16f0e/CommunityDivers-0.1.0-preview.1-919cd3a1-windows-x64.zip\"\r\n}\n",
   "schema": 1,
-  "signature": "7855bee23e36bc98ca6e5f0d92337289a85d7f7fa9ae30cac582f2146143f4e06e27a9efcb97b6e8a315bdc893b00a2a08ac3e86900ca31b134e8e60fdd51b2d"
+  "signature": "2d2ce05c2e1ff40c527acfdcf8496f5e7f36a7432df3f14d402176d56d1764a519481e504ffaa052afb559682712cc9fe0ffe1b2ab58074af5609c9b5d35301d"
 }
