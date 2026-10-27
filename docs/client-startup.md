@@ -55,8 +55,8 @@ pre-probe values after cleanup.
 
 A subsequent bounded probe captured the runtime child's main thread in the
 Windows dialog message loop, with frames in `DialogBoxParamW`. Static resources
-include a crash-report dialog and a hardware-test dialog, but the displayed dialog
-and any underlying exception have not been identified. This distinguishes the
+include a crash-report dialog and a hardware-test dialog. At that stage the active
+dialog and underlying exception had not been identified. This distinguished the
 observed wait from engine startup without assigning an unverified failure cause.
 A separate fixture proved descendant cleanup after the parent had already exited.
 The probe verified an empty job before restoring access and removing its profile;
@@ -108,6 +108,35 @@ with the corrected folders. Its final process/ACL receipt was interrupted, so it
 is not counted as a complete probe. Subsequent inspection found no surviving probe
 processes; the exact temporary profile and its access rules were removed and all
 five bootstrap hashes remained unchanged. The pre-run ACL snapshot was not retained.
+
+## Launch arguments and recoverable diagnostics
+
+A comparison supplied an explicit `--bundle-dir` pointing at the prepared copy's
+`data` directory, together with `--release`. These options came from the older
+loader's launch contract; they were tested as a hypothesis, not assumed current
+requirements. The captured root command line confirmed both options were present.
+The same runtime-base execute fault, path-not-found status and child dialog wait
+remained. No engine module was observed. The bounded run ended with an empty job,
+all 180 access descriptors restored and all five bootstrap hashes unchanged.
+Supplying these arguments is therefore not a startup fix for this contained run.
+
+The probe now persists its complete pre-run access/hash baseline and a separate
+profile/process identity journal before changing access. A synthetic interruption
+check observed a fixture parent exit with a descendant still present, then forcibly
+stopped the owning probe. Recovery refused to act while the owner was alive; after
+termination it removed only the recorded profile's access rules and profile, with
+no remaining fixture processes or rules. The ordinary parent/child isolation and
+actual temporary-directory write checks also passed with journaling enabled.
+This improves recovery from a lost tool session; it does not establish game startup.
+
+The next diagnostic needs the specific failed file or object lookup. An empty ETW
+session capability check returned `ERROR_ACCESS_DENIED` for the current token;
+no provider was enabled and no activity was collected. A file trace therefore
+needs an appropriately authorized controller and verified filtering to the owned
+processes before it can be used. Windows documents the permissions in
+[StartTrace](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-starttracew)
+and [EnableTraceEx2](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-enabletraceex2).
+No tracing permissions or group memberships were changed.
 
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The
