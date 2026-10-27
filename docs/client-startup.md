@@ -79,6 +79,36 @@ changes execution conditions, so this result does not prove that the same except
 sequence occurs during an ordinary launch or identify the active dialog.
 See Microsoft's [exception continuation semantics](https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-continuedebugevent).
 
+A run without debug-event instrumentation captured the runtime child's process
+parameters: its command line contained only its image path, with no additional
+arguments. It reached the same dialog wait. A subsequent diagnostic captured the
+root's execute-fault context, and a matching user-visible crash report confirmed
+that the runtime was reporting that fault. The preserved registers included
+`STATUS_OBJECT_PATH_NOT_FOUND` (`0xC000003A`); the failed lookup is not identified.
+The report separately failed to create its dump directory with
+`STATUS_ACCESS_DENIED` (`0xC0000022`). These are distinct observations, not proof
+that the dump path caused the original execute fault.
+
+The report exposed an error in the probe's temporary-directory setup. Windows
+rewrites an AppContainer's `LOCALAPPDATA`, `TEMP` and `TMP` beneath its per-container
+folder. Overriding the launch environment had not created that redirected tree.
+Earlier fixtures wrote explicit private paths and therefore missed this case.
+The corrected setup creates the private per-container folders after applying their
+inherited access and integrity settings. New fixture checks verify actual
+`APPDATA`, `LOCALAPPDATA`, `TEMP`, `TMP` and `GetTempPathW` file writes and reads in
+both parent and child, alongside the existing outside-file and network denials.
+See Microsoft's [AppContainer profile and environment behavior](https://learn.microsoft.com/en-us/windows/win32/secauthz/implementing-an-appcontainer#creating-the-profile).
+
+A normal diagnostic run after that correction still reached the runtime dialog
+without observing the engine. The probe cleaned up both processes and left all
+checked copy permissions, paths and bootstrap hashes unchanged. Actual game dump
+creation has not been reverified, and the underlying startup failure remains open.
+A later debug run captured the same runtime-base fault and path-not-found status
+with the corrected folders. Its final process/ACL receipt was interrupted, so it
+is not counted as a complete probe. Subsequent inspection found no surviving probe
+processes; the exact temporary profile and its access rules were removed and all
+five bootstrap hashes remained unchanged. The pre-run ACL snapshot was not retained.
+
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The
 remaining runtime dependency or failure must be identified before selecting an
