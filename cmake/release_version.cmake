@@ -1,0 +1,18 @@
+# A preview number follows main's first-parent revision, independent of CI finish order.
+function(community_release_version base revision commit dirty output)
+  if(NOT base MATCHES "^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)$")
+    message(FATAL_ERROR "Release base must be a numeric MAJOR.MINOR.PATCH version.")
+  endif()
+  string(LENGTH "${commit}" commit_length)
+  if(NOT revision MATCHES "^[1-9][0-9]*$" OR NOT commit MATCHES "^[0-9a-f]+$" OR
+     NOT commit_length EQUAL 40)
+    set(version "${base}-dev.0+unknown")
+  else()
+    set(version "${base}-preview.${revision}")
+    if(dirty)
+      string(SUBSTRING "${commit}" 0 8 short_commit)
+      string(APPEND version "+dev.${short_commit}")
+    endif()
+  endif()
+  set(${output} "${version}" PARENT_SCOPE)
+endfunction()

@@ -3,6 +3,7 @@
 param([string]$ArtifactDirectory = 'dist-ci')
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+. (Join-Path $PSScriptRoot 'release-policy.ps1')
 function Assert-Native { if ($LASTEXITCODE -ne 0) { throw 'A native release command failed.' } }
 $repo = $env:GITHUB_REPOSITORY
 $source = $env:GITHUB_SHA
@@ -41,7 +42,9 @@ $roots = @(Get-ChildItem -LiteralPath $unpacked -Directory)
 if ($roots.Count -ne 1) { throw 'Package must contain one root directory.' }
 $info = Get-Content -LiteralPath (Join-Path $roots[0].FullName 'build-info.json') -Raw | ConvertFrom-Json
 if ($info.source_commit -ne $source -or $info.source_dirty -ne $false -or $info.platform -ne 'windows-x64' -or $info.launcher_update_protocol -ne 1) { throw 'Package is not the clean supported CI source build.' }
-$tag = 'preview-' + $source.Substring(0, 12)
+$identity = Get-PreviewIdentity $info
+if ($zip.Name -ne $identity.zip_name -or $setup.Name -ne $identity.setup_name) { throw 'Package names do not match the numbered release.' }
+$tag = $identity.tag
 $updater = Join-Path $roots[0].FullName 'CommunityDiversUpdate.exe'
 $payload = [ordered]@{
     schema=1; channel='preview'; platform='windows-x64'; release_id=$info.release_id;
@@ -60,6 +63,36 @@ function Api-Get([string]$Url) {
     try { return Invoke-RestMethod -Uri $Url -Headers $headers -Method Get }
     catch { if ([int]$_.Exception.Response.StatusCode -eq 404) { return $null }; throw 'GitHub release API request failed.' }
 }
+# Publication is serialized by the workflow, but queued jobs need not start in source order.
+# Authenticate the channel before creating a release, and recheck before making a draft public.
+function Read-CurrentChannel([string]$Stage) {
+    $current = Api-Get ($base + '/contents/updates/preview.json?ref=main')
+    if (-not $current) { throw 'The existing preview channel is missing.' }
+    $oldFeed = Join-Path $work ('previous-' + $Stage + '.json')
+    [IO.File]::WriteAllBytes($oldFeed, [Convert]::FromBase64String($current.content))
+    $old = (& $updater --inspect-feed $oldFeed) | ConvertFrom-Json; Assert-Native
+    return [pscustomobject]@{file=$current; payload=$old}
+}
+function Test-PublicationNeeded([string]$Stage) {
+    $channel = Read-CurrentChannel $Stage
+    $decision = Get-PreviewPublicationDecision $payload $channel.payload
+    if ($decision -ne 'publish') {
+        Write-Host ('Skipping publication: ' + $decision + '.')
+        return $false
+    }
+    # A newer release may be public even if its subsequent channel promotion failed.
+    $page = 1
+    do {
+        $releases = @(Api-Get ($base + '/releases?per_page=100&page=' + $page))
+        if (Test-PreviewSupersededByRelease $identity.version $releases) {
+            Write-Host 'Skipping publication: a newer numbered release is already public.'
+            return $false
+        }
+        $page++
+    } while ($releases.Count -eq 100)
+    return $true
+}
+if (-not (Test-PublicationNeeded 'preflight')) { exit 0 }
 $tagRef = Api-Get ($base + '/git/ref/tags/' + $tag)
 if (-not $tagRef) {
     $tagRequest = @{ref=('refs/tags/' + $tag); sha=$source} | ConvertTo-Json
@@ -97,7 +130,7 @@ if (-not $existing) {
     # The create response is authoritative. A new draft may not be visible in tag/list queries yet.
     $existing = Api-Json ($base + '/releases') 'Post' @{
         tag_name=$tag; target_commitish=$source; draft=$true; prerelease=$true;
-        name=('Launcher preview ' + $source.Substring(0, 8)); body=$notes
+        name=$identity.title; body=$notes
     }
 }
 if (-not $existing.id -or $existing.tag_name -ne $tag) { throw 'Release identity mismatch.' }
@@ -120,7 +153,8 @@ if ($existing.draft) {
             Invoke-RestMethod -Uri ($uploadBase + '?name=' + [Uri]::EscapeDataString($name)) -Headers $headers -Method Post -ContentType $type -InFile $file | Out-Null
         } catch { throw 'Draft asset upload failed; no channel promotion occurred.' }
     }
-    $existing = Api-Json ($base + '/releases/' + $existing.id) 'Patch' @{draft=$false;prerelease=$true;body=$notes}
+    if (-not (Test-PublicationNeeded 'before-publish')) { exit 0 }
+    $existing = Api-Json ($base + '/releases/' + $existing.id) 'Patch' @{draft=$false;prerelease=$true;name=$identity.title;body=$notes}
 } else {
     $asset = @($existing.assets | Where-Object { $_.name -eq $zip.Name })
     if ($asset.Count -ne 1 -or ($asset[0].digest -and $asset[0].digest -ne ('sha256:' + $digest))) { throw 'Published package differs; refusing to overwrite it.' }
@@ -152,17 +186,10 @@ for ($attempt = 0; $attempt -lt 5; $attempt++) {
 if (-not $downloaded -or (Get-FileHash -LiteralPath $publicSetup -Algorithm SHA256).Hash.ToLowerInvariant() -ne $setupDigest) { throw 'Public installer differs from the tested artifact.' }
 $feedBytes = [IO.File]::ReadAllBytes($feedPath)
 for ($attempt = 0; $attempt -lt 3; $attempt++) {
-    $current = Api-Get ($base + '/contents/updates/preview.json?ref=main')
-    if (-not $current) { throw 'The existing preview channel is missing.' }
-    $oldFeed = Join-Path $work ('previous-' + $attempt + '.json')
-    [IO.File]::WriteAllBytes($oldFeed, [Convert]::FromBase64String($current.content))
-    $old = (& $updater --inspect-feed $oldFeed) | ConvertFrom-Json; Assert-Native
-    if ($old.source_revision -gt $info.source_revision) { Write-Host 'A newer release is already promoted.'; exit 0 }
-    if ($old.source_revision -eq $info.source_revision) {
-        if ($old.source_commit -ne $source -or $old.sha256 -ne $digest) { throw 'Channel revision collision.' }
-        Write-Host 'This immutable release is already promoted.'; exit 0
-    }
-    $request = @{message=('Promote preview ' + $source.Substring(0, 12)); branch='main'; sha=$current.sha; content=[Convert]::ToBase64String($feedBytes)} | ConvertTo-Json -Depth 8
+    $channel = Read-CurrentChannel ('promote-' + $attempt)
+    $decision = Get-PreviewPublicationDecision $payload $channel.payload
+    if ($decision -ne 'publish') { Write-Host ('Channel promotion: ' + $decision + '.'); exit 0 }
+    $request = @{message=('Promote ' + $identity.version); branch='main'; sha=$channel.file.sha; content=[Convert]::ToBase64String($feedBytes)} | ConvertTo-Json -Depth 8
     try {
         Invoke-RestMethod -Uri ($base + '/contents/updates/preview.json') -Headers $headers -Method Put -ContentType 'application/json' -Body ([Text.Encoding]::UTF8.GetBytes($request)) | Out-Null
         Write-Host ('Published and promoted ' + $tag)

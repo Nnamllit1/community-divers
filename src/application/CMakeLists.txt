@@ -32,7 +32,6 @@ add_custom_target(community_docs ALL COMMAND ${CMAKE_COMMAND} -E copy_directory
   "${CMAKE_SOURCE_DIR}/docs" "$<TARGET_FILE_DIR:CommunityDivers>/docs")
 add_dependencies(CommunityDivers community_catalog community_docs)
 target_link_libraries(CommunityDivers PRIVATE community_platform community_maintenance community_mod_loader community_notes_view imgui winhttp shell32 ole32 windowscodecs comdlg32)
-target_compile_definitions(CommunityDivers PRIVATE CD_VERSION="${PROJECT_VERSION}")
 add_custom_command(TARGET CommunityDivers POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
   "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:CommunityDivers>/assets")
 install(TARGETS CommunityDivers CommunityDiversInspect CommunityDiversUpdate RUNTIME DESTINATION .)

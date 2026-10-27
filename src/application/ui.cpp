@@ -540,7 +540,7 @@ void App::draw(void *owner) {
     text("COMMUNITY DIVERS");
     ImGui::PopFont();
     ImGui::PushFont(caption_font);
-    subdued("COMMUNITY LAUNCHER  /  PREVIEW " CD_VERSION);
+    subdued("COMMUNITY LAUNCHER  /  " + std::string(version::release_id));
     ImGui::PopFont();
     ImGui::EndGroup();
     ImGui::SameLine(ImGui::GetWindowWidth() - 300);
@@ -1018,8 +1018,7 @@ void App::draw(void *owner) {
                 "A failed startup restores the previous version.");
         gap(18);
         section_head("COMMUNITY DIVERS");
-        text("Launcher preview " CD_VERSION);
-        subdued("Release " + std::string(version::release_id));
+        text("Launcher " + std::string(version::release_id));
         if (version::source_dirty)
             subdued("Local development build with uncommitted changes.");
         gap(10);

@@ -9,6 +9,21 @@ int main() {
         auto r = parse_update_payload(j.dump(), "preview");
         update_require(r.bytes == 3 && r.revision == 6, "Signed payload fields lost");
         std::cout << "PASS update package identity and bounds\n";
+        auto numbered = j;
+        numbered["release_id"] = "0.1.0-preview.45";
+        numbered["source_revision"] = 45u;
+        numbered["filename"] = "CommunityDivers-0.1.0-preview.45-windows-x64.zip";
+        numbered["url"] = "https://github.com/Nnamllit1/community-divers/releases/download/"
+                          "v0.1.0-preview.45/CommunityDivers-0.1.0-preview.45-windows-x64.zip";
+        auto next = parse_update_payload(numbered.dump(), "preview");
+        update_require(next.release_id == "0.1.0-preview.45" &&
+                           compare_update(next, r.source_commit, r.revision) == UpdateRelation::current,
+                       "Numbered release format rejected or source identity changed");
+        numbered["source_commit"] = std::string(40, 'b');
+        next = parse_update_payload(numbered.dump(), "preview");
+        update_require(compare_update(next, r.source_commit, r.revision) == UpdateRelation::available,
+                       "Legacy install cannot recognize a numbered update");
+        std::cout << "PASS numbered previews retain legacy updater compatibility\n";
         for (const auto &field : {"source_commit", "sha256", "filename", "url"}) {
             auto bad = j;
             bad[field] = "../../escape";

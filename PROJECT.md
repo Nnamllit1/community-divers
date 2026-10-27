@@ -143,6 +143,8 @@ The [coordinated update design](docs/updates.md) defines channels and release se
   rollback, interrupted-update recovery and persisted channel replay protection.
 - [x] Publish immutable launcher previews and a signed channel after Windows/Linux CI.
   [Update-capable preview](https://github.com/Nnamllit1/community-divers/releases/tag/preview-0039e8e3846f)
+- [x] Use readable numbered preview versions across releases, downloads and the
+  launcher, with publication checks that skip older CI builds finishing late.
 - [ ] Extend publication to client-adapter/server bundles in a compatible release set.
 - [ ] Check for launcher/client updates at startup and before joining a community.
 - [ ] Enforce the server's required release set, including adapter and game build.

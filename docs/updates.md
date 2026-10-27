@@ -32,6 +32,29 @@ contents change at the same URL. Signed manifests establish the publisher;
 artifact hashes validate the downloaded bytes. Publishing credentials stay in
 CI secrets, outside source control and client packages.
 
+## Preview version numbers
+
+Public previews use `MAJOR.MINOR.PATCH-preview.N`, for example
+`0.1.0-preview.45`. The same version appears in About, the release title, tag
+(`v0.1.0-preview.45`), ZIP, installer and signed update feed. The full commit
+hash remains in `build-info.json` for diagnostics.
+
+`N` is the source commit's first-parent count on main. A later main revision
+therefore has a larger number regardless of when its CI job finishes. Numbers
+can skip because documentation-only and channel-promotion commits do not publish
+packages. Compare the numeric preview suffix, not the order of GitHub's release
+cards. Maintainers change the base version in `CMakeLists.txt` when appropriate;
+stable-release publication is not implemented yet.
+
+Local modified builds append `+dev.<commit>`. Source archives without Git history
+and shallow checkouts use `-dev.0+unknown`. Neither can be published. Use a full
+clone for a reproducible numbered build, and preserve main's history once released.
+
+Earlier hash-tagged previews retain their download links and signed identities.
+Their titles identify them as legacy builds. Existing update-capable launchers
+continue to order updates using the authenticated source revision, so this naming
+change does not require a manual reinstall.
+
 ## Release sets
 
 A release set pairs components that work together. Server and client component
@@ -128,8 +151,8 @@ CommunityDiversUpdate.exe --sign payload.json .local/keys/update-publisher.priva
 
 Generation and signing refuse existing output paths. Store the private key in
 ignored local storage and an appropriate secret backup; never publish it. The
-initial channel was signed manually. CI secret provisioning and automatic
-promotion remain pending. The accepted channel envelope is persisted and reauthenticated on subsequent
+initial channel was signed manually; subsequent preview promotion runs in CI.
+The accepted channel envelope is persisted and reauthenticated on subsequent
 checks. An older observed revision or a changed package for the same revision is
 rejected. A corrupt saved channel state is reported rather than silently reset.
 Trust-root rotation across multiple publisher keys remains pending; current
@@ -191,9 +214,13 @@ CommunityDiversUpdate.exe --verify-package package.zip signed-feed.json extracte
 `publish-preview` runs only on main after Windows and Linux checks pass. It
 consumes the Windows job's package, checks its source identity/checksum, signs
 through the native updater using an environment secret and verifies extraction
-before creating a draft release. The source tag identifies the full build commit;
-ZIP names include the version and short commit. Draft retries may replace draft
-assets; published assets are checked and never overwritten.
+before creating a draft release. Numbered version tags identify the full build
+commit; ZIP and installer names use the same readable version. Before creating a
+draft and again before publishing it, the job checks the authenticated channel
+and published release versions. A late older build is skipped, including when a
+newer release became public but its channel promotion failed. Same-revision
+identity collisions and public version regressions fail publication. Draft retries
+may replace draft assets; published assets are checked and never overwritten.
 
 The release is published before `updates/preview.json` is promoted through a
 compare-and-swap Contents API update on main. A competing/newer channel revision

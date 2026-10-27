@@ -31,6 +31,10 @@ contracts are kept separate from Windows integration. It does not require a webv
 and verify it with the accompanying SHA-256 file. Choose the **Setup executable**
 for a per-user installation and uninstaller, or the **ZIP** for portable use.
 See [installation](docs/installation.md) for setup, updates and data preservation.
+Previews have numbered versions such as `0.1.0-preview.45`, shared by the release,
+launcher and downloads. A larger preview number means a newer main revision;
+older hash-tagged downloads are labelled as legacy builds. See
+[version numbering](docs/updates.md#preview-version-numbers).
 
 - Detect an existing game through Steam or choose its installation directory.
 - Save community HTTPS endpoints and check their protocol/build advertisements.

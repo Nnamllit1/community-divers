@@ -1,23 +1,18 @@
 # Launcher preview
 
-## Licensing
+## Clearer versions
 
-  * **Service license 1.0 is adopted.** The independent backend now has explicit
-    source-sharing and funding terms: unlimited genuine donations, capped paid
-    decorative ranks, and no paid gameplay advantages or gambling. Earlier MIT
-    permissions remain valid. The launcher and shared components remain MIT.
-  * Server packages include their exact source archive and license notices.
-    Operators can publish the running service's source link through its public
-    information page. Modified builds can supply their own source URL.
-
-## For contributors
-
-  * The GPL HellForge loader has a separate pinned build and synthetic checks for
-    mod callbacks and hook chaining. It is not included in launcher packages.
-  * Component license coverage, contribution terms and native-mod approval
-    boundaries are documented separately.
+  * **Numbered previews** replace commit hashes in release titles and download
+    names: for example, `0.1.0-preview.45`. About displays the same version.
+    The commit hash remains available in build information for diagnostics.
+  * A larger preview number means a newer main revision. Numbers can skip when
+    source changes do not produce a release.
+  * Late CI builds are checked before publication so an older build cannot be
+    newly published after a newer preview. Existing updater installations accept
+    the new versions; older download links continue to work.
 
 ## Current limits
 
 The launcher remains a **preview**. Current-game startup and community multiplayer
-are still in development. Synthetic loader tests do not establish game compatibility.
+are still in development. This release changes versioning and publication, not
+game compatibility.
