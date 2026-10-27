@@ -17,6 +17,11 @@
   * Releases publish the same notes in the launcher and on GitHub, with versioned
     setup and portable downloads.
 
+## Fixed
+
+  * Installer builds retry official compiler mirrors if a download returns an
+    HTML page or incomplete archive, while keeping the compiler checksum pinned.
+
 ## Current limits
 
 The community game adapter and multiplayer are **still in development**. A verified

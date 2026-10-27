@@ -37,10 +37,30 @@ $cache=Join-Path $root '.local/tools/nsis/3.13'
 New-Item -ItemType Directory -Path $cache -Force | Out-Null
 $archive=Join-Path $cache 'nsis-3.13.zip'
 $sha='ba63dffc4410ee89193e1cb5a41989991bd77c61068da17e3156d136b7b0b3d8'
-if(-not(Test-Path -LiteralPath $archive)){
-    Invoke-WebRequest -Uri 'https://downloads.sourceforge.net/project/nsis/NSIS%203/3.13/nsis-3.13.zip' -OutFile $archive
+$verified=(Test-Path -LiteralPath $archive -PathType Leaf) -and (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -eq $sha
+if(-not $verified){
+    # Some SourceForge routes return an HTML mirror page with HTTP 200. Never cache or run it.
+    $sources=@(
+        'https://downloads.sourceforge.net/project/nsis/NSIS%203/3.13/nsis-3.13.zip',
+        'https://altushost-net.dl.sourceforge.net/project/nsis/NSIS%203/3.13/nsis-3.13.zip',
+        'https://prdownloads.sourceforge.net/nsis/nsis-3.13.zip'
+    )
+    foreach($source in $sources){
+        $candidate=Join-Path $work ('nsis-download-'+[Guid]::NewGuid().ToString('N')+'.zip')
+        try {
+            Invoke-WebRequest -Uri $source -OutFile $candidate -UseBasicParsing -UserAgent 'CommunityDiversBuild/1.0' -TimeoutSec 30 -MaximumRedirection 5
+            $digest=(Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash.ToLowerInvariant()
+            if($digest -ne $sha){
+                Write-Warning ('NSIS mirror returned '+(Get-Item -LiteralPath $candidate).Length+' bytes with an unexpected digest; trying another official route.')
+                continue
+            }
+            Move-Item -LiteralPath $candidate -Destination $archive -Force
+            $verified=$true
+            break
+        } catch { Write-Warning 'NSIS mirror download failed; trying another official route.' }
+    }
 }
-if((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $sha){throw 'NSIS compiler archive hash mismatch.'}
+if(-not $verified){throw 'No official NSIS download matched the pinned compiler digest.'}
 # Each build uses a fresh extraction from the pinned archive.
 $sdk=Join-Path $work 'nsis'
 Expand-Archive -LiteralPath $archive -DestinationPath $sdk
