@@ -26,34 +26,35 @@ files, interfaces, notices and packaging rules must be documented before adoptio
 
 ## Funding policy
 
-The intended permitted funding is voluntary donations and reasonable hosting-cost
-recovery. Donations must not buy gameplay advantages or other paid entitlements.
-Operators may retain a modest surplus; the policy is not intended to require every
-small community to balance to exactly zero. Paid cosmetics are a possible future
-policy change and are not part of the present permission being designed.
+Genuine voluntary donations are unlimited, including amounts retained by the
+operator. They must not purchase or be expected in exchange for a benefit. Paid
+purely decorative ranks, titles and profile badges are permitted within a separate
+cap, along with disclosed shared hosting-cost contributions. Paid pets and other
+cosmetics remain a possible future extension.
+
+The paid-revenue allowance is **twice actual monthly eligible operating costs**.
+This is a revenue cap, not permission for profit of twice the costs: EUR 100 in
+hosting permits EUR 200 of monthly sales, leaving EUR 100 after hosting. Saving
+that margin for four months builds EUR 400 to pay for another four months without
+sales at the same cost. Donations are outside the cap and do not increase it.
+
+The draft defines prorated infrastructure costs, calendar-month accounting and
+refunds of over-cap sales. The retained lawful margin may be saved without a
+balance cap or taken as operator income. Paying operator salaries or relabeling
+purchases as donations must not enlarge the allowance. Aggregate reporting keeps
+donation and sales income separate without publishing donor identities.
 
 The intended prohibited activities are:
 
 - real-money gambling, paid randomized rewards and cash-out schemes involving the
   covered service;
-- selling gameplay advantages, progression, unlocks, equipment, stats or privileged
-  influence over the shared campaign;
-- routing equivalent purchases through donation tiers, third parties or bundled
-  memberships to avoid these conditions.
+- selling gameplay advantages, progression, equipment, stats, priority access or
+  privileged influence over the shared campaign;
+- disguising purchases through donation tiers, third parties or bundled memberships
+  to avoid benefit restrictions or the paid-revenue cap.
 
-A final license needs an objective surplus rule. A proposal for review is an annual
-operator-retained surplus of at most **10% of documented eligible operating costs**,
-with excess funding retained for future service costs, returned, or used to reduce
-fees. This number is a draft, not an agreed term. The draft defines eligible
-infrastructure costs, documented future-cost reserves,
-calendar-year accounting and operator compensation within the surplus allowance.
-It includes worked examples and aggregate reporting without public donor identities.
-These details, including the cap, remain review proposals until adopted.
-
-The license should distinguish actual shared hosting costs from fees for cosmetic
-items or gameplay benefits. Donation records must not require disclosure of donor
-identities to the public. Any funding transparency requirement should use aggregate
-figures and preserve personal information.
+The [review draft](service-license-draft.md) includes worked examples and the
+source-sharing conditions. These terms have not changed the effective license.
 
 ## Proposed coverage and adoption boundary
 
@@ -74,9 +75,10 @@ not by themselves establish that code is independent; copied or derived GPL code
 cannot be moved into the restricted service by changing its deployment layout.
 See [GNU's explanation of combined works and communication](https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation).
 
-The draft permits disclosed shared access-cost contributions but no paid gameplay
-tiers, donor priority or paid cosmetics. Operator compensation counts toward the
-surplus cap rather than increasing the cost base used to calculate that cap.
+The draft permits decorative paid ranks and disclosed shared access-cost
+contributions, but no paid gameplay tiers or donor priority. Genuine donations
+remain uncapped. Operator compensation does not increase the cost base used to
+calculate the paid-revenue cap.
 
 Before adoption, review contributor rights and the final wording with qualified
 legal advice. The draft is a proposal, not a legal opinion or an enforcement
@@ -97,8 +99,8 @@ Before changing effective terms:
    and third-party notices. New restrictions cannot revoke existing grants.
 2. Review the separate service/loader interfaces and avoid importing GPL code into
    a component intended to carry incompatible restrictions.
-3. Finalize the surplus rule and draft the actual license text, including definitions,
-   source obligations, permitted funding, prohibited conduct and compliance/remedies.
+3. Review the draft definitions, source obligations, donation/sales distinction,
+   monthly paid-revenue cap, prohibited conduct and compliance/remedies.
 4. Review enforceability and compatibility with qualified legal advice, then update
    file-level notices, contributor terms, installer/package notices and public docs
    together. Do not label the restricted service as open source.

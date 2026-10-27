@@ -39,10 +39,12 @@ objective can stay stable while the roadmap evolves.
 - Reuse HellForge's GPL loader where compatible, preserving its mod exception;
   keep independently written backend/service code separate. Follow the
   [licensing plan](docs/licensing-plan.md) before changing license grants or publishing
-  the transition. The plan includes reciprocity, donations/cost recovery and restrictions
-  on gambling and exploitative monetization. The [service license draft](docs/service-license-draft.md)
-  defines funding and source-sharing proposals; the surplus cap and effective license
-  transition remain to be finalized. Paid cosmetics are a future policy option.
+  the transition. The plan includes reciprocity, unlimited genuine donations and
+  optional decorative ranks, with paid monthly revenue capped at twice actual
+  monthly operating costs, plus restrictions on gambling and paid advantages.
+  The [service license draft](docs/service-license-draft.md) defines the proposed
+  terms; the effective license transition remains unfinished. Paid pets and other
+  cosmetics remain a future policy option.
 - Mod-friendly community sessions without mandatory client-side anti-cheat.
   Client protection changes may be researched for the isolated community client.
   Authentication, profile ownership and service access remain separate concerns.
