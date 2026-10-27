@@ -126,8 +126,8 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 - [ ] Provide a server update agent that drains active missions before switching versions.
 - [ ] Preserve profiles, campaign data and mods across client/server updates.
 - [x] Render formatted per-release notes, including optional images, inside the launcher.
-- [ ] Publish the same release notes with each versioned GitHub release.
-- [ ] Provide and verify a Windows installer, app-list entry, shortcut and safe uninstaller.
+- [x] Publish the same release notes with each versioned GitHub release.
+- [x] Provide and verify a Windows installer, app-list entry, shortcut and safe uninstaller.
 - [ ] Finish repair, uninstall and release packaging.
 - [ ] Verify the complete install -> join -> mission -> progression -> restart flow.
 

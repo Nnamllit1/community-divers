@@ -203,3 +203,11 @@ exercises the real Direct3D/WIC image path.
 A live native HTTPS check also fetched an exact public source revision and its
 128,316-byte inline PNG through the application transport. That is separate from
 the deterministic stream/formatting tests and from local image render captures.
+
+The [modular launcher release](https://github.com/Nnamllit1/community-divers/releases/tag/preview-2d5db4129dce)
+passed Windows and Linux CI. Its public ZIP passed native signature/inventory
+verification; the public setup passed installation, app-list/shortcut checks,
+real launcher note rendering and removal while retaining custom files and user
+data. Release-note bytes match between the ZIP and the published Markdown asset.
+The public installer check used its silent command interface; interactive wizard
+input and DPI behavior are still separate desktop checks.
