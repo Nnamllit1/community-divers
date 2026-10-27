@@ -19,6 +19,9 @@
 
 ## Fixed
 
+  * Update-note images use the bounded binary transport, so images larger than
+    the update manifest limit can load correctly.
+
   * Installer builds retry official compiler mirrors if a download returns an
     HTML page or incomplete archive, while keeping the compiler checksum pinned.
 

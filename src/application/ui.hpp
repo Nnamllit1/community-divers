@@ -1,5 +1,6 @@
 #pragma once
 #include "community/platform.hpp"
+#include "note_transport.hpp"
 #include "community/mod_loader.hpp"
 #include "community/patch_notes_view.hpp"
 #include "community/updates.hpp"
@@ -14,9 +15,7 @@ struct App {
     std::future<ReleaseNotes> pending_notes;
     std::map<std::string, NoteTexture> note_textures;
     std::function<NoteTexture(const std::string &)> note_image_loader;
-    std::function<std::future<ReleaseNotes>(std::string)> notes_reader = [](std::string source) {
-        return fetch_release_notes_async(std::move(source), fetch_update_text);
-    };
+    std::function<std::future<ReleaseNotes>(std::string)> notes_reader = fetch_launcher_notes;
     bool notes_open = false, notes_requested = false;
     uint64_t notes_generation = 0, pending_notes_generation = 0;
     std::string notes_title;

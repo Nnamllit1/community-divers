@@ -27,7 +27,7 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "The Windows launcher currently targets x64.")
 endif()
 enable_language(RC)
-add_executable(CommunityDivers WIN32 main.cpp ui.cpp app.rc launcher.manifest)
+add_executable(CommunityDivers WIN32 main.cpp ui.cpp note_transport.cpp app.rc launcher.manifest)
 add_custom_target(community_docs ALL COMMAND ${CMAKE_COMMAND} -E copy_directory
   "${CMAKE_SOURCE_DIR}/docs" "$<TARGET_FILE_DIR:CommunityDivers>/docs")
 add_dependencies(CommunityDivers community_catalog community_docs)

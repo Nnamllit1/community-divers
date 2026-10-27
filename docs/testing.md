@@ -23,6 +23,8 @@ CTest runs these suites:
   retries, capped liberation, online backup/restore, restart continuity and
   unrelated/forward-schema rejection. Windows also probes the service with the
   launcher's actual WinHTTP client; Linux checks owner-only file permissions.
+- `note_transport_tests` (Windows): the application transport streams binary note
+  images above the update manifest size limit without truncation or text conversion.
 - `setup_tests` (Windows): installation ownership, interrupted setup repair, path
   rejection, active-launcher locks and inventory-based removal that preserves
   modified resources and unrelated files.
@@ -197,3 +199,7 @@ The viewer is an ImGui window rendered by the launcher, not an external browser.
 Use the normal window-size option to inspect wrapping at the minimum supported
 size. Formatting tests use an offscreen context; native backbuffer capture also
 exercises the real Direct3D/WIC image path.
+
+A live native HTTPS check also fetched an exact public source revision and its
+128,316-byte inline PNG through the application transport. That is separate from
+the deterministic stream/formatting tests and from local image render captures.
