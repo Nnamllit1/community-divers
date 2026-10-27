@@ -55,8 +55,20 @@ jobs:
           name: CommunityDiversService-linux-x64
           path: dist-service/
 
+  hellforge-loader:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .local/tools/hellforge-loader
+          key: ${{ runner.os }}-hellforge-tools-${{ hashFiles('integrations/hellforge-loader/upstream.lock.json') }}
+      - name: Build GPL loader and run synthetic fixtures
+        shell: powershell
+        run: ./integrations/hellforge-loader/Build.ps1
+
   publish-preview:
-    needs: [windows, linux-core]
+    needs: [windows, linux-core, hellforge-loader]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: windows-latest
     permissions:

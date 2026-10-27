@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "component": "hellforge-loader-experimental",
+  "upstream_commit": "@CD_HF_COMMIT@",
+  "upstream_game_build": "@CD_HF_UPSTREAM_BUILD@",
+  "loader_source_digest": "@CD_HF_SOURCE_DIGEST@",
+  "compiler": "@CMAKE_C_COMPILER_ID@ @CMAKE_C_COMPILER_VERSION@",
+  "current_client_compatible": false,
+  "deployable": false
+}

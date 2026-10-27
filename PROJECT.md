@@ -79,6 +79,9 @@ objective can stay stable while the roadmap evolves.
 - [x] Provide native depot-based file-copy preparation and independent content verification.
   Copy preparation alone does not verify game startup, user data or network isolation.
 
+- [x] Build the selected GPL HellForge loader separately and verify its startup,
+  mod callbacks and hook chaining against synthetic fixtures. This does not
+  establish current-game compatibility.
 - [ ] Establish an exact-build integration contract and compatibility manifest.
 - [ ] Create and verify an isolated current-game installation and user data.
 - [ ] Establish current-client startup and native integration for community use.

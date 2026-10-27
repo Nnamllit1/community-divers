@@ -253,3 +253,12 @@ integration unavailable.
 The [current-client bootstrap probe](client-startup.md) documents a separate
 runtime process and the conditions of an offline startup observation. It did not
 reach engine startup and does not satisfy the adapter acceptance gates.
+
+## Standalone GPL loader checks
+
+`integrations/hellforge-loader/Build.ps1` builds the pinned native loader and runs
+the two required synthetic suites, without loading a real game. It writes a
+successful verification receipt only after both pass, invalidating any previous
+success before configuring. See the
+[component instructions](../integrations/hellforge-loader/README.md) for prerequisites,
+outputs, license boundaries and the unverified current-game integration.

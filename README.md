@@ -135,5 +135,9 @@ by Arrowhead Game Studios or Sony Interactive Entertainment.
 
 ## License
 
-Project code is [MIT licensed](LICENSE). Third-party components retain their own
-licenses; see [THIRD_PARTY.md](THIRD_PARTY.md).
+Project code is [MIT licensed](LICENSE) except where a component supplies its own
+license. The separate [HellForge loader integration](integrations/hellforge-loader/README.md)
+is GPLv3 with HellForge's mod exception and is not included in the launcher package.
+Third-party components retain their own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md).
+The [service licensing plan](docs/licensing-plan.md) is a proposal; it has not
+changed the service's current MIT terms.

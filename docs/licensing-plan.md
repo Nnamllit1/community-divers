@@ -1,7 +1,9 @@
 # Component licensing plan
 
 This is a policy design, not a replacement license grant. The repository's current
-[LICENSE](../LICENSE) remains MIT until a reviewed transition is adopted. Already
+[LICENSE](../LICENSE) remains MIT for the existing launcher/service. The separate
+[loader build integration](../integrations/hellforge-loader/README.md) now carries
+GPLv3 and the mod exception; it is not part of the launcher distribution. Already
 published MIT copies retain their existing permissions. Third-party components
 retain their own licenses.
 

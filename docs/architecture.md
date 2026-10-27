@@ -21,6 +21,11 @@ application composes these interfaces instead of embedding their implementations
 | `src/installer/` | Setup ownership, verified removal and app-list registration, integrated into `community_maintenance` |
 | `src/service/` | `community_service` and `CommunityDiversService`: independent SQLite/HTTP campaign backend |
 
+`integrations/hellforge-loader/` is an independent GPL native-loader build with
+its own dependency pins, licenses and synthetic fixtures. It is not linked into
+application/service targets or deployed by the launcher. Its current-build port
+and execution-approval integration remain unimplemented.
+
 `installer/` at the repository root holds the NSIS wizard, while `tools/` holds
 packaging/publication commands. Release content is `docs/release-notes.md`, separate
 from its renderer. `tests/` owns the CTest executables. Binaries still go to the

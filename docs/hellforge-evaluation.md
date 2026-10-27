@@ -2,8 +2,11 @@
 
 Reviewed on 27 October 2026 at commit
 [`b1aef771474710eab5461d360444cd80a809c70c`](https://github.com/SkyeShade/HellForge/tree/b1aef771474710eab5461d360444cd80a809c70c).
-This is a static source review. No HellForge binary or build script was executed,
-and no HellForge code is currently integrated into Community Divers.
+The initial review was static. A separate
+[GPL component build](../integrations/hellforge-loader/README.md) now compiles the
+pinned native loader and runs synthetic tests. No upstream session/build script
+or game-startup code was executed. The loader is not deployed into the game or
+included in the launcher package.
 
 ## License and reuse decision
 
@@ -82,3 +85,13 @@ code supplied by a host.
    enabling runtime deployment.
 5. Implement the player-owned mod approval and profile admission rules before
    offering any community-driven native-mod setup.
+
+## Standalone build evidence
+
+The pinned Zig/MinHook build passed both named CTest suites locally on Windows:
+upstream synthetic stats/registry fixtures and the separate two-mod loader smoke
+check. The latter verifies actual DLL loading, event delivery, pattern lookup and
+chained hooks in a dedicated process with a fake game DLL. The build retains the
+GPL/mod-exception/SDK/MinHook notices and writes source/compiler/library identity
+receipts. These results establish the component build, not current-game runtime
+compatibility or multiplayer behavior.

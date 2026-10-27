@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "upstream": {
+    "repository": "https://github.com/SkyeShade/HellForge",
+    "commit": "b1aef771474710eab5461d360444cd80a809c70c",
+    "url": "https://codeload.github.com/SkyeShade/HellForge/tar.gz/b1aef771474710eab5461d360444cd80a809c70c",
+    "sha256": "f4329d9ce5019ae9671b16fa39553fe40171de2dc9e038b31275030379f7546e",
+    "game_build": "25480438"
+  },
+  "minhook": {
+    "version": "1.3.4",
+    "url": "https://github.com/TsudaKageyu/minhook/archive/refs/tags/v1.3.4.zip",
+    "sha256": "172708123daa0c98d20d3a980b16a50be14af243dc95dee6f79c24193ad010e4"
+  },
+  "zig": {
+    "version": "0.17.0",
+    "url": "https://ziglang.org/download/0.17.0/zig-x86_64-windows-0.17.0.zip",
+    "sha256": "b5663f69581dcf391293fbf16c06cb80d81d806545ce618b4d0bab7f0eb8c428",
+    "directory": "zig-x86_64-windows-0.17.0"
+  }
+}

@@ -20,3 +20,16 @@ Portable release packages must include this file and the dependency license file
 
 On Linux, the service links the system OpenSSL 3 Crypto library for secure random
 credentials and SHA-256. Windows uses BCrypt. OpenSSL retains its upstream license.
+
+## Standalone native loader development component
+
+`integrations/hellforge-loader/` has its own GPLv3 license and mod exception. Its
+standalone build fetches HellForge at commit
+`b1aef771474710eab5461d360444cd80a809c70c` (GPLv3 with the upstream exception; SDK
+MIT-0) and MinHook 1.3.4 (BSD-2-Clause). Zig 0.17.0 is the build tool, not a launcher
+runtime dependency. Versions and archive checksums are in that component's
+`upstream.lock.json`; copied notices are retained beside its build outputs.
+
+This component is not linked into or packaged with the default launcher/service.
+Its GPL code must retain the applicable source-distribution obligations if shipped.
+See its [build and licensing instructions](integrations/hellforge-loader/README.md).
