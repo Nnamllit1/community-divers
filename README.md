@@ -139,5 +139,6 @@ Project code is [MIT licensed](LICENSE) except where a component supplies its ow
 license. The separate [HellForge loader integration](integrations/hellforge-loader/README.md)
 is GPLv3 with HellForge's mod exception and is not included in the launcher package.
 Third-party components retain their own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md).
-The [service licensing plan](docs/licensing-plan.md) is a proposal; it has not
-changed the service's current MIT terms.
+The [service licensing plan](docs/licensing-plan.md) and
+[review draft](docs/service-license-draft.md) are proposals; they have not changed
+the service's current MIT terms.

@@ -5,7 +5,8 @@ This is a policy design, not a replacement license grant. The repository's curre
 [loader build integration](../integrations/hellforge-loader/README.md) now carries
 GPLv3 and the mod exception; it is not part of the launcher distribution. Already
 published MIT copies retain their existing permissions. Third-party components
-retain their own licenses.
+retain their own licenses. The [review draft](service-license-draft.md) makes the
+proposed funding and source-sharing rules concrete; it is not in force.
 
 ## Intended split
 
@@ -43,14 +44,44 @@ The intended prohibited activities are:
 A final license needs an objective surplus rule. A proposal for review is an annual
 operator-retained surplus of at most **10% of documented eligible operating costs**,
 with excess funding retained for future service costs, returned, or used to reduce
-fees. This number is a draft, not an agreed term. Eligible costs, reserve treatment,
-operator compensation and accounting periods need clear definitions; "small profit"
-on its own does not give operators a predictable rule.
+fees. This number is a draft, not an agreed term. The draft defines eligible
+infrastructure costs, documented future-cost reserves,
+calendar-year accounting and operator compensation within the surplus allowance.
+It includes worked examples and aggregate reporting without public donor identities.
+These details, including the cap, remain review proposals until adopted.
 
 The license should distinguish actual shared hosting costs from fees for cosmetic
 items or gameplay benefits. Donation records must not require disclosure of donor
 identities to the public. Any funding transparency requirement should use aggregate
 figures and preserve personal information.
+
+## Proposed coverage and adoption boundary
+
+No file changes license merely because it appears in this table. An adopted
+release needs explicit notices and an exact revision identifying the transition.
+Previously granted MIT permissions and notices must be preserved.
+
+| Material | Proposed treatment |
+| --- | --- |
+| Original service implementation in `src/service/`, service implementation API in `include/community/service.hpp`, dedicated `tests/service_tests.cpp`, and service examples | Candidate service-license scope for new copyrightable material; inventory rights and preserve existing MIT grants before adoption. |
+| Launcher, shared data contracts, patch-note renderer, update/installer code and general documentation | Remain MIT; no service restrictions on independent clients or implementations. |
+| `integrations/hellforge-loader/` and fetched HellForge native loader | Existing GPLv3 and mod exception; never add this draft's commercial restrictions. |
+| Third-party libraries, SDK and game files | Their own terms; no relicensing through this proposal. |
+
+The source-sharing requirement covers modifications derived from the service code,
+not every program on the same network. Separate processes and HTTP interfaces do
+not by themselves establish that code is independent; copied or derived GPL code
+cannot be moved into the restricted service by changing its deployment layout.
+See [GNU's explanation of combined works and communication](https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation).
+
+The draft permits disclosed shared access-cost contributions but no paid gameplay
+tiers, donor priority or paid cosmetics. Operator compensation counts toward the
+surplus cap rather than increasing the cost base used to calculate that cap.
+
+Before adoption, review contributor rights and the final wording with qualified
+legal advice. The draft is a proposal, not a legal opinion or an enforcement
+guarantee. Do not change package licenses, contributor terms or active source
+notices until the transition is actually adopted.
 
 ## Transition and compatibility
 

@@ -40,7 +40,9 @@ objective can stay stable while the roadmap evolves.
   keep independently written backend/service code separate. Follow the
   [licensing plan](docs/licensing-plan.md) before changing license grants or publishing
   the transition. The plan includes reciprocity, donations/cost recovery and restrictions
-  on gambling and exploitative monetization; the surplus definition remains to be finalized.
+  on gambling and exploitative monetization. The [service license draft](docs/service-license-draft.md)
+  defines funding and source-sharing proposals; the surplus cap and effective license
+  transition remain to be finalized. Paid cosmetics are a future policy option.
 - Mod-friendly community sessions without mandatory client-side anti-cheat.
   Client protection changes may be researched for the isolated community client.
   Authentication, profile ownership and service access remain separate concerns.
