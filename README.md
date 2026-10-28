@@ -85,7 +85,7 @@ in-game, but other players may have spent real money.
 
 Modding was the breaking point. Quality-of-life improvements, community-made
 fixes and experimenting with friends made the game more enjoyable for me.
-Losing those possibilities was the final fucking straw. I want communities to
+Losing those possibilities pushed me to build an alternative. I want communities to
 have room to keep the changes they enjoy and make their own decisions about
 balance, mods and the direction of their war campaign.
 
