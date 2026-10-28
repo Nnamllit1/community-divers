@@ -74,6 +74,33 @@ See [self-hosting](docs/self-hosting.md) and [the service contract](docs/service
 See [player profiles](docs/player-profiles.md) for launcher sign-in.
 The game adapter, lobby transport and scheduling/voting remain in development. API mission results are not native gameplay verification.
 
+## Why this exists
+
+I started Community Divers because I care about HELLDIVERS 2, and I am frustrated
+with the direction Arrowhead has taken it. Unresolved problems, heavy weapon nerfs
+and balance changes have too often taken the fun out of equipment I enjoyed.
+When a Warbond item feels like an answer to a lingering problem, only for a later
+nerf to bring that frustration back, it leaves a bad taste. I earn my Super Credits
+in-game, but other players may have spent real money.
+
+Modding was the breaking point. Quality-of-life improvements, community-made
+fixes and experimenting with friends made the game more enjoyable for me.
+Losing those possibilities was the final fucking straw. I want communities to
+have room to keep the changes they enjoy and make their own decisions about
+balance, mods and the direction of their war campaign.
+
+Community Divers is an attempt to build that choice: independently operated
+campaigns, separate progression and a place for people who want to play a
+different version of the experience together. The client-integration and
+protection research serves that purpose. Getting through those technical
+obstacles is necessary work toward the community platform I actually want to use.
+Official gameplay and progression stay separate.
+
+Always-online dependence is another frustration. This project still needs
+servers, so it does not promise fully offline play. The goal is to let communities
+run those services themselves and decide how their campaigns evolve. There is
+still substantial work to do before that becomes a playable alternative.
+
 ## Development
 
 Most of this project's code and artwork is AI-generated. Review and validation
