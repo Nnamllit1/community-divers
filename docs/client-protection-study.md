@@ -118,7 +118,8 @@ dispatch address. These are responsibilities that a compatible replacement would
 need to account for; a successful return from a stub would not demonstrate them.
 
 The runtime entrypoint leads into code with repeated indirect control transfers.
-Only a bounded, unchanged instruction slice was examined; its complete control
+Bounded static decoding and CPU-only observation have followed its initial path
+to Windows thread/process-state access, as described below. Its complete control
 flow and initialization contract remain unresolved. The presence of ordinary
 user-mode mapping code in the preloader does not prove that later runtime code
 has no driver, service or machine-specific dependency.
@@ -128,6 +129,37 @@ what it prepares for each protected image, how it makes imports and exception
 handling usable, and what dependencies remain after startup. No protection
 checks were disabled, no game files were patched, and no new game launch was
 performed for this structural investigation.
+
+## Initial runtime state dependency
+
+A bounded CPU emulator followed unchanged instructions from the runtime's declared
+entrypoint, using the first-dispatch arguments identified in the preloader. The
+model used a synthetic stack, the preferred image base and unresolved imports;
+the shared initialization record and Windows services were not supplied. System
+instructions, unsupported memory access and instruction/time budgets stop the
+observation instead of receiving invented successful results.
+
+Two different initial values for the otherwise unspecified general-purpose
+registers reached the same read of the current thread's environment block. A
+second observation supplied only its self pointer, using the Windows SDK layout,
+and stopped at the read of its process-environment pointer. Both register cases
+again reached the same boundary. Microsoft documents the
+[thread environment block](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb)
+and its process-environment pointer; the examined SDK's x64 `NtCurrentTeb`
+implementation confirms the self-pointer access.
+
+These are deliberately missing simulation inputs, not observed game failures or
+protection rejections. The controls verified instruction limits, system-operation
+stops, read-only code and refusal to continue through unknown thread fields.
+Agreement between two register cases is limited evidence, not a proof that the
+model reproduces every native startup condition. No API results, process-state
+contents or protection-check outcomes were fabricated.
+
+The next dependency to identify is how the runtime consumes this process state
+and the preloader's shared initialization record. The observations do not yet
+identify a check that can be removed, recover prepared engine code, or establish
+that startup can work without the original runtime. This remains bootstrap
+architecture research; further AppContainer adaptation stays deferred.
 
 ## Next engineering gates
 
