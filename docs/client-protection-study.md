@@ -130,33 +130,56 @@ handling usable, and what dependencies remain after startup. No protection
 checks were disabled, no game files were patched, and no new game launch was
 performed for this structural investigation.
 
+## Shared initialization record
+
+The preloader copies **18 Windows API pointers** into the record passed to the
+runtime. Their sources are explicit import-address entries, and the copies occur
+before the first runtime dispatch. They cover process/thread creation, waiting
+and process/system queries; file and directory operations; environment and
+process-parameter handling; and registry/dialog functions. Consequently, the
+runtime's small ordinary import table is not its complete interface to Windows.
+
+The same initializer stores eight local image-relative pointers. Several point
+to routines with window-message or hook-forwarding behavior, while others remain
+unclassified. An address in an executable section can also point to data; it is
+not automatically a callable function. Other record values still have unresolved
+origins or meanings.
+
+This is a static write-site inventory, not evidence that every supplied function
+is used. It does not establish the full record size, all initialization paths or
+the runtime's lifetime requirements. Those distinctions matter when evaluating
+whether a replacement can preserve startup rather than merely return success.
+
 ## Initial runtime state dependency
 
 A bounded CPU emulator followed unchanged instructions from the runtime's declared
-entrypoint, using the first-dispatch arguments identified in the preloader. The
-model used a synthetic stack, the preferred image base and unresolved imports;
-the shared initialization record and Windows services were not supplied. System
-instructions, unsupported memory access and instruction/time budgets stop the
-observation instead of receiving invented successful results.
-
-Two different initial values for the otherwise unspecified general-purpose
-registers reached the same read of the current thread's environment block. A
-second observation supplied only its self pointer, using the Windows SDK layout,
-and stopped at the read of its process-environment pointer. Both register cases
-again reached the same boundary. Microsoft documents the
+entrypoint, using the first-dispatch arguments identified in the preloader. It
+reaches the current thread's environment block, its process-environment pointer,
+and a process field identifying the executable image. Microsoft documents the
 [thread environment block](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb)
-and its process-environment pointer; the examined SDK's x64 `NtCurrentTeb`
-implementation confirms the self-pointer access.
+and its process-environment pointer. A separate C++ diagnostic verified the SDK
+offsets and compared the image-base field with its own executable module handle;
+that comparison inspected the diagnostic itself, not the game.
 
-These are deliberately missing simulation inputs, not observed game failures or
-protection rejections. The controls verified instruction limits, system-operation
-stops, read-only code and refusal to continue through unknown thread fields.
-Agreement between two register cases is limited evidence, not a proof that the
-model reproduces every native startup condition. No API results, process-state
-contents or protection-check outcomes were fabricated.
+With only those pointer relationships modeled, two different initial register
+seeds reach the same `CPUID` query. The surrounding static code closely matches
+Microsoft's named `__isa_available_init` routine from the installed C runtime,
+including vendor comparisons, processor-model masks and feature-selection data.
+The binaries are not identical. This supports ordinary CPU-feature initialization
+as the interpretation of this early query, not a protection rejection. Microsoft
+documents [CPUID's processor-information behavior](https://learn.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=msvc-170).
 
-The next dependency to identify is how the runtime consumes this process state
-and the preloader's shared initialization record. The observations do not yet
+The model uses a synthetic caller/stack and preferred image base. Imports remain
+unresolved; the shared initialization record, main-image contents, CPU-query
+results and Windows services are not supplied. Unknown reads and system operations
+stop observation. Controls verify these stops, read-only code and bounded execution.
+These are simulation limits, not observed game failures. Agreement between two
+register cases does not prove equivalence with every native startup condition.
+Modeled pointers are explicit assumptions; no API results or protection-check
+outcomes are supplied.
+
+The next dependency to identify is how the runtime consumes the supplied function
+table and prepares protected images after the early setup. The observations do not yet
 identify a check that can be removed, recover prepared engine code, or establish
 that startup can work without the original runtime. This remains bootstrap
 architecture research; further AppContainer adaptation stays deferred.

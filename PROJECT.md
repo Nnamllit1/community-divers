@@ -137,9 +137,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   now explains its exception-mediated entry and cached runtime dispatch. The
   runtime's image preparation and continuing dependencies remain unresolved.
   [Bounded runtime observation](docs/client-protection-study.md#initial-runtime-state-dependency)
-  reaches thread/process-state access without running the game. Identify the
-  consumed state and shared initialization contract next; missing simulation
-  inputs are not evidence of a protection rejection or a removable check.
+  follows thread/process-state access to a CPU-feature query without running the
+  game. The [shared record](docs/client-protection-study.md#shared-initialization-record)
+  supplies an additional Windows function table. Identify its actual consumption
+  and protected-image preparation next; missing simulation inputs and ordinary
+  CPU initialization are not evidence of a removable protection check.
 - [ ] Separate protection requirements from diagnostic-environment failures.
   AppContainer's named-object failure has been identified; its later
   `0xC0000244` exit remains unattributed. Neither is proof of a kernel-driver
