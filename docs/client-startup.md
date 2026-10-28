@@ -1,7 +1,7 @@
 # Current-client startup investigation
 
 The current client adapter is unfinished. This page records the bootstrap
-observed for Steam build **26088801** on 27 October 2026 and the limits of the
+observed for Steam build **26088801** on 27-28 October 2026 and the limits of the
 startup probe. It does not describe a playable community client.
 
 ## Bootstrap dependencies
@@ -169,9 +169,53 @@ same runtime-base execute fault and caller, with `STATUS_ACCESS_DENIED`
 (`0xC0000022`) now preserved in the status registers. It recorded seven
 first-chance exceptions, no second-chance exception and no engine module before
 the imposed timeout. Cleanup again left an empty job, restored the 180 checked
-access descriptors and preserved all five bootstrap hashes. The specific denied
-operation remains unidentified; this narrows the next diagnostic without proving
-a driver dependency or an anti-tamper rejection.
+access descriptors and preserved all five bootstrap hashes. At that stage the
+specific denied operation was unidentified; the comparison below subsequently
+attributed it without establishing a driver dependency or anti-tamper rejection.
+
+## Named-object compatibility
+
+A bounded fault-context capture identified an explicit reporting path in the
+runtime. Its recorded caller instructions matched the exact on-disk runtime
+bytes. Skipping that reporting path would not establish successful initialization.
+A nearby native-call return supplied a narrower diagnostic candidate.
+
+A subsequent probe used processor breakpoints on that candidate call in the
+owned root thread, recording its arguments and return status. It observed
+`NtCreateMutant` requesting a named mutex under `\BaseNamedObjects\Packer_...`
+with `MUTEX_ALL_ACCESS`, and receiving `STATUS_ACCESS_DENIED`. The operation was
+identified against the examined Windows build's native API stub rather than
+assuming system-call numbers are stable across versions.
+
+The observer was checked against synthetic named-object requests before the game
+run. It paired entry and return in the same process/thread and confirmed the
+fixture received the same denied status. It did not replace the result, suppress
+application exceptions or modify game bytes. Processor breakpoints do change
+debug registers and execution conditions, so this is instrumented evidence.
+
+Controlled comparisons then found:
+
+- The same mutex operation and access mask succeeded under the ordinary,
+  unprivileged account; its unique control object was immediately closed.
+- The operation was denied in the zero-capability AppContainer when addressed
+  through `\BaseNamedObjects`.
+- A mutex in the AppContainer's own named-object namespace succeeded under the
+  same contained token without granting additional capabilities or permissions.
+
+These comparisons establish a startup-environment incompatibility for this
+request. Microsoft documents that AppContainer applications have their own
+[named-object path](https://learn.microsoft.com/en-us/windows/win32/api/securityappcontainer/nf-securityappcontainer-getappcontainernamedobjectpath)
+and that ordinary session/global objects are unavailable to them by default.
+The fixture's private-namespace success has **not** been applied to the game.
+Neither this result nor the ordinary-account control proves the game can start
+without its remaining runtime dependencies.
+
+The instrumented game still reached its error-reporting path and child dialog
+before the imposed timeout; no engine module appeared. Both owned processes were
+removed, the temporary profile was deleted, all 180 checked access descriptors
+were restored, and the copy inventory and five bootstrap hashes were unchanged.
+The next startup check must address namespace compatibility while retaining
+network and user-data isolation, then identify any later failure separately.
 
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The

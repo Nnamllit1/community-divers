@@ -62,7 +62,7 @@ objective can stay stable while the roadmap evolves.
 
 ## Milestones and acceptance criteria
 
-### 1. Native launcher foundation - active
+### 1. Native launcher foundation
 
 - [x] CMake builds the launcher and portable core with pinned dependencies.
 - [x] Separate application, patch-note and mod-loader modules, with documented
@@ -81,7 +81,7 @@ objective can stay stable while the roadmap evolves.
 - [x] The first public release has a verified portable Windows artifact.
   [Launcher preview 1](https://github.com/Nnamllit1/community-divers/releases/tag/v0.1.0-preview.1)
 
-### 2. Isolated current-client integration
+### 2. Isolated current-client integration - current priority
 
 - [x] Add read-only client fingerprint inspection and an observed-build catalog.
 - [x] Provide native depot-based file-copy preparation and independent content verification.
@@ -103,6 +103,50 @@ objective can stay stable while the roadmap evolves.
 - [ ] Isolate Steam Cloud data as well as the ordinary user-data directory.
 - [ ] Reach the ship against the community backend and complete a solo operation.
 - [ ] Keep launch unavailable when compatibility or isolation is not verified.
+
+#### Current-client bootstrap work package
+
+This is the immediate development focus. Further launcher polish and unrelated
+features wait until the current client can run with a community-owned campaign.
+Prefer a reproducible, version-specific binary patch applied to the player's
+isolated copy. If a user-mode runtime adapter is also necessary, identify and
+document that dependency rather than claiming that an on-disk patch is sufficient.
+
+- [x] Attribute the observed `STATUS_ACCESS_DENIED` to a specific operation and
+  resource. Distinguish probe restrictions from protection/runtime dependencies
+  using bounded diagnostics with verifiable cleanup.
+  The [named-mutex comparison](docs/client-startup.md#named-object-compatibility)
+  identifies an AppContainer namespace incompatibility, not a verified integrity
+  rejection. The real client has not advanced beyond this failure.
+- [ ] Resolve named-object compatibility in the startup environment while
+  retaining independent user data and network isolation. Verify that the real
+  client advances beyond the observed mutex request; fixture success alone is
+  insufficient. Do not broaden machine-wide object permissions to mask it.
+- [ ] Map the required startup behavior of the main executable, game DLL,
+  preloader and runtime for the exact supported build. Identify protected-code
+  preparation, imports, TLS callbacks, exception handling and any continuing
+  runtime/process/device dependencies that affect a replacement.
+- [ ] Implement and verify the necessary current-client protection/bootstrap
+  adaptation in the isolated copy, preserving working engine initialization.
+  Do not assume historical offsets, keys or driver behavior apply to this build.
+- [ ] Produce a repeatable patch/integration build from exact input hashes.
+  Keep originals intact; verify output identity, reject unsupported inputs and
+  support restoration without reinstalling the official game.
+- [ ] Prove repeated cold startup through engine initialization without a custom
+  driver, test-signing, disabled signature enforcement or development-only state.
+- [ ] Verify separate user/Cloud data and enforce exclusion of official gameplay
+  and progression endpoints throughout the adapted client's process tree.
+- [ ] Connect the actual game client to the community backend and reach the ship.
+- [ ] Select and launch a mission from the community campaign using installed
+  game content; complete it, return to the ship and persist its contribution to
+  the community campaign only. Custom map assets are not this requirement.
+- [ ] Repeat the working flow on a second machine without research tools or
+  custom drivers. Record the supported game hashes and reproducible procedure.
+
+The exit criterion is the real client using a community campaign. A memory dump,
+a decoded function, a passing fixture, a patched executable or a launcher screen
+alone does not satisfy this work package. If a particular approach fails, record
+the evidence and investigate the next viable approach within the same scope.
 
 ### 3. Shared campaign and progression service
 
@@ -176,10 +220,10 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 
 The launcher and native installer provide the current foundation. Prioritize
 the current-client protection/bootstrap investigation now, with driver-free
-player deployment as a requirement. Resolve the observed initialization failure
-and establish engine startup before expanding gameplay integration. Continue
-the campaign and multiplayer service alongside that integration. Client startup
-is an unresolved engineering gate, not an assumption that a server URL, a larger
+player deployment as a requirement. Execute the bootstrap work package above
+before additional launcher polish or unrelated features. Backend work during
+this phase should directly support the actual client's community-campaign flow.
+Client startup is an unresolved engineering gate, not an assumption that a server URL, a larger
 binary patch or one skipped initialization call solves it.
 
 Record actual evidence in acceptance checkboxes and linked development docs.

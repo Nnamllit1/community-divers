@@ -49,18 +49,22 @@ the directory operation succeeded. A subsequent bounded diagnostic still
 captured the runtime-base execute fault, but its preserved status was now
 `STATUS_ACCESS_DENIED` (`0xC0000022`) instead of `STATUS_OBJECT_PATH_NOT_FOUND`.
 
-The denied operation has not been identified. The probe uses AppContainer,
-which restricts files, registry, devices and kernel objects as well as networking.
-[Microsoft documents those isolation boundaries](https://learn.microsoft.com/en-us/windows/win32/secauthz/appcontainer-isolation).
-The status therefore does not by itself prove an anti-cheat driver dependency,
-an integrity rejection or an intentional anti-debugger response. Engine startup
-remains unobserved.
+The [subsequent named-object comparison](client-startup.md#named-object-compatibility)
+identified `NtCreateMutant` trying to create a named mutex under
+`\BaseNamedObjects\Packer_...`. That operation was denied in the AppContainer;
+the same operation and access mask succeeded in an ordinary unprivileged control.
+A second contained fixture succeeded using its own private object namespace.
+These results identify an incompatibility in the startup probe's environment.
+They do not establish a driver requirement, integrity rejection or a working
+game adaptation. The game has not advanced beyond this request, and engine
+startup remains unobserved.
 
 ## Next engineering gates
 
-1. Attribute the access-denied result to a specific operation and resource in
-   the owned process. Separate probe-induced restrictions from required runtime
-   behavior without connecting to official services.
+1. Resolve the identified named-object namespace incompatibility in the startup
+   environment, preserving network and user-data isolation. Verify advancement
+   in the actual game before interpreting any later failure as a protection
+   dependency. Do not change machine-wide namespace permissions to mask it.
 2. Establish which initialization work the preloader/runtime performs for this
    exact build, including any code preparation and later runtime dependencies.
    Do not import old offsets or assume deleting an import produces valid code.
