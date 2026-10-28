@@ -442,14 +442,41 @@ general-register/flag maps and eight bounded guest-stack snapshots, with 42
 changed-evidence controls rejected. Seed-dependent registers and stale stack
 spills remain explicitly identified; full state equality is not established.
 
+Bounded analysis of the fourth result identifies a store over the earlier third
+result's stack slot, followed by equality comparisons against `0xC0000008` and a
+concrete selected continuation in both contexts. An independent short guest-CPU
+check agrees on the path, registers, stack and defined flags. This establishes
+the result's local use, while its downstream purpose remains unresolved.
+
 The fifth request uses the same service, current-process handle `-1`, NULL key,
 alertability disabled and the previously defined zero-timeout address. A separate
 owned diagnostic measures 256 normal returns with full RAX `0x00000000C0000024`
 (`STATUS_OBJECT_TYPE_MISMATCH`); twenty-two changed-evidence controls reject.
-This establishes another narrow native contract. Its actual model continuation
-has not yet been verified. The runtime's subsequent preparation of protected
-images, engine startup and startup without the original runtime remain
-unverified. Further AppContainer adaptation stays deferred.
+In a retained seed0 diagnostic, this exact measured return leads to a sixth
+request after **52,604,621** total instruction hooks. After RAM
+checkpoint restoration, the repeated full recorded continuation agrees except
+for two elapsed-time fields. A separate evidence audit rejects twelve mutations.
+This establishes repeated observable state and continuation in the same guest
+engine; it does not independently prove equality of every native context field
+or provide a portable process checkpoint.
+
+The sixth request uses the same service with key `1`, current-process handle,
+alertability disabled and zero timeout. A separate owned diagnostic measures
+256 normal returns with full RAX `0x00000000C00000EF`; twenty-eight
+changed-evidence controls reject. Its exact retained-state adapter passes 38
+refusal controls. One application advances the seed0 model to a seventh request
+after **52,606,370** total hooks. A separate audit verifies the applied mapping,
+recorded result and next unknown stop, rejecting fifteen changed-evidence cases.
+This sixth continuation was not repeated.
+
+The seventh request uses the same service, current-process handle, NULL key,
+alertability disabled and timeout pointer `-10000`. Another owned diagnostic
+measures 256 normal returns with full, sign-extended RAX `0xFFFFFFFFC0000005`,
+without a delivered exception; thirty-three changed-evidence controls reject.
+That establishes a separate native contract. Its model continuation remains
+unverified and stopped. The runtime's subsequent preparation of protected images,
+engine startup and startup without the original runtime remain unverified.
+Further AppContainer adaptation stays deferred.
 
 ## Next engineering gates
 

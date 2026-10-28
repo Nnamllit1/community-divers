@@ -153,9 +153,12 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   identified against measured Windows code as a zero-timeout process wait.
   A [measured wait continuation](docs/client-protection-study.md#measured-wait-continuation)
   verifies four exact operations in diagnostic-owned processes and advances
-  the model to another keyed-event request. A fifth native contract is measured,
-  with its actual model continuation still unverified. Post-return readbacks and
-  status access traces distinguish result lifetimes from reused stack slots.
+  the paired models to another keyed-event request. Fifth and sixth native
+  contracts now advance a retained seed0 model to a seventh request. The fifth
+  continuation repeats with matching observable state after RAM restoration;
+  the sixth continuation has one recorded application. Post-return readbacks
+  and status access traces distinguish result lifetimes from reused stack slots.
+  A seventh native contract is measured; its model continuation is unverified.
   Verify the next request and the results' consumers, then identify protected-image preparation;
   missing simulation inputs, emulator limitations and ordinary initialization
   are not evidence of a removable protection check.
