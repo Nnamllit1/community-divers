@@ -159,6 +159,12 @@ not establish the full record size, all initialization paths or
 the runtime's lifetime requirements. Those distinctions matter when evaluating
 whether a replacement can preserve startup rather than merely return success.
 
+The inspected successful preloader paths retain this record across later
+callbacks without rebuilding it or directly closing its section handle. Copying
+the `ZwClose` address into the record is not itself a close operation. The runtime
+receives a mutable record and can change the handle's lifetime; the retained field
+does not prove that the handle is still valid or establish who owns its cleanup.
+
 ## Initial runtime state dependency
 
 A bounded CPU emulator followed unchanged instructions from the runtime's declared
@@ -214,13 +220,42 @@ stop at the same subsequent eight-byte read of the support-module identity.
 Each trace observes 57,308 instructions; the copied table matches the measured
 input byte for byte. This establishes table consumption within the model, not an
 invocation of any supplied Windows function or complete runtime initialization.
-The support-module value is deliberately unresolved rather than replaced with
-an assumed address.
+In that comparison, the support-module value is left unresolved rather than
+replaced with an assumed address.
 
-The next investigation is how that module identity is used and what the runtime
-subsequently prepares for protected images. These observations do not identify
-a removable check, recover prepared engine code or establish startup without
-the original runtime. Further AppContainer adaptation stays deferred.
+## Support-module parsing
+
+Read-only snapshots at that stop allowed an independent static evaluation of the
+next data flow, keeping the unknown module value symbolic. Accounting for all
+intervening writes and overlapping destinations established that the value is
+saved twice and subsequently passed to another runtime helper. This resolves
+the argument path without assigning an invented module address.
+
+A separate C++ diagnostic then reproduced the preloader's exception-based module
+lookup inside its own process. The captured fault instruction resolved to that
+process's `ntdll` module. A second diagnostic captured only its 4,096-byte loaded
+PE headers, verifying readable committed image memory and matching module/file
+identities. Neither diagnostic loaded or executed game or protection code.
+
+Replaying that measured identity and header data advances both initial register
+cases through DOS and PE header reads, then to the export-directory
+`NumberOfNames` field. Each bounded trace observes 82,399 instructions and retains
+the matching 18-pointer table. The export-directory contents remain unmodeled,
+so observation stops before reading that field. This establishes the start of
+export metadata parsing, not a resolved function, an API call or complete module
+validation.
+
+The header mapping is read-only and non-executable; reads beyond captured bytes
+stop. Nine additional controls cover those boundaries and reject changed header
+bytes, mismatched capture references, missing page coverage and inconsistent PE
+identity fields. Separate-process addresses, synthetic stack state and preferred
+runtime placement remain explicit assumptions. The observations do not establish
+the corresponding native game-process state.
+
+The next dependency is the set of exports selected by this parser and their
+actual use during protected-image preparation. No removable check, prepared
+engine code or startup without the original runtime has been established.
+Further AppContainer adaptation stays deferred.
 
 ## Next engineering gates
 

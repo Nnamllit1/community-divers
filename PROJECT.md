@@ -141,10 +141,12 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   game. The [shared record](docs/client-protection-study.md#shared-initialization-record)
   supplies an additional Windows function table. With measured diagnostic inputs,
   the [table-consumption trace](docs/client-protection-study.md#runtime-table-consumption)
-  copies all 18 pointers and stops at the support-module identity. Determine its
-  subsequent use and protected-image preparation next; missing simulation inputs,
-  emulator limitations and ordinary CPU initialization are not evidence of a
-  removable protection check.
+  copies all 18 pointers. Subsequent
+  [support-module parsing](docs/client-protection-study.md#support-module-parsing)
+  reaches Windows export-directory metadata using measured diagnostic inputs.
+  Identify the selected exports, their actual use and protected-image preparation
+  next; missing simulation inputs, emulator limitations and ordinary CPU
+  initialization are not evidence of a removable protection check.
 - [ ] Separate protection requirements from diagnostic-environment failures.
   AppContainer's named-object failure has been identified; its later
   `0xC0000244` exit remains unattributed. Neither is proof of a kernel-driver
