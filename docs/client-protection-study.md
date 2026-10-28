@@ -142,11 +142,20 @@ runtime's small ordinary import table is not its complete interface to Windows.
 The same initializer stores eight local image-relative pointers. Several point
 to routines with window-message or hook-forwarding behavior, while others remain
 unclassified. An address in an executable section can also point to data; it is
-not automatically a callable function. Other record values still have unresolved
-origins or meanings.
+not automatically a callable function. Further static tracing identifies the
+preloader base, actual runtime mapping base, runtime entrypoint, a support-module
+base and an image-section handle. On native Windows, that module identity comes
+from resolving the containing module of a captured exception instruction pointer;
+it is not simply a fixed address. The section handle comes from actual image
+section creation. The Wine path obtains these inputs differently.
 
-This is a static write-site inventory, not evidence that every supplied function
-is used. It does not establish the full record size, all initialization paths or
+The preloader attempts runtime placement relative to the selected support module.
+Consequently, using the PE preferred base in a simulator is an explicit modeling
+assumption, not a measurement of native placement. The complete record and the
+lifetime of its objects remain unresolved.
+
+This inventory is not evidence that every supplied function is used. It does
+not establish the full record size, all initialization paths or
 the runtime's lifetime requirements. Those distinctions matter when evaluating
 whether a replacement can preserve startup rather than merely return success.
 
@@ -169,20 +178,49 @@ The binaries are not identical. This supports ordinary CPU-feature initializatio
 as the interpretation of this early query, not a protection rejection. Microsoft
 documents [CPUID's processor-information behavior](https://learn.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=msvc-170).
 
-The model uses a synthetic caller/stack and preferred image base. Imports remain
-unresolved; the shared initialization record, main-image contents, CPU-query
-results and Windows services are not supplied. Unknown reads and system operations
-stop observation. Controls verify these stops, read-only code and bounded execution.
-These are simulation limits, not observed game failures. Agreement between two
-register cases does not prove equivalence with every native startup condition.
-Modeled pointers are explicit assumptions; no API results or protection-check
-outcomes are supplied.
+Separate C++ diagnostics subsequently captured this machine's CPU-query results,
+platform-query results and the 18 imported API addresses in their own processes.
+The bounded model replays those measurements unchanged, along with initializer
+literals established by static tracing. It does not execute game code natively
+or forward simulated calls to Windows. Addresses observed in a diagnostic process
+are not proof of their placement in a game process.
 
-The next dependency to identify is how the runtime consumes the supplied function
-table and prepares protected images after the early setup. The observations do not yet
-identify a check that can be removed, recover prepared engine code, or establish
-that startup can work without the original runtime. This remains bootstrap
-architecture research; further AppContainer adaptation stays deferred.
+The model still uses a synthetic caller/stack and preferred image base. Imports,
+main-image contents, most shared-record fields and Windows services remain
+unimplemented. Unknown reads and external calls stop observation. Controls verify
+these stops, read-only code and bounded execution. These are simulation limits,
+not observed game failures. Agreement between two initial register cases does not
+prove equivalence with every native startup condition. Modeled pointers remain
+explicit assumptions; no successful API calls or protection-check outcomes are
+invented to advance the trace.
+
+## Runtime table consumption
+
+With those measured inputs, the runtime requests a 144-byte copy of the supplied
+API table into its own data. The selected memory-copy path uses AVX instructions
+that the pinned emulator could not execute correctly. Independent synthetic
+controls reproduced both unsupported vector moves and incorrect upper-vector
+clearing; some instruction-length hints were also truncated. These were observer
+defects, not evidence of a protection failure in the game.
+
+A narrow instruction-semantics helper now handles the observed vector moves and
+upper-vector clearing. It preserves memory permissions and unknown-input stops,
+and decodes only within contiguous executable memory. Verification includes 23
+helper controls, eight instruction-fetch controls, 27 integrated observer checks
+and a separate native test over diagnostic-owned buffers.
+
+Two different initial register cases now copy all **18 pointers** correctly and
+stop at the same subsequent eight-byte read of the support-module identity.
+Each trace observes 57,308 instructions; the copied table matches the measured
+input byte for byte. This establishes table consumption within the model, not an
+invocation of any supplied Windows function or complete runtime initialization.
+The support-module value is deliberately unresolved rather than replaced with
+an assumed address.
+
+The next investigation is how that module identity is used and what the runtime
+subsequently prepares for protected images. These observations do not identify
+a removable check, recover prepared engine code or establish startup without
+the original runtime. Further AppContainer adaptation stays deferred.
 
 ## Next engineering gates
 
