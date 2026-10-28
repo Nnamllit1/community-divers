@@ -108,6 +108,13 @@ objective can stay stable while the roadmap evolves.
 
 This is the immediate development focus. Further launcher polish and unrelated
 features wait until the current client can run with a community-owned campaign.
+Start with the current build's protection/bootstrap architecture: determine what
+the runtime supplies to both the executable and engine, then establish whether
+a reproducible driver-free replacement is feasible. AppContainer compatibility
+is not a prerequisite for this investigation or for the selected mod loader.
+Further AppContainer adaptation is deferred; it must not displace the bootstrap
+investigation. The eventual integration still requires verified data and official
+service separation, regardless of which isolation mechanism is selected.
 Prefer a reproducible, version-specific binary patch applied to the player's
 isolated copy. If a user-mode runtime adapter is also necessary, identify and
 document that dependency rather than claiming that an on-disk patch is sufficient.
@@ -117,15 +124,20 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   using bounded diagnostics with verifiable cleanup.
   The [named-mutex comparison](docs/client-startup.md#named-object-compatibility)
   identifies an AppContainer namespace incompatibility, not a verified integrity
-  rejection. The real client has not advanced beyond this failure.
-- [ ] Resolve named-object compatibility in the startup environment while
-  retaining independent user data and network isolation. Verify that the real
-  client advances beyond the observed mutex request; fixture success alone is
-  insufficient. Do not broaden machine-wide object permissions to mask it.
+  rejection. A subsequent diagnostic comparison advanced the real client beyond
+  this request, but has not reached the engine.
 - [ ] Map the required startup behavior of the main executable, game DLL,
   preloader and runtime for the exact supported build. Identify protected-code
   preparation, imports, TLS callbacks, exception handling and any continuing
   runtime/process/device dependencies that affect a replacement.
+  The [static bootstrap map](docs/client-protection-study.md#current-build-startup-structure)
+  identifies shared TLS/import slots and exception-metadata differences. This
+  establishes concrete dependencies; it does not identify all runtime work.
+- [ ] Separate protection requirements from diagnostic-environment failures.
+  AppContainer's named-object failure has been identified; its later
+  `0xC0000244` exit remains unattributed. Neither is proof of a kernel-driver
+  requirement or a protection rejection. Do not turn sandbox compatibility into
+  a product acceptance gate or broaden machine-wide permissions to mask it.
 - [ ] Implement and verify the necessary current-client protection/bootstrap
   adaptation in the isolated copy, preserving working engine initialization.
   Do not assume historical offsets, keys or driver behavior apply to this build.

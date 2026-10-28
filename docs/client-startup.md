@@ -21,6 +21,13 @@ SDK binaries do not establish a working native bootstrap.
 
 ## Offline probe conditions
 
+AppContainer is an experimental isolation mechanism for these diagnostics, not
+a prerequisite imposed by HellForge, a product requirement or a way to make the
+client trusted by anti-cheat. Its restrictions can introduce failures absent
+from an ordinary desktop process. Further AppContainer adaptation is deferred
+while the current build's protection/bootstrap architecture is investigated.
+Data and official-service separation remain requirements for eventual deployment.
+
 The development probe used a fresh Windows AppContainer with no network
 capabilities, a private writable data directory and temporary read/execute access
 to the independent copy. It did not patch game bytes, launch Steam or use the
@@ -206,16 +213,64 @@ These comparisons establish a startup-environment incompatibility for this
 request. Microsoft documents that AppContainer applications have their own
 [named-object path](https://learn.microsoft.com/en-us/windows/win32/api/securityappcontainer/nf-securityappcontainer-getappcontainernamedobjectpath)
 and that ordinary session/global objects are unavailable to them by default.
-The fixture's private-namespace success has **not** been applied to the game.
-Neither this result nor the ordinary-account control proves the game can start
-without its remaining runtime dependencies.
+The private-namespace game comparison below subsequently applied this idea to
+the recognized mutex request. Neither the fixtures nor the ordinary-account
+control proves the game can start without its remaining runtime dependencies.
 
 The instrumented game still reached its error-reporting path and child dialog
 before the imposed timeout; no engine module appeared. Both owned processes were
 removed, the temporary profile was deleted, all 180 checked access descriptors
 were restored, and the copy inventory and five bootstrap hashes were unchanged.
-The next startup check must address namespace compatibility while retaining
-network and user-data isolation, then identify any later failure separately.
+Further comparisons must distinguish namespace compatibility from actual
+protection dependencies while retaining network and user-data separation.
+
+## Private-namespace startup comparison
+
+A diagnostic compatibility adjustment redirected only the recognized runtime
+mutex's name to the current AppContainer's private namespace. It kept the
+requested access, initial ownership and caller-supplied security descriptor,
+used temporary argument storage, and left the native result unchanged. The
+created handle was queried to verify that it referred to the expected private
+object. Temporary storage was released after the call. This changes an in-memory
+call argument during a debug session; it is not an on-disk patch or a deployable
+client adapter.
+
+Synthetic checks verified actual handle creation, native duplicate-name errors,
+unchanged security-descriptor bytes, untouched unrelated names and temporary
+storage cleanup. The current harness also passed its parent/child file and
+network isolation controls. No machine-wide namespace permission was granted.
+
+The real runtime then created its mutex successfully, and its previous
+runtime-base error-reporting fault and child crash dialog did not recur in these
+comparisons. One run remained active until the imposed 15-second limit. Two
+subsequent runs, each allowed up to 45 seconds, exited independently within a few
+seconds with `0xC0000244`; neither reached the engine.
+
+Windows names this status `STATUS_AUDIT_FAILED` in its
+[NTSTATUS definitions](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55).
+A process can select an exit value, so the label alone does not identify the
+terminating component or establish a full system audit log, an integrity failure
+or an anti-cheat decision. No Windows auditing settings were changed.
+
+A separate processor-breakpoint observer successfully recorded the synthetic
+fixture's ordinary `NtTerminateProcess` shutdown calls with their unchanged
+arguments. It recorded no such call in the game comparison. Its coverage is
+limited to the observed API entry; this does not prove external termination or
+identify the game's exit path. This exit remains an unattributed observation
+from the restricted environment, not the current investigation's prerequisite.
+
+These game comparisons ended with empty jobs, removed temporary profiles,
+restored access descriptors, unchanged copy inventories and unchanged bootstrap
+hashes. Engine startup and general namespace compatibility remain unverified.
+
+A subsequent combined debug/file trace recorded an access denial for a runtime
+cache beneath private ProgramData, followed by many Windows catalog-file opens.
+The observer reached its 10,000-record limit and the harness stopped the target.
+This is an incomplete trace, not another independently observed game exit. The
+ETW session was removed; recovery verified the profile was removed, no residual
+access rules remained, and all 180 access descriptors, copy paths and five
+bootstrap hashes were unchanged. The cache denial's cause and relevance to
+startup remain unproved; it does not establish an integrity rejection.
 
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The

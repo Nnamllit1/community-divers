@@ -55,19 +55,54 @@ identified `NtCreateMutant` trying to create a named mutex under
 the same operation and access mask succeeded in an ordinary unprivileged control.
 A second contained fixture succeeded using its own private object namespace.
 These results identify an incompatibility in the startup probe's environment.
-They do not establish a driver requirement, integrity rejection or a working
-game adaptation. The game has not advanced beyond this request, and engine
-startup remains unobserved.
+They do not establish a driver requirement or integrity rejection.
+
+The later [private-namespace comparison](client-startup.md#private-namespace-startup-comparison)
+advanced the actual runtime beyond this mutex request, with a verified private
+handle and unchanged native return semantics. This is diagnostic argument
+adaptation, not a deployable patch. Subsequent runs exited with `0xC0000244`
+before the engine loaded; the exit's caller and cause remain unattributed.
+Engine startup remains unobserved.
+
+## Current-build startup structure
+
+An exact-hash, read-only inventory of the four bootstrap images was compared
+against Microsoft `dumpbin` header, import, TLS and export output. It did not
+execute an image, recover decrypted code or modify game files.
+
+| Image | Observed on-disk structure | Integration consequence |
+| --- | --- | --- |
+| Main executable | Its TLS callback array occupies the same import-address slot as the preloader import. The exception-directory entry is empty although a `.pdata` section exists. | Initialization depends on the preloader before ordinary application startup. The runtime treatment of exception metadata remains to be identified. |
+| Engine DLL | The same TLS/import-slot arrangement; an empty exception-directory entry alongside a `.pdata` section. | The dependency also applies when the engine DLL is loaded; solving only the executable's launch is insufficient. |
+| Preloader | The imported export and DLL entrypoint lie in an on-disk section marked read-only, without execute permission. Other native startup code is present separately. | The on-disk entry addresses alone do not describe the eventual execution path. Earlier debug evidence recorded a handled first-chance execute fault at this entry before runtime initialization continued. |
+| Runtime | Multiple executable sections, its own exception metadata and a small ordinary import table. | Static imports do not provide a complete inventory of its runtime dependencies. Mapping this image is not proof of engine initialization. |
+
+The apparent callback values in the main/engine files are import-ordinal entries,
+not ordinary on-disk function pointers: the callback array aliases the import
+address table. Windows resolves that table when loading imports. This is a
+structural link between early initialization and the preloader, not evidence that
+the callback list is corrupt. The
+[PE specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
+defines the import-address table, TLS callback array and exception directory.
+
+These observations rule out treating the preloader as an unrelated launcher
+component. They do not establish which code or data is transformed, whether
+exception tables are registered dynamically, which checks are essential to
+initialization, or whether a driver-free replacement is feasible. The next
+architecture task is to identify that initialization contract and any continuing
+runtime dependency. A deployable patch remains unimplemented.
 
 ## Next engineering gates
 
-1. Resolve the identified named-object namespace incompatibility in the startup
-   environment, preserving network and user-data isolation. Verify advancement
-   in the actual game before interpreting any later failure as a protection
-   dependency. Do not change machine-wide namespace permissions to mask it.
-2. Establish which initialization work the preloader/runtime performs for this
+1. Establish which initialization work the preloader/runtime performs for this
    exact build, including any code preparation and later runtime dependencies.
    Do not import old offsets or assume deleting an import produces valid code.
+2. Distinguish these requirements from diagnostic-environment restrictions.
+   AppContainer is an optional research mechanism, not a loader prerequisite.
+   Further work on its compatibility is deferred. The observed mutex succeeds in
+   a diagnostic comparison, but the later early exit remains unattributed; it
+   cannot be used as proof of a protection dependency. Future dynamic comparisons
+   still need separate user data and verified exclusion of official services.
 3. Demonstrate a reproducible user-mode startup through engine initialization.
    Identify any dependency on another process, device, session or machine before
    choosing an on-disk transformation or a launch-time adapter.
