@@ -48,6 +48,10 @@ objective can stay stable while the roadmap evolves.
 - Mod-friendly community sessions without mandatory client-side anti-cheat.
   Client protection changes may be researched for the isolated community client.
   Authentication, profile ownership and service access remain separate concerns.
+- The community client must not require players to install a custom kernel driver,
+  enable test-signing or disable driver-signature enforcement. Investigate a
+  reproducible user-mode integration for each supported game build; a binary
+  patch is a candidate delivery method, not an established startup solution.
 - Opt-in, one-way progression import when a permitted and complete data source
   exists, with partial/manual imports as a documented fallback.
 - Distribute source and launcher components, not proprietary game files. Keep
@@ -91,6 +95,10 @@ objective can stay stable while the roadmap evolves.
 - [ ] Establish current-client startup and native integration for community use.
   [Bootstrap investigation](docs/client-startup.md) identified a separate runtime
   process; engine startup remains unverified.
+  [Driver-free integration study](docs/client-protection-study.md) distinguishes
+  historical protection research from evidence for the supported game build.
+- [ ] Verify the client integration on a second machine without custom drivers,
+  researcher-installed tooling or development-machine state.
 - [ ] Ensure the modified client cannot connect to official gameplay/progression.
 - [ ] Isolate Steam Cloud data as well as the ordinary user-data directory.
 - [ ] Reach the ship against the community backend and complete a solo operation.
@@ -166,10 +174,13 @@ The [coordinated update design](docs/updates.md) defines channels and release se
 
 ## Working order
 
-Finish a usable launcher foundation first. Prepare client integration and the
-service contract next; evolve the campaign and multiplayer services alongside
-that integration. Client startup is an unresolved engineering gate, not an
-assumption that a server URL or one skipped initialization call solves it.
+The launcher and native installer provide the current foundation. Prioritize
+the current-client protection/bootstrap investigation now, with driver-free
+player deployment as a requirement. Resolve the observed initialization failure
+and establish engine startup before expanding gameplay integration. Continue
+the campaign and multiplayer service alongside that integration. Client startup
+is an unresolved engineering gate, not an assumption that a server URL, a larger
+binary patch or one skipped initialization call solves it.
 
 Record actual evidence in acceptance checkboxes and linked development docs.
 Distinguish source inspection, builds, tests, installed components and live

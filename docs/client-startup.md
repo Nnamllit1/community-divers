@@ -164,6 +164,15 @@ Both game traces stopped their ETW sessions, emptied their owned jobs, removed
 temporary profiles and restored all 180 checked access descriptors; all five
 bootstrap hashes and the copy's path inventory remained unchanged.
 
+A subsequent debug-event comparison with the corrected environment captured the
+same runtime-base execute fault and caller, with `STATUS_ACCESS_DENIED`
+(`0xC0000022`) now preserved in the status registers. It recorded seven
+first-chance exceptions, no second-chance exception and no engine module before
+the imposed timeout. Cleanup again left an empty job, restored the 180 checked
+access descriptors and preserved all five bootstrap hashes. The specific denied
+operation remains unidentified; this narrows the next diagnostic without proving
+a driver dependency or an anti-tamper rejection.
+
 This establishes a bootstrap process dependency, **not successful unprotected
 startup**. AppContainer restrictions can themselves affect initialization. The
 remaining runtime dependency or failure must be identified before selecting an
