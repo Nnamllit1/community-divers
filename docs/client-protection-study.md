@@ -92,6 +92,43 @@ initialization, or whether a driver-free replacement is feasible. The next
 architecture task is to identify that initialization contract and any continuing
 runtime dependency. A deployable patch remains unimplemented.
 
+## Preloader-to-runtime handoff
+
+The x64 exception metadata explicitly covers the preloader's non-executable
+entry stubs. Both entries select a handler that reads its associated destination,
+updates the saved instruction pointer and returns the continue-execution
+disposition. Their destinations are executable startup routines. This explains
+why an execute access violation at the stub can be part of initialization, rather
+than a terminal crash or evidence of an anti-cheat rejection. It is consistent
+with the earlier debug log, which continued beyond that first-chance exception.
+
+The metadata was checked independently through Windows DbgHelp using a read-only
+data mapping, with no execution or DLL initialization. The Windows SDK also
+confirmed the exception-context field layouts used in the interpretation.
+Microsoft documents the relevant
+[x64 exception-handler and unwind structures](https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170).
+The disassembler's hybrid-image unwind display selected ARM64 data; that display
+was not used as independent confirmation of the x64 records.
+
+The native startup routines share a once-initialized runtime handoff. Static
+control flow identifies file/image preparation, address relocation and memory
+protection operations, followed by a call to the runtime's declared entrypoint
+with a shared initialization record. Later callbacks use the same cached runtime
+dispatch address. These are responsibilities that a compatible replacement would
+need to account for; a successful return from a stub would not demonstrate them.
+
+The runtime entrypoint leads into code with repeated indirect control transfers.
+Only a bounded, unchanged instruction slice was examined; its complete control
+flow and initialization contract remain unresolved. The presence of ordinary
+user-mode mapping code in the preloader does not prove that later runtime code
+has no driver, service or machine-specific dependency.
+
+The immediate remaining investigation is the runtime's initialization contract:
+what it prepares for each protected image, how it makes imports and exception
+handling usable, and what dependencies remain after startup. No protection
+checks were disabled, no game files were patched, and no new game launch was
+performed for this structural investigation.
+
 ## Next engineering gates
 
 1. Establish which initialization work the preloader/runtime performs for this

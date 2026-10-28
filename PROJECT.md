@@ -133,6 +133,9 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   The [static bootstrap map](docs/client-protection-study.md#current-build-startup-structure)
   identifies shared TLS/import slots and exception-metadata differences. This
   establishes concrete dependencies; it does not identify all runtime work.
+  The [preloader handoff](docs/client-protection-study.md#preloader-to-runtime-handoff)
+  now explains its exception-mediated entry and cached runtime dispatch. The
+  runtime's image preparation and continuing dependencies remain unresolved.
 - [ ] Separate protection requirements from diagnostic-environment failures.
   AppContainer's named-object failure has been identified; its later
   `0xC0000244` exit remains unattributed. Neither is proof of a kernel-driver
