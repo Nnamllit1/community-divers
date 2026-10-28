@@ -16,6 +16,45 @@ test-signing or disabled driver-signature enforcement. The official installation
 official services and official progression remain separate. Game ownership and
 community account authentication are independent requirements.
 
+## Lua addons alongside the existing runtime
+
+[Boot Mod Loader](https://github.com/pat-pat-patrick/boot-mod-loader/tree/96ff9818c51c669d8f690e01db49198a44453297)
+provides an upstream Lua-only route whose checked-build list includes **26088801**.
+Its boot replacement executes the original game boot, then starts addons after
+the original Lua `init` returns. It exposes callbacks and engine Lua APIs;
+its capabilities explicitly report `ffi=false` and `jit=false`. This is an
+upstream compatibility claim, not a Community Divers game-startup test.
+
+The inspected exact-build original boot chunk has empty Lua lifecycle callbacks.
+Consequently, the order of its Lua `init` call does not establish the timing of
+native account or backend initialization. The prepared copy's settings expose
+PlayFab title IDs and boot/profile paths, but no demonstrated community backend
+URL. A current native endpoint/config consumer or exposed API still needs to be
+identified and tested with official-service and profile separation.
+
+This route can inform features implemented through existing Lua APIs. It starts
+after the preloader/runtime stage investigated here and provides no demonstrated
+community-account bootstrap or backend-routing adapter. The reviewed HellForge
+integration also relies on native routing and SDK/Cloud stand-ins for its older
+supported build. Those requirements remain separate current-build engineering
+work; successful Lua loading would not establish community-client compatibility.
+
+## Native engine-plugin candidate
+
+The reviewed [Native Bridge source](https://github.com/CowboyBingus/BingusNativeBridge/tree/b39184851b76ee6096095f4e46d163b3f1b0108b)
+implements the engine's `get_plugin_api`/`setup_game` handshake and registers
+three informational Lua functions. It provides no community backend adapter or
+native module loader. Its mock host tests the declared interface, rather than
+the current game's ABI, acceptance policy or initialization order.
+
+The reviewed v0.1.1 DLL has no PE certificate and Windows reports it unsigned.
+The project's pinned [signing policy](https://github.com/CowboyBingus/BingusNativeBridge/blob/b39184851b76ee6096095f4e46d163b3f1b0108b/CODE_SIGNING_POLICY.md)
+also describes signing as planned and unsigned releases as unable to load.
+A legitimately signed engine plugin remains a candidate alongside the original
+runtime. Current-build acceptance, working callbacks and initialization early
+enough for community service routing are all unverified. No bridge was installed
+or executed in this assessment.
+
 ## What historical research establishes
 
 The January 2024 [THE FINALS analysis by Reversing Thread](https://reversingthread.info/index.php/2024/01/10/the-finals-defeating-theia-packer/)
@@ -76,6 +115,15 @@ execute an image, recover decrypted code or modify game files.
 | Engine DLL | The same TLS/import-slot arrangement; an empty exception-directory entry alongside a `.pdata` section. | The dependency also applies when the engine DLL is loaded; solving only the executable's launch is insufficient. |
 | Preloader | The imported export and DLL entrypoint lie in an on-disk section marked read-only, without execute permission. Other native startup code is present separately. | The on-disk entry addresses alone do not describe the eventual execution path. Earlier debug evidence recorded a handled first-chance execute fault at this entry before runtime initialization continued. |
 | Runtime | Multiple executable sections, its own exception metadata and a small ordinary import table. | Static imports do not provide a complete inventory of its runtime dependencies. Mapping this image is not proof of engine initialization. |
+
+Read-only inspection of the current stock `level_generation` and `wwise`
+plugins also finds `preloader.dll` imports and `get_plugin_api` exports. These
+share the main executable/engine DLL's TLS-array/import-slot alias and empty
+exception directory despite retained `.pdata` sections. Independent `dumpbin`
+output agrees with the structural reader in 18 comparisons. These observations
+extend the image inventory affected by the shared bootstrap architecture. They
+do not establish which plugins are essential to startup or what preparation
+their code requires.
 
 The apparent callback values in the main/engine files are import-ordinal entries,
 not ordinary on-disk function pointers: the callback array aliases the import
@@ -252,10 +300,156 @@ identity fields. Separate-process addresses, synthetic stack state and preferred
 runtime placement remain explicit assumptions. The observations do not establish
 the corresponding native game-process state.
 
-The next dependency is the set of exports selected by this parser and their
-actual use during protected-image preparation. No removable check, prepared
-engine code or startup without the original runtime has been established.
-Further AppContainer adaptation stays deferred.
+## Export-name observation
+
+A further own-process C++ diagnostic captured the declared **80,551-byte**
+`ntdll` export-metadata range, with module/file identity and readable,
+non-executable page checks. Replaying that range read-only lets the runtime
+enumerate all **2,522** named exports in the model. Recorded comparison operands
+identify the first two selected bytes as `Z` and `w`: **490** names match that
+prefix. An independent metadata parser checks these counts and the recorded
+operand examples. Export metadata reads do not establish calls to those functions.
+
+Two observer limitations were resolved before continuing. A thread-state read
+comes from a routine whose decoded instructions match the installed MSVC stack
+probe. The model supplies the lower boundary of its already mapped synthetic
+stack; native guard-page growth remains unimplemented. A later two-byte
+`MOVSXD` encoding executes correctly in the pinned CPU emulator but is rejected
+by the pinned disassembler. An authored native control and 48 emulator
+comparisons verify its register and flag behavior. The observer supplies only
+the missing decode metadata and executes the original instruction unchanged.
+Other undecodable instructions continue to stop observation.
+
+The subsequent scan constructs an address/value table. In two recorded stack
+snapshots, its 154 visible rows match the prefix of an independently
+address-sorted list of 490 distinct `Zw` exports. For 49 visible names of length
+9 through 16, the value matches a statically decoded full-name hash. The other
+rows and hash-length paths are outside that bounded proof. This does not yet
+establish how the table selects a native operation.
+
+## First system-call boundary
+
+Longer observations exposed a timing issue in the observer: asynchronous timeout
+resumption could count an instruction hook before its instruction executed.
+Equal hook budgets then ended five instructions apart. The observer now uses
+fixed 100,000-instruction slices and treats an asynchronous slice timeout as a
+terminal observation. Controls compare different slice sizes and verify that
+timeout stops are never resumed. All 23 export-observer controls pass.
+
+With that correction, both initial register cases reach the same `SYSCALL`
+instruction after **52,593,507** observed instructions. Their recorded input and
+metadata reads, instruction tails and slice signatures agree; the independent
+audit also passes seven changed-evidence controls. The API table still matches
+all 18 supplied pointers. Observation stops before executing the system call.
+
+The saved service number is **4**. A separate own-process C++ diagnostic reads
+32 bytes from the measured `NtWaitForSingleObject`/`ZwWaitForSingleObject` export
+without invoking it. Its entry stub loads the same number before `SYSCALL`.
+For this Windows module identity, this identifies a wait operation with handle
+`-1`, alertability disabled and a captured timeout value of zero. Microsoft
+documents [the current-process pseudo-handle](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getcurrentprocess)
+and [zero-timeout wait behavior](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntwaitforsingleobject).
+These describe a nonblocking current-process wait request in the model. Its
+purpose in the runtime remains unresolved; the request is not itself evidence
+of an integrity rejection or a custom-driver requirement.
+
+The native diagnostic passed ten own-process data-read and refusal controls.
+It measures this machine's Windows module, not the game's native process state.
+The runtime's earlier derivation of service number 4 remains incompletely traced.
+That observation supplied no wait result or post-system-call state. The later
+measured continuation below establishes a narrow contract for this one request.
+
+## Measured wait continuation
+
+An authored C++/assembly diagnostic executed the fixed, nonalertable,
+zero-timeout current-process wait in its own process. Its 256 cases cover all
+64 arithmetic-flag combinations, attempted IF clear/set and two register seeds.
+It verifies the Windows module and native entry bytes before measurement.
+Every case returns `STATUS_TIMEOUT` (`0x102`); ordinary native and Win32 controls
+also return timeout for the current process and success for an owned signaled
+event. These are actual diagnostic results, not substituted successful checks.
+
+The diagnostic also measures the registers and flags immediately around
+`SYSCALL`. RCX becomes the following instruction address, R11 receives the prior
+flags, and those flags remain unchanged on return. Several other volatile
+registers change. The model replays the measured mapping for this exact request,
+with the model's continuation address instead of an address from the diagnostic.
+The result is pinned to the measured Windows module; other operations still stop.
+
+The comparison identified another observer limitation: its initial IF flag was
+clear, and its ordinary `POPFQ` behavior allowed that privileged bit to change.
+The native user-mode controls establish that CPL3 with IOPL0 preserves IF. A
+narrow layer now starts with user-mode flags and handles only the verified safe
+`POPFQ` domain. Unsupported flag bits, prefixed forms and unreadable operands
+stop observation. All 128 safe flag cases and 13 flag/provenance controls pass.
+The wait layer additionally passes 64 measured flag cases and 13 refusal checks,
+including changed arguments, unwritten or partial timeouts and exhausted budgets.
+
+With this layer, both seed cases advance through the first request and stop
+before a second `SYSCALL`, after **52,595,848** observed instructions: 2,341
+instructions beyond the first request. The zero timeout has explicit provenance
+from an eight-byte immediate-zero store in the runtime. The observed instruction
+tails, slice counts and call operands agree. Three preserved caller registers
+retain their declared seed values; full raw-state convergence is not established.
+
+The second request specifies service number 4, but uses handle `-10000` and a
+null timeout pointer. A separate diagnostic measures this exact tuple in an
+owned child under a retained-handle deadline. All 256 cases return
+`STATUS_INVALID_HANDLE`, with RAX exactly `0x00000000C0000008`. Ordinary native
+and Win32 controls agree on the invalid-handle outcome. Its separate validator
+rejects twelve changed-evidence cases; the first native evidence remains intact.
+
+A second narrow model accepts that tuple only after the first measured wait.
+Its 64 flag cases and nine refusal checks pass, including request order, repeat
+requests, wrong service numbers and stack alignment. Both seed observations now
+advance to a third `SYSCALL` after **52,597,686** instruction hooks. The paired
+audit verifies three phases, both measured output mappings and terminal refusal
+of the new request; fifteen evidence-mutation controls are rejected. Declared
+seed-dependent state remains explicitly reported rather than called convergence.
+
+The third request uses service number 4, current-process handle `-1`,
+alertability disabled and timeout pointer `-10000`. Another bounded, owned
+diagnostic measured 256 normal returns with full RAX
+`0xFFFFFFFFC0000005` (`STATUS_ACCESS_VIOLATION`), with no delivered exception.
+Its sign extension differs from the preceding result and is preserved exactly.
+The third validator rejects sixteen changed-evidence cases, including incorrect
+status width and treating an exception as a normal return.
+
+The three-contract model passes 64 third-tuple flag cases, ten refusal checks
+and passive-observation controls, alongside the earlier controls. Both seed
+observations advance through the three measured results and stop at a fourth
+system call after **52,600,167** observed instruction hooks. A separate audit
+verifies all three actual post-return general-register/flag readbacks and six
+bounded guest-stack snapshots, with 29 evidence-mutation controls rejected.
+These snapshots are diagnostic data, not executable process checkpoints.
+
+The new status-access observations also establish that the original stack slots
+are reused. A later value in one slot cannot be treated as the earlier result.
+Some inspected arithmetic involving a status cancels independently of that
+status. Later bounded evaluation identifies equality comparisons against the
+second and third low-32-bit error codes. Their selected continuations and
+higher-level purpose remain unresolved; no removable integrity check is
+established.
+
+The fourth request specifies service `0x1E6`, identified against the measured
+`NtWaitForKeyedEvent` entry, with handle `-10000`, NULL key, alertability disabled
+and NULL timeout. An owned diagnostic measures 256 normal returns with full RAX
+`0x00000000C0000008`; eighteen changed-evidence controls reject. Its exact model
+passes 64 flag cases and ten refusals. Both seed observations now advance through
+four measured returns and stop before a fifth request after **52,602,849**
+instruction hooks. The independent paired audit verifies all four post-return
+general-register/flag maps and eight bounded guest-stack snapshots, with 42
+changed-evidence controls rejected. Seed-dependent registers and stale stack
+spills remain explicitly identified; full state equality is not established.
+
+The fifth request uses the same service, current-process handle `-1`, NULL key,
+alertability disabled and the previously defined zero-timeout address. A separate
+owned diagnostic measures 256 normal returns with full RAX `0x00000000C0000024`
+(`STATUS_OBJECT_TYPE_MISMATCH`); twenty-two changed-evidence controls reject.
+This establishes another narrow native contract. Its actual model continuation
+has not yet been verified. The runtime's subsequent preparation of protected
+images, engine startup and startup without the original runtime remain
+unverified. Further AppContainer adaptation stays deferred.
 
 ## Next engineering gates
 

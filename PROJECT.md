@@ -136,6 +136,8 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   The [preloader handoff](docs/client-protection-study.md#preloader-to-runtime-handoff)
   now explains its exception-mediated entry and cached runtime dispatch. The
   runtime's image preparation and continuing dependencies remain unresolved.
+  Both examined stock engine plugins also import the preloader; their required
+  startup preparation and role in the working client remain unverified.
   [Bounded runtime observation](docs/client-protection-study.md#initial-runtime-state-dependency)
   follows thread/process-state access and CPU initialization without running the
   game. The [shared record](docs/client-protection-study.md#shared-initialization-record)
@@ -144,9 +146,19 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   copies all 18 pointers. Subsequent
   [support-module parsing](docs/client-protection-study.md#support-module-parsing)
   reaches Windows export-directory metadata using measured diagnostic inputs.
-  Identify the selected exports, their actual use and protected-image preparation
-  next; missing simulation inputs, emulator limitations and ordinary CPU
-  initialization are not evidence of a removable protection check.
+  [Export-name observation](docs/client-protection-study.md#export-name-observation)
+  identifies a native-export address/name-hash table. With deterministic
+  observation slices, both register cases reach the same
+  [first system call](docs/client-protection-study.md#first-system-call-boundary),
+  identified against measured Windows code as a zero-timeout process wait.
+  A [measured wait continuation](docs/client-protection-study.md#measured-wait-continuation)
+  verifies four exact operations in diagnostic-owned processes and advances
+  the model to another keyed-event request. A fifth native contract is measured,
+  with its actual model continuation still unverified. Post-return readbacks and
+  status access traces distinguish result lifetimes from reused stack slots.
+  Verify the next request and the results' consumers, then identify protected-image preparation;
+  missing simulation inputs, emulator limitations and ordinary initialization
+  are not evidence of a removable protection check.
 - [ ] Separate protection requirements from diagnostic-environment failures.
   AppContainer's named-object failure has been identified; its later
   `0xC0000244` exit remains unattributed. Neither is proof of a kernel-driver
