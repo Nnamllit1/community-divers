@@ -41,6 +41,13 @@ network-disable setting was found in the decoded keys/string values or bounded
 whole-payload literal scans. This finding covers those three hashed payloads;
 it does not exclude native or dynamically constructed service configuration.
 
+An independent standalone C++ test using the unchanged archived SDK
+[ConstConfig reader](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/plugin_foundation/const_config.h)
+agrees with the bounded decoder on all 4,685 nodes and 855 scalar values in
+those payloads. The test validates offsets and counts before using the SDK's
+unbounded readers. This supports the data-format interpretation; it does not
+establish an available current-game API or native settings consumer.
+
 This route can inform features implemented through existing Lua APIs. It starts
 after the preloader/runtime stage investigated here and provides no demonstrated
 community-account bootstrap or backend-routing adapter. The reviewed HellForge
@@ -72,6 +79,13 @@ leaves unused. These are generic SDK interfaces, not established current-game
 callbacks or proof of ordering before account initialization. See the pinned
 [native Application API](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/engine_plugin_api/plugin_api.h#L1505-L1555)
 and [callback declarations](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/engine_plugin_api/plugin_api.h#L149-L201).
+
+The separate archival C API also returns a const settings root. Its mutable
+dynamic script-data interface is a different table, with no declared connection
+to native account configuration or accepted backend keys. A usable route still
+requires a demonstrated game-specific consumer and early call order. See the
+[application C API](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/engine_plugin_api/c_api/c_api_application.h)
+and [script-data interface](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/engine_plugin_api/c_api/c_api_dynamic_script_data.h).
 
 Boot Mod Loader's `after_startup` queue runs within its Lua `init` wrapper,
 after addons and guest boots. Its name does not identify a native account or

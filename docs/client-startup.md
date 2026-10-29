@@ -259,6 +259,23 @@ limited to the observed API entry; this does not prove external termination or
 identify the game's exit path. This exit remains an unattributed observation
 from the restricted environment, not the current investigation's prerequisite.
 
+The retained logs preserve all debug-event headers for those two exits, but
+no terminal register context, caller stack or dump. Their saved register/code
+snapshots belong to an earlier preloader execute fault, before mutex success.
+Individual thread-exit codes were not serialized. Windows' process-exit debug
+record supplies the exit code rather than a terminating caller, so the missing
+context cannot be recovered from that record alone. See the
+[process-exit](https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exit_process_debug_info)
+and [thread-exit](https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exit_thread_debug_info)
+record definitions.
+
+An authored Windows control demonstrates this ambiguity: a worker calling
+`ExitProcess` and a last worker calling `ExitThread` both produced `0xC0000244`
+on a noninitial thread. Their event-kind/thread-role/final-status sequences
+matched when individual thread-exit codes were omitted; those codes distinguished
+the two controls. This does not identify the retail client's exit mechanism or
+extend the native-entry observer's coverage.
+
 These game comparisons ended with empty jobs, removed temporary profiles,
 restored access descriptors, unchanged copy inventories and unchanged bootstrap
 hashes. Engine startup and general namespace compatibility remain unverified.
