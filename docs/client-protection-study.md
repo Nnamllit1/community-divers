@@ -1,6 +1,6 @@
 # Driver-free current-client integration
 
-Assessment date: 28 October 2026. Examined client: Steam build **26088801**.
+Assessment date: 29 October 2026. Examined client: Steam build **26088801**.
 No working protection-removal patch or current-game community startup is available.
 
 ## Feasibility
@@ -473,10 +473,51 @@ The seventh request uses the same service, current-process handle, NULL key,
 alertability disabled and timeout pointer `-10000`. Another owned diagnostic
 measures 256 normal returns with full, sign-extended RAX `0xFFFFFFFFC0000005`,
 without a delivered exception; thirty-three changed-evidence controls reject.
-That establishes a separate native contract. Its model continuation remains
-unverified and stopped. The runtime's subsequent preparation of protected images,
-engine startup and startup without the original runtime remain unverified.
-Further AppContainer adaptation stays deferred.
+Its exact retained-state adapter passes 35 refusal controls. One application
+advances the seed0 model to a four-byte read at address zero, runtime RVA
+`5BF5D2`, after **52,610,202** total hooks. A separate audit verifies the full
+applied register/flag mapping, original instruction tail and caller-frame bytes,
+rejecting sixteen changed-evidence cases. This seventh continuation was not
+repeated. No eighth system call was reached.
+
+## Null read and conditional exception route
+
+The original helper executes `XOR EAX,EAX; MOV EAX,[RAX]`. The current observer
+stops at that read because it does not implement Windows exception dispatch.
+This is an emulator boundary; it does not establish a native game crash or a
+protection rejection.
+
+Read-only PE inspection identifies no unwind entry for the leaf helper. Its
+caller, RVA `499440..499463`, has an exception scope covering the actual return
+PC `499457`, with filter RVA `53B410` and target `499461`. An independent native
+SDK/DbgHelp diagnostic confirms the decoded metadata while treating the runtime
+file as read-only data. The original language handler evaluates the filter before
+selecting a continuation. Scope coverage alone does not prove recovery; Windows
+distinguishes continuing execution, continuing the search and entering a handler.
+See Microsoft's [x64 unwind description](https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170)
+and [filter outcomes](https://learn.microsoft.com/en-us/windows/win32/debug/exception-handler-syntax).
+
+The filter reads the live SS selector. An authored, owned-process null-read
+diagnostic separately measures the exception record, saved context and selector
+behavior: the saved fault flags include RF, and the live SS read returns `0x2B`.
+Its validator rejects 33 changed-evidence cases. Saved fault state and later
+capture-helper entry state are distinct; neither proves the original filter's
+entry flags. Emulator controls also show that setting SS/CS selector values
+alone does not reproduce native user-mode `POPFQ` behavior.
+
+The handler's positive-result branch decodes a mutable function pointer. The
+recorded guest value still decodes to NULL, matching its on-disk initializer.
+Its setter and eventual callee remain unresolved. That branch matters only if
+the original filter returns positive; the value is not evidence that a normal
+DLL initialization call was omitted. The preloader's established first dispatch
+uses its private initialization arguments before its wrapper forwards later
+callbacks.
+
+The next gate is to establish the original filter's consumed inputs, result and
+context effects before modeling any exception continuation or target unwind.
+The runtime's subsequent preparation of protected images, engine startup and
+startup without the original runtime remain unverified. Further AppContainer
+adaptation stays deferred.
 
 ## Next engineering gates
 
