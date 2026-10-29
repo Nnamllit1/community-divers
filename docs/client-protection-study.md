@@ -32,6 +32,15 @@ PlayFab title IDs and boot/profile paths, but no demonstrated community backend
 URL. A current native endpoint/config consumer or exposed API still needs to be
 identified and tested with official-service and profile separation.
 
+Read-only extraction and structural inspection now cover all three archive
+resources classified as `config`: `content/input`,
+`core/performance_hud/performance_hud` and `rendering/performance_hud`. They
+contain input bindings/settings and performance HUD definitions. Their two
+`network_hud` objects contain only font settings. No backend/account endpoint or
+network-disable setting was found in the decoded keys/string values or bounded
+whole-payload literal scans. This finding covers those three hashed payloads;
+it does not exclude native or dynamically constructed service configuration.
+
 This route can inform features implemented through existing Lua APIs. It starts
 after the preloader/runtime stage investigated here and provides no demonstrated
 community-account bootstrap or backend-routing adapter. The reviewed HellForge
@@ -54,6 +63,21 @@ A legitimately signed engine plugin remains a candidate alongside the original
 runtime. Current-build acceptance, working callbacks and initialization early
 enough for community service routing are all unverified. No bridge was installed
 or executed in this assessment.
+
+The archived engine SDK distinguishes a native whole-settings reader from Lua's
+script-data accessor. Its `ApplicationApi` (ID 12) returns a const settings root;
+the reviewed interface supplies no backend endpoint setter. It also declares
+`loaded` and `setup_resources` phases before `setup_game`, which the bridge
+leaves unused. These are generic SDK interfaces, not established current-game
+callbacks or proof of ordering before account initialization. See the pinned
+[native Application API](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/engine_plugin_api/plugin_api.h#L1505-L1555)
+and [callback declarations](https://github.com/AutodeskGames/stingray-plugin-api-samples/blob/e9d937a013e4aa1f25b6f7d9bdee0ca985455cfd/stingray_sdk/engine_plugin_api/plugin_api.h#L149-L201).
+
+Boot Mod Loader's `after_startup` queue runs within its Lua `init` wrapper,
+after addons and guest boots. Its name does not identify a native account or
+backend initialization barrier. The
+[implemented order](https://github.com/pat-pat-patrick/boot-mod-loader/blob/96ff9818c51c669d8f690e01db49198a44453297/src/boot_mod_loader.lua#L2136-L2201)
+therefore does not establish a hook early enough for community service routing.
 
 ## What historical research establishes
 
