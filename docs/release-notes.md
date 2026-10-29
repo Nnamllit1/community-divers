@@ -23,6 +23,8 @@
     entry. The full launcher package is embedded and verified before installation.
   * Rerun setup to repair an interrupted installation. Uninstall preserves profiles,
     mods, campaigns, game copies and modified launcher files.
+  * Installer checks now cover removal after another reader releases the launcher
+    file, including the repaired-installation flow.
   * Portable downloads and the launcher's signed update system continue to work.
     Existing installations do not need the installer to receive launcher updates.
 
