@@ -453,3 +453,51 @@ malformed-IPC paths remain untested live.
 This collector still has only fixture evidence. Retail process-tree admission,
 observation before loader initialization and the earlier game's `0xC0000244`
 exit cause remain unverified.
+
+## Early image-load observation
+
+A separate native diagnostic uses ordinary Windows debug events to retain the
+original process and thread capabilities before continuing its own targets.
+It records actual executable/DLL bases from
+[creation and image-load events](https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events),
+with the supplied file object's identity, hash and bounded PE metadata. It does
+not require an initialized module list or an authored readiness gate. This probe
+contains no native-call interceptors, instruction offsets, code writes or ETW
+observer. The controller runs without elevation; its targets use a fresh
+zero-capability AppContainer and an atomically assigned, owned job.
+
+All 26 metadata controls and six authored runtime cases pass. They cover an exit
+during TLS initialization before the supported `wmain` route, two generations of
+an owned DLL's load/unload, forwarded TLS/application breakpoints, handled and
+unhandled exceptions, a two-process timeout and a diagnostic failure immediately
+after real process creation. Independent checks join 189 continued events,
+seven original process lifetimes, 25 terminal thread capabilities and 129 image
+generations. The six profiles were removed and the 12 saved directory DACLs
+restored. The low-integrity label on newly created diagnostic data is retained.
+
+Unload and process-exit boundaries close image generations separately; process
+exit does not invent per-DLL unload notifications. Missing file metadata,
+conflicting ranges or cumulative job/debugger process-count differences leave
+image mapping incomplete. Debugger receipt QPC values are not ETW event timestamps.
+Disk sections and image/RVA matches do not establish live code bytes, a
+terminating caller, engine initialization or ordinary startup behavior without
+a debugger.
+
+An unmodified build `26251122` comparison passes content checks for all 168
+depot files before launch. All 1,139 pinned inputs remain unchanged afterward,
+and all 180 private-copy paths and DACLs match their original state. The capture
+records executable, preloader and runtime image loads, 46 successful debug-event
+continuations, two original process lifetimes and five terminal thread
+capabilities. Its 23 complete image generations cover the root process.
+
+The diagnostic stops the owned tree when a descendant image fails admission.
+Both process exits are its requested `0xCDD00002` cleanup status, with
+`natural_exit=false` and `capture_success=false`. The rejected child's original
+process identity is retained, but its image file identity, path, hash and base
+were not saved; a later child DLL-load event also lacks image metadata. The
+producer's complete recorded-map flag does not establish a complete tree
+inventory. It continued the rejected creation event before requesting cleanup,
+so child non-execution is unproved. The next diagnostic needs rejected-image
+metadata and a successful stop request before that continuation. This result
+does not identify the game's natural failure, a protection rejection or a
+working current-client integration.

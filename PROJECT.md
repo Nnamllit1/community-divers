@@ -188,9 +188,13 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   opens. Its bounded prefix still does not explain the later process exit.
   Separate [OS exit-tracing controls](docs/client-startup.md#os-exit-tracing-controls)
   now separate an elevated observer from normal authored targets and map recorded
-  exit frames to measured executable module/RVA candidates. Retail process-tree
-  admission and observation before loader initialization remain unverified;
-  victim exit context alone does not identify the terminating requester.
+  exit frames to measured executable module/RVA candidates. Separate
+  [early-image observation](docs/client-startup.md#early-image-load-observation)
+  records executable, preloader and runtime image loads in unmodified build
+  `26251122`, then stops at a descendant-image admission guard. The child's
+  image identity and the game's natural exit remain unverified; the observed
+  process exit codes came from diagnostic cleanup. Victim exit context alone
+  does not identify the terminating requester.
   Neither failure establishes a kernel-driver requirement or a protection
   rejection. Do not turn sandbox compatibility into
   a product acceptance gate or broaden machine-wide permissions to mask it.
