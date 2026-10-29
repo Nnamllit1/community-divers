@@ -160,9 +160,10 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   and status access traces distinguish result lifetimes from reused stack slots.
   The seventh measured return now advances that model to a null-read boundary.
   The caller's [exception metadata](docs/client-protection-study.md#null-read-and-conditional-exception-route)
-  identifies a conditional filter, whose outcome and required dispatch state
-  remain unverified. Establish that original exception route and the results'
-  consumers, then identify protected-image preparation;
+  identifies a conditional filter. An exploratory selected-scope model reaches
+  that filter but stops on unprovided stack bytes; its outcome and required
+  dispatch state remain unverified. Establish that original exception route and
+  the results' consumers, then identify protected-image preparation;
   missing simulation inputs, emulator limitations and ordinary initialization
   are not evidence of a removable protection check.
 - [ ] Separate protection requirements from diagnostic-environment failures.

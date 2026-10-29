@@ -505,6 +505,15 @@ capture-helper entry state are distinct; neither proves the original filter's
 entry flags. Emulator controls also show that setting SS/CS selector values
 alone does not reproduce native user-mode `POPFQ` behavior.
 
+A separate selected-scope guest experiment follows the original language handler
+into the filter across two register sentinels and all 64 safe arithmetic-flag
+combinations. All 128 cases stop at an unprovided eight-byte stack read, RVA
+`34DE391`, without a filter result. The read lies in the filter's reserved local
+area and has no preceding write on this observed path. The experiment preserves
+pre-instruction state and rejects missing bytes rather than supplying defaults.
+Its dispatcher storage and entry states are synthetic parameters; it does not
+establish native Windows dispatch or independence from every possible input.
+
 The handler's positive-result branch decodes a mutable function pointer. The
 recorded guest value still decodes to NULL, matching its on-disk initializer.
 Its setter and eventual callee remain unresolved. That branch matters only if
