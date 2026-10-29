@@ -407,30 +407,49 @@ equivalence of all later behavior and timing remains unverified.
 
 ## OS exit-tracing controls
 
-A separate native observer has been tested against four self-created fixtures:
-`ExitProcess`, final-thread `ExitThread`, parent-requested `TerminateProcess` and
-an intentional timeout. It uses a fresh real-time Windows session requesting
+A native diagnostic now separates a normal coordinator and targets from a
+one-time elevated observer. Six self-created fixtures cover `ExitProcess`,
+main-thread `ExitThread`, parent-requested `TerminateProcess`, an intentional
+timeout, a numeric `0xC0000244` exit and a two-thread process exit. The high-bit
+case supplies that numeric value to `ExitProcess`.
+The observer uses a fresh real-time Windows session requesting
 [process/thread exit stacks](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/stackwalk).
-The normal-token attempt was denied before any session or fixture was created.
-A one-time elevated run preserved all four expected process/thread exit codes,
-emptied the fixture jobs, stopped its session and joined its consumer.
+Recorded tokens confirm that the coordinator and all targets are non-elevated
+at medium integrity, with the observer elevated at high integrity. All six
+process and primary-thread exit codes, plus the additional worker's exit code,
+match their expected values. The jobs emptied, session stopped and consumer joined.
 
-Thirty-seven pure-data controls and six independent negative audit cases pass.
-The capture contains 16 owned event records and eight matched stack records,
-with 106 nonzero decoded addresses. Decoded values match the complete saved
-stack payloads for the observed Windows schema. Input identities, original
-process/thread lifetimes and durable journals were independently checked.
+All 129 pure-data controls and 16 independent negative audit cases pass. The
+capture contains 26 owned event records and 13 matched stacks with 173 nonzero
+decoded addresses. Original process/thread lifetimes, authentication, 910 input
+identities, durable journals and raw stack bytes were independently checked.
 
-All process-exit stack addresses are in the upper half of the address space;
-30 lower-half addresses occur in thread-exit stacks. No target module map was
-collected, so no specific code location has been attributed. The parent-requested
-termination's events describe the victim's context, which does not identify the
-requesting parent's caller. Stack matching uses the original event's
+Live module snapshots were taken while initialized fixtures waited at exit
+gates. Module-file pins were released before gate release or requested
+termination. Measured module bases, executable sections and queried memory
+regions account for 54
+user-range addresses as module/RVA candidates, including 21 in the self image.
+Three frames also match declared function ranges starting at the authored
+exit-helper exports. These metadata matches do not establish live code bytes,
+debug-symbol locations or a terminating requester. The other 119 addresses are
+in the upper half of the address space and remain unmapped; every process-exit stack contains
+only upper-half addresses in this run.
+
+All end-event emitters are victims, including the parent-requested termination.
+The separate coordinator module map is not used for those victim stacks. Stack
+matching uses the original event's
 [timestamp and process/thread fields](https://learn.microsoft.com/en-us/windows/win32/etw/stackwalk-event),
-with a final check for ambiguous associations after draining the trace.
+with a final ambiguity check and a requirement that the selected emitter's
+module snapshot precede the matched end event. Snapshots remain time-qualified;
+they do not prove that mappings persisted or bytes stayed unchanged until exit.
 
 The session reports zero lost events and buffers at stop. Separately, the
-observer discards 214 unrelated-target events and 77 unmatched or pre-event
-stacks; those counts do not establish complete attribution. This collector has
-only fixture evidence. Its elevated children do not establish observation of an
-unprivileged retail client or explain the earlier `0xC0000244` game exit.
+observer discards 363 unrelated-target events and 178 unmatched or pre-event
+stacks, and records 74 cancelled callbacks during shutdown. The cancelled
+callbacks have not been classified as unrelated or lost events. Complete
+attribution is not established. Observer/coordinator failure-injection and
+malformed-IPC paths remain untested live.
+
+This collector still has only fixture evidence. Retail process-tree admission,
+observation before loader initialization and the earlier game's `0xC0000244`
+exit cause remain unverified.
