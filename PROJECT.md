@@ -173,6 +173,9 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   `0xC0000244` exit remains unattributed. A fresh bounded comparison records all
   event dispositions and thread-exit codes, with no ordinary process/thread
   termination-entry hits; this still does not identify a terminating caller.
+  A later [pre-exit snapshot](docs/client-startup.md#pre-exit-file-operation-candidate)
+  supplies a file-open-by-ID contract candidate; its root volume, target file
+  and completion result remain unverified.
   Neither failure establishes a kernel-driver requirement or a protection
   rejection. Do not turn sandbox compatibility into
   a product acceptance gate or broaden machine-wide permissions to mask it.

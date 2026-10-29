@@ -327,3 +327,29 @@ engine startup, then verify separate profile/Cloud data and explicit routing to
 the community backend. The [adapter acceptance gates](client-integration.md#adapter-acceptance-gates)
 remain unchanged. Ordinary native stack walking may not unwind protected or
 manually mapped frames reliably; unrecognized frames are not function evidence.
+
+## Pre-exit file-operation candidate
+
+The periodic sampler now retains bounded live instruction bytes, stack bytes,
+candidate argument structures and debug registers at its existing sample points.
+Ten authored cases pass, including 38 memory-reader checks, the previous 34
+ownership checks, a real open of an authored file and a seven-second wait in the
+confined fixture. The controls preserve counted binary data, embedded zeros and
+UTF-16 code units; they do not treat every object-name buffer as a pathname.
+
+A further retail comparison again exited with `0xC0000244`, with all 43 event
+continuations successful and cleanup verified. One pre-exit sample at runtime
+RVA `5B3C28` contains a live `SYSCALL` immediately before the saved instruction
+pointer. Its accumulator matches the measured system `NtOpenFile` service value;
+candidate arguments include share mode `1`, open options `0x2020`, a nonzero root
+handle and an eight-byte counted object-name buffer. These fields are consistent
+with a file-open-by-ID request. With `FILE_OPEN_BY_FILE_ID`, that buffer can hold
+a binary file reference rather than a Unicode pathname; see Microsoft's
+[file-open options](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatefile).
+
+This is a contract candidate from a periodic snapshot, not an observed API entry
+and return. The root handle's volume and target file remain unidentified. Saved
+output-slot bytes do not establish initialized or final completion results.
+The ordinary termination observers were still armed at this sample, but their
+state at exit remains unobserved. The file operation's relationship to the later
+exit, protected-image preparation and engine startup remains unverified.

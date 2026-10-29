@@ -141,6 +141,13 @@ adaptation, not a deployable patch. Subsequent runs exited with `0xC0000244`
 before the engine loaded; the exit's caller and cause remain unattributed.
 Engine startup remains unobserved.
 
+A later [pre-exit snapshot](client-startup.md#pre-exit-file-operation-candidate)
+retains live code and candidate file arguments at runtime RVA `5B3C28`. The saved
+state is consistent with a file-open-by-ID contract, whose counted name field
+contains a binary reference. The root volume, target file and completion result
+remain unresolved; this does not attribute the exit or establish protected-image
+preparation. No native call result or game instruction was changed to obtain it.
+
 ## Current-build startup structure
 
 An exact-hash, read-only inventory of the four bootstrap images was compared
