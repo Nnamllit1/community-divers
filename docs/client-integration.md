@@ -79,8 +79,9 @@ The catalog contains Steam builds `26088801` (observed on 26 October 2026) and
 `not_implemented`. In the newer installed build, six of the eight inspected
 modules changed: the executable, engine, preloader, runtime and both stock
 engine plugins. The two networking SDK modules retain their earlier identities.
-The [startup investigation](client-startup.md) still describes build `26088801`;
-its addresses and runtime results have not been validated on `26251122`.
+The [latest static bootstrap inventory](client-startup.md#latest-build-static-inventory)
+records the newer PE structures. Live startup results and native-observer
+instruction addresses remain scoped to `26088801`, unvalidated on `26251122`.
 
 A catalog match is a diagnostic result, not a supported adapter, proof of game
 ownership or permission to launch. Changing catalog flags cannot enable the

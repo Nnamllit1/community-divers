@@ -92,6 +92,8 @@ objective can stay stable while the roadmap evolves.
   and two stock engine plugins. Their exact identities do not establish startup.
 - [x] Provide native depot-based file-copy preparation and independent content verification.
   Copy preparation alone does not verify game startup, user data or network isolation.
+  The [latest-build copy](docs/client-startup.md#latest-build-static-inventory)
+  passes full verification for all 168 depot files of Steam build `26251122`.
 
 - [x] Build the selected GPL HellForge loader separately and verify its startup,
   mod callbacks and hook chaining against synthetic fixtures. This does not
@@ -144,6 +146,10 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   runtime's image preparation and continuing dependencies remain unresolved.
   Both examined stock engine plugins also import the preloader; their required
   startup preparation and role in the working client remain unverified.
+  A [fresh static inventory](docs/client-startup.md#latest-build-static-inventory)
+  confirms those import/TLS dependencies on build `26251122`, with changed entry
+  points and runtime exception-table contents. It does not validate the older
+  instruction addresses or establish startup on the newer build.
   [Bounded runtime observation](docs/client-protection-study.md#initial-runtime-state-dependency)
   follows thread/process-state access and CPU initialization without running the
   game. The [shared record](docs/client-protection-study.md#shared-initialization-record)

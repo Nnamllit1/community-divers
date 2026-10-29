@@ -1,18 +1,50 @@
 # Current-client startup investigation
 
-The current client adapter is unfinished. This page records the bootstrap
-observed for Steam build **26088801** on 27-29 October 2026 and the limits of the
-startup probe. It does not describe a playable community client.
+The current client adapter is unfinished. Steam build **26251122** has a fresh
+static bootstrap inventory. The live startup observations on this page were
+collected on build **26088801** on 27-29 October 2026; they have not been validated
+on the newer binaries. This does not describe a playable community client. See
+the [game-version target policy](client-integration.md#game-version-target-policy).
 
-Steam build **26251122** was fingerprinted on 29 October 2026. Its executable,
-engine and all four inspected startup dependencies differ from this build.
-The observations below have not been validated on the newer binaries. See the
-[game-version target policy](client-integration.md#game-version-target-policy).
+## Latest-build static inventory
+
+A separately prepared copy of build **26251122** passes full content verification
+for 168 depot files totaling 24,128,702,003 bytes. Its eight inspected module
+identities match the build catalog. This establishes file-copy integrity; startup,
+profile/Cloud isolation and official-network isolation remain unverified.
+
+A read-only comparison of all eight inspected modules, cross-checked against
+Microsoft `dumpbin` output, finds unchanged normal import descriptors, TLS directory
+fields and callback arrays. The executable, engine and both stock engine plugins
+still import preloader ordinal 1, and their on-disk TLS callback storage still
+overlaps that import's address-table slot. This preserves a concrete dependency;
+it does not establish unchanged initialization behavior.
+
+Several declared entry points and the runtime's exception table changed:
+
+| Metadata | Build 26088801 | Build 26251122 |
+| --- | --- | --- |
+| Executable PE entry RVA | `0x12EA6C8` | `0x12EA554` |
+| Runtime PE entry RVA | `0x560040` | `0x519D00` |
+| Wwise plugin PE entry RVA | `0x3C1308` | `0x3C1318` |
+| Runtime declared exception-table entries | 28,601 | 28,881 |
+
+The preloader's declared entry remains in a non-executable section, but its
+`.text` and `.rdata` section bytes changed. The executable, engine and both stock plugins
+still have no declared exception directory despite containing `.pdata` sections.
+All 16 old/new module identities remained unchanged across the inventory pass.
+These are file structures, not observations of loaded code or exception dispatch.
+Earlier instruction addresses, native-call observers and runtime results require
+fresh validation before use on build 26251122.
+
+A literal comparison of the top-level `data/settings.ini` changes only its build
+and audio-version lines. This does not locate native settings consumers or
+establish a community-backend configuration route.
 
 ## Bootstrap dependencies
 
-Read-only PE inspection and a contained startup probe of the independently
-prepared copy found:
+For build **26088801**, read-only PE inspection and a contained startup probe of
+the independently prepared copy found:
 
 - `bin/helldivers2.exe` imports `preloader.dll` and has TLS initialization callbacks.
 - `data/game/game.dll` also imports the preloader and has TLS callbacks.
