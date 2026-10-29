@@ -170,8 +170,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   are not evidence of a removable protection check.
 - [ ] Separate protection requirements from diagnostic-environment failures.
   AppContainer's named-object failure has been identified; its later
-  `0xC0000244` exit remains unattributed. Neither is proof of a kernel-driver
-  requirement or a protection rejection. Do not turn sandbox compatibility into
+  `0xC0000244` exit remains unattributed. A fresh bounded comparison records all
+  event dispositions and thread-exit codes, with no ordinary process/thread
+  termination-entry hits; this still does not identify a terminating caller.
+  Neither failure establishes a kernel-driver requirement or a protection
+  rejection. Do not turn sandbox compatibility into
   a product acceptance gate or broaden machine-wide permissions to mask it.
 - [ ] Implement and verify the necessary current-client protection/bootstrap
   adaptation in the isolated copy, preserving working engine initialization.

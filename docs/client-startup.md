@@ -276,6 +276,33 @@ matched when individual thread-exit codes were omitted; those codes distinguishe
 the two controls. This does not identify the retail client's exit mechanism or
 extend the native-entry observer's coverage.
 
+A later capture version records each actual debug-event continuation result,
+exception contexts before and after the debugger's handling, and individual
+thread-exit codes. It observes the ordinary system-library entries for both
+`NtTerminateProcess` and `NtTerminateThread`. Eight authored control cases pass,
+including 34 breakpoint-ownership checks, exception forwarding, the existing
+namespace comparison, isolation and descendant cleanup. All 366 recorded event
+continuations succeeded. The authored last-worker `ExitThread` control also
+reaches process-termination entries internally on the examined Windows build;
+fixture names alone do not identify the final native API.
+
+A fresh retail comparison with that capture version again created the private
+mutex successfully and exited with `0xC0000244`. All 43 event continuations
+succeeded. Six unowned first-chance exceptions were forwarded with unchanged
+captured contexts; no second-chance exception or imposed timeout was recorded.
+The initial thread and two other threads each reported `0xC0000244`, followed by
+the process exit with the same status on another thread. This distinguishes the
+run from the exact authored control whose initial thread exited with zero, but
+does not establish a terminating caller or cause.
+
+Both ordinary termination-entry observers were armed on four threads and
+recorded no entry hits. Their coverage does not include direct system calls,
+other code copies or external termination, and the saved events do not prove the
+debug registers remained armed until exit. No terminal caller context was
+captured. The run preserved all eight catalogued module identities and the copy
+inventory, restored all 180 saved access descriptors, removed the temporary
+profile and left an empty job. Engine startup remains unverified.
+
 These game comparisons ended with empty jobs, removed temporary profiles,
 restored access descriptors, unchanged copy inventories and unchanged bootstrap
 hashes. Engine startup and general namespace compatibility remain unverified.

@@ -520,10 +520,18 @@ repeated. No eighth system call was reached.
 
 ## Null read and conditional exception route
 
-The original helper executes `XOR EAX,EAX; MOV EAX,[RAX]`. The current observer
-stops at that read because it does not implement Windows exception dispatch.
+The original helper executes `XOR EAX,EAX; MOV EAX,[RAX]`. The bounded model
+stopped at that read because it does not implement Windows exception dispatch.
 This is an emulator boundary; it does not establish a native game crash or a
 protection rejection.
+
+A fresh [native capture](client-startup.md#private-namespace-startup-comparison)
+separately records the access violation at runtime RVA `5BF5D2` and subsequent
+single-step events at `5BF5D4`, `5BF5D9` and `5BF5DB`. Each was forwarded with
+unchanged captured context and a successful `DBG_EXCEPTION_NOT_HANDLED`
+continuation. No second-chance exception was recorded. These event receipts do
+not identify the original filter's consumed inputs, result or context changes,
+or attribute the later `0xC0000244` exit.
 
 Read-only PE inspection identifies no unwind entry for the leaf helper. Its
 caller, RVA `499440..499463`, has an exception scope covering the actual return
