@@ -19,7 +19,11 @@ objective can stay stable while the roadmap evolves.
   explicit public interfaces and independent build/test targets. Keep backend,
   update, setup and client-preparation code in their own components.
 - A current-game client integration, isolated installation and separate profiles.
-  The pre-EAC game is reference material, not the target implementation.
+  Target the newest Windows/Steam retail release, with the immediately preceding
+  release as a temporary fallback during update investigation. Check each new
+  build's identities and integration gates before claiming compatibility, even
+  for balance-only patches. The pre-EAC game is reference material, not the
+  target implementation. See the [game-version target policy](docs/client-integration.md#game-version-target-policy).
 - Human-readable notes for every release, rendered inside the launcher with text
   emphasis, headings, lists and optional images, and published with the release.
 - A native C++ per-user Windows installer/uninstaller styled like the launcher,
@@ -173,9 +177,9 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   `0xC0000244` exit remains unattributed. A fresh bounded comparison records all
   event dispositions and thread-exit codes, with no ordinary process/thread
   termination-entry hits; this still does not identify a terminating caller.
-  A later [pre-exit snapshot](docs/client-startup.md#pre-exit-file-operation-candidate)
-  supplies a file-open-by-ID contract candidate; its root volume, target file
-  and completion result remain unverified.
+  A later [native file trace](docs/client-startup.md#native-catalog-file-observation)
+  identifies a private catalog-cache miss followed by successful catalog-file
+  opens. Its bounded prefix still does not explain the later process exit.
   Neither failure establishes a kernel-driver requirement or a protection
   rejection. Do not turn sandbox compatibility into
   a product acceptance gate or broaden machine-wide permissions to mask it.

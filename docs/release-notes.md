@@ -2,6 +2,11 @@
 
 ## Client inspection
 
+  * **Steam build 26251122 is now recorded** alongside build 26088801 in the
+    observed-file catalog. Both remain diagnostic identities; game launch and
+    community gameplay are unavailable.
+  * Development targets the latest Windows/Steam retail release, with the
+    immediately preceding release as a temporary fallback during investigation.
   * **Startup dependencies are now checked.** Client inspection fingerprints the
     preloader, runtime and two stock engine plugins alongside the four core
     client modules.

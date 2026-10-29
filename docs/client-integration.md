@@ -5,6 +5,21 @@ inspector to establish reproducible starting points for adapter development.
 The [current startup investigation](client-startup.md) records the observed
 preloader/runtime process dependency and the limits of an offline contained probe.
 
+## Game-version target policy
+
+Development aims to track the newest Windows/Steam retail release of HELLDIVERS 2.
+The immediately preceding retail release may serve as a temporary fallback while
+an update is investigated. This policy does not promise same-day compatibility,
+and neither release currently has a working Community Divers game adapter.
+
+Every update needs fresh file identities and build-specific integration evidence.
+Balance changes alone do not establish unchanged executable code or startup
+behavior. Keep earlier observations tied to their original build; unknown or
+changed identities cannot inherit an adapter's compatibility status. Historical
+catalog entries remain useful for reproducibility without extending this target
+window. The launcher and community must agree on an explicitly validated build
+before eventual gameplay is enabled.
+
 ## Inspect an installed client
 
 Use **Settings > Inspect client files**, or the packaged console tool:
@@ -59,10 +74,17 @@ entry without those records does not match. These eight fingerprints identify
 the inspected modules; they do not verify every installed asset or establish
 the runtime's complete initialization contract.
 
-The initial record is Steam build `26088801`, observed on 26 October 2026. Its
-integration state is `not_implemented`. A catalog match is a diagnostic result,
-not a supported adapter, proof of game ownership or permission to launch.
-Changing catalog flags cannot enable the missing adapter in the launcher.
+The catalog contains Steam builds `26088801` (observed on 26 October 2026) and
+`26251122` (observed on 29 October 2026). Both have integration state
+`not_implemented`. In the newer installed build, six of the eight inspected
+modules changed: the executable, engine, preloader, runtime and both stock
+engine plugins. The two networking SDK modules retain their earlier identities.
+The [startup investigation](client-startup.md) still describes build `26088801`;
+its addresses and runtime results have not been validated on `26251122`.
+
+A catalog match is a diagnostic result, not a supported adapter, proof of game
+ownership or permission to launch. Changing catalog flags cannot enable the
+missing adapter in the launcher.
 
 ## Adapter acceptance gates
 

@@ -2,6 +2,47 @@
   "schema": 1,
   "profiles": [
     {
+      "id": "hd2-steam-26251122-win64",
+      "steam_build": "26251122",
+      "integration_status": "not_implemented",
+      "startup_files": {
+        "bin/preloader.dll": {
+          "bytes": 46168,
+          "sha256": "e937839363624129a31e29e9bb1831140842ed5b0549b2a1afb80063ccf07538"
+        },
+        "bin/runtime.dll": {
+          "bytes": 64928856,
+          "sha256": "e976ebb4c6a0f527f3427d4eb2bb1975f1acd85482555f5990afe07853654cf2"
+        },
+        "bin/plugins/level_generation_pluginw64_release.dll": {
+          "bytes": 625752,
+          "sha256": "b2db7fdc01e87f6941b03b941a4cc6a0d4d1199281055d6ab6f7f74a79de87e2"
+        },
+        "bin/plugins/wwise_pluginw64_release.dll": {
+          "bytes": 6155864,
+          "sha256": "f008ae94f48b11b0cc3fb363aeab0c1dfae0e86f5cb3a21f33c592041c135425"
+        }
+      },
+      "files": {
+        "bin/helldivers2.exe": {
+          "bytes": 28743256,
+          "sha256": "257fd7de21a04e8668e02e5c820edf3435176fbde3569765255cc52a5ea20f9d"
+        },
+        "data/game/game.dll": {
+          "bytes": 49075800,
+          "sha256": "61dcfcd201dacbf3545c97beb8a5a6186e9850d2670bf60b0e058320b477f6df"
+        },
+        "bin/PartyWin.dll": {
+          "bytes": 4031520,
+          "sha256": "de34667c2f7084013d9c03cd5d1cb5dc3321bc36bb616a845e35534e4e7995e0"
+        },
+        "bin/PlayFabMultiplayerWin.dll": {
+          "bytes": 1878048,
+          "sha256": "95bc5f958e519f612b479de4227f3bdffaba9b2b8de987eb3f7991960b8ced17"
+        }
+      }
+    },
+    {
       "id": "hd2-steam-26088801-win64",
       "steam_build": "26088801",
       "integration_status": "not_implemented",

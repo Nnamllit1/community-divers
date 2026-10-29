@@ -2,6 +2,10 @@
 
 Assessment date: 29 October 2026. Examined client: Steam build **26088801**.
 No working protection-removal patch or current-game community startup is available.
+The newer installed Steam build **26251122** has different executable, engine and
+startup-module identities. These findings remain scoped to **26088801**; they have
+not been validated on the newer build. See the
+[game-version target policy](client-integration.md#game-version-target-policy).
 
 ## Feasibility
 
@@ -141,12 +145,14 @@ adaptation, not a deployable patch. Subsequent runs exited with `0xC0000244`
 before the engine loaded; the exit's caller and cause remain unattributed.
 Engine startup remains unobserved.
 
-A later [pre-exit snapshot](client-startup.md#pre-exit-file-operation-candidate)
-retains live code and candidate file arguments at runtime RVA `5B3C28`. The saved
-state is consistent with a file-open-by-ID contract, whose counted name field
-contains a binary reference. The root volume, target file and completion result
-remain unresolved; this does not attribute the exit or establish protected-image
-preparation. No native call result or game instruction was changed to obtain it.
+A later [native file trace](client-startup.md#native-catalog-file-observation)
+pairs 32 actual `NtOpenFile` entries and returns at runtime RVAs `5B3C26`/`5B3C28`.
+It identifies a private catalog-cache miss followed by successful catalog-file
+opens. Existing-handle metadata resolves the CatRoot directory and two catalog
+files, including their matching binary IDs. The bounded prefix does not attribute
+the later exit, establish a signature-verification result or explain preparation
+of protected images. Requested file arguments and returned values were preserved;
+the linked diagnostic coverage and handle-lifetime limits still apply.
 
 ## Current-build startup structure
 

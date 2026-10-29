@@ -5,7 +5,7 @@
 **Your community. Your campaign.**
 
 A native C++ launcher and self-hosted campaign platform for community-run
-HELLDIVERS 2 wars.
+HELLDIVERS 2 wars, aiming to track the latest retail game release.
 
 </div>
 
@@ -17,6 +17,11 @@ Community Divers is being built for players who want to share a persistent war,
 run their own progression and choose their mods together. Each community can
 operate its own campaign service, while players' machines run individual missions
 using their own installed game assets.
+
+Development targets the newest Windows/Steam retail release, with the immediately
+preceding release as a temporary fallback while updates are investigated. This is
+a target policy; game integration is still unfinished. See
+[build targeting and observed identities](docs/client-integration.md#game-version-target-policy).
 
 The launcher uses a HELLDIVERS 2-inspired menu layout and is written in C++20
 with Win32, Direct3D 11 and Dear ImGui. Application, patch notes and mod discovery have separate modules, and portable

@@ -1,8 +1,13 @@
 # Current-client startup investigation
 
 The current client adapter is unfinished. This page records the bootstrap
-observed for Steam build **26088801** on 27-28 October 2026 and the limits of the
+observed for Steam build **26088801** on 27-29 October 2026 and the limits of the
 startup probe. It does not describe a playable community client.
+
+Steam build **26251122** was fingerprinted on 29 October 2026. Its executable,
+engine and all four inspected startup dependencies differ from this build.
+The observations below have not been validated on the newer binaries. See the
+[game-version target policy](client-integration.md#game-version-target-policy).
 
 ## Bootstrap dependencies
 
@@ -328,28 +333,42 @@ the community backend. The [adapter acceptance gates](client-integration.md#adap
 remain unchanged. Ordinary native stack walking may not unwind protected or
 manually mapped frames reliably; unrecognized frames are not function evidence.
 
-## Pre-exit file-operation candidate
+## Native catalog file observation
 
-The periodic sampler now retains bounded live instruction bytes, stack bytes,
-candidate argument structures and debug registers at its existing sample points.
-Ten authored cases pass, including 38 memory-reader checks, the previous 34
-ownership checks, a real open of an authored file and a seven-second wait in the
-confined fixture. The controls preserve counted binary data, embedded zeros and
-UTF-16 code units; they do not treat every object-name buffer as a pathname.
+A bounded native trace now records actual entry and return at runtime RVAs
+`5B3C26` and `5B3C28`, with the system service identified against the measured
+Windows `NtOpenFile` export. It pairs the first 32 observed calls: 31 return
+success, and one returns `STATUS_OBJECT_NAME_NOT_FOUND` (`0xC0000034`). That miss
+is for `catcache4.bin` under the diagnostic's private `ProgramData\Packer`
+directory. The runtime continues with successful file opens after the miss.
 
-A further retail comparison again exited with `0xC0000244`, with all 43 event
-continuations successful and cleanup verified. One pre-exit sample at runtime
-RVA `5B3C28` contains a live `SYSCALL` immediately before the saved instruction
-pointer. Its accumulator matches the measured system `NtOpenFile` service value;
-candidate arguments include share mode `1`, open options `0x2020`, a nonzero root
-handle and an eight-byte counted object-name buffer. These fields are consistent
-with a file-open-by-ID request. With `FILE_OPEN_BY_FILE_ID`, that buffer can hold
-a binary file reference rather than a Unicode pathname; see Microsoft's
+Queries on duplicated existing handles identify the Windows
+`System32\CatRoot\{F750E6C3-38EE-11D1-85E5-00C04FC295EE}` directory. Twenty-nine
+captured file-by-ID requests succeed. Two returned handles resolve to `1.CAT`
+and a Windows Composition catalog in that directory, with file IDs matching
+the requested binary references and volume metadata. The counted name fields
+are binary IDs under the documented
 [file-open options](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatefile).
+No unknown file was opened by ID in the host to obtain these names.
 
-This is a contract candidate from a periodic snapshot, not an observed API entry
-and return. The root handle's volume and target file remain unidentified. Saved
-output-slot bytes do not establish initialized or final completion results.
-The ordinary termination observers were still armed at this sample, but their
-state at exit remains unobserved. The file operation's relationship to the later
-exit, protected-image preparation and engine startup remains unverified.
+Fourteen authored cases pass, including 38 reader checks, 34 checks of termination
+observer ownership and 40 file-observer checks. Controlled file calls preserve
+their baseline statuses and payloads. A failed call's stale output handle is not
+queried as a successful result. Worker controls verify handle inheritance,
+metadata identity, timeout termination and cleanup. All 493 fixture continuations
+succeeded.
+
+The retail run records 107 successful event continuations, exits with
+`0xC0000244` and completes verified cleanup. The file observer retires at its
+32-pair limit; subsequent calls are unobserved. The earlier periodic snapshot's
+exact file ID does not occur in this captured prefix; its file remains unresolved.
+The missing cache and catalog opens do not establish the later exit's cause,
+signature-verification outcome, a driver requirement or engine preparation.
+
+This diagnostic transfers the original namespace observer's slots only after
+its first verified mapped mutex pair and cleanup. Later calls at that old site
+are no longer observed or adapted. The termination observers retain their own
+slots. Metadata workers query existing duplicated handles without rewriting
+requested file arguments or returned values, but those references can briefly
+extend object and sharing lifetimes. These are instrumented observations;
+equivalence of all later behavior and timing remains unverified.
