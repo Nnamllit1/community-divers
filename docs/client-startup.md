@@ -404,3 +404,33 @@ slots. Metadata workers query existing duplicated handles without rewriting
 requested file arguments or returned values, but those references can briefly
 extend object and sharing lifetimes. These are instrumented observations;
 equivalence of all later behavior and timing remains unverified.
+
+## OS exit-tracing controls
+
+A separate native observer has been tested against four self-created fixtures:
+`ExitProcess`, final-thread `ExitThread`, parent-requested `TerminateProcess` and
+an intentional timeout. It uses a fresh real-time Windows session requesting
+[process/thread exit stacks](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/stackwalk).
+The normal-token attempt was denied before any session or fixture was created.
+A one-time elevated run preserved all four expected process/thread exit codes,
+emptied the fixture jobs, stopped its session and joined its consumer.
+
+Thirty-seven pure-data controls and six independent negative audit cases pass.
+The capture contains 16 owned event records and eight matched stack records,
+with 106 nonzero decoded addresses. Decoded values match the complete saved
+stack payloads for the observed Windows schema. Input identities, original
+process/thread lifetimes and durable journals were independently checked.
+
+All process-exit stack addresses are in the upper half of the address space;
+30 lower-half addresses occur in thread-exit stacks. No target module map was
+collected, so no specific code location has been attributed. The parent-requested
+termination's events describe the victim's context, which does not identify the
+requesting parent's caller. Stack matching uses the original event's
+[timestamp and process/thread fields](https://learn.microsoft.com/en-us/windows/win32/etw/stackwalk-event),
+with a final check for ambiguous associations after draining the trace.
+
+The session reports zero lost events and buffers at stop. Separately, the
+observer discards 214 unrelated-target events and 77 unmatched or pre-event
+stacks; those counts do not establish complete attribution. This collector has
+only fixture evidence. Its elevated children do not establish observation of an
+unprivileged retail client or explain the earlier `0xC0000244` game exit.

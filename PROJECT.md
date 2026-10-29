@@ -186,6 +186,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   A later [native file trace](docs/client-startup.md#native-catalog-file-observation)
   identifies a private catalog-cache miss followed by successful catalog-file
   opens. Its bounded prefix still does not explain the later process exit.
+  Separate [OS exit-tracing controls](docs/client-startup.md#os-exit-tracing-controls)
+  capture process/thread end stacks on authored fixtures. Target module mapping
+  and separation of an elevated observer from an unprivileged target remain
+  prerequisites for a retail comparison; victim exit context alone does not
+  identify the terminating requester.
   Neither failure establishes a kernel-driver requirement or a protection
   rejection. Do not turn sandbox compatibility into
   a product acceptance gate or broaden machine-wide permissions to mask it.
