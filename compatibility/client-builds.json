@@ -5,6 +5,24 @@
       "id": "hd2-steam-26088801-win64",
       "steam_build": "26088801",
       "integration_status": "not_implemented",
+      "startup_files": {
+        "bin/preloader.dll": {
+          "bytes": 46168,
+          "sha256": "2e416e6516ec1f425e8aeb159e45bb474a32afadebb275c41d8f87a1d76dc257"
+        },
+        "bin/runtime.dll": {
+          "bytes": 64222296,
+          "sha256": "97fe1c10fce52a4aeaa772b164eedb35075708eb12885f135fd85cbe05fc947b"
+        },
+        "bin/plugins/level_generation_pluginw64_release.dll": {
+          "bytes": 625752,
+          "sha256": "81cd55d6f694f7fafea6a3a43984f3e0f0e774cc4272108d7bf260998d0df4bf"
+        },
+        "bin/plugins/wwise_pluginw64_release.dll": {
+          "bytes": 6155864,
+          "sha256": "02815eeee1f6865d214970640d33ff8c76b5d055f4ee5ccb9746e5e3cd6a0ed8"
+        }
+      },
       "files": {
         "bin/helldivers2.exe": {
           "bytes": 28743256,

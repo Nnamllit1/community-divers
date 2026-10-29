@@ -41,6 +41,8 @@ struct Workspace {
         write(game / "data/game/game.dll", "engine fixture");
         write(game / "bin/PartyWin.dll", "party fixture");
         write(game / "bin/PlayFabMultiplayerWin.dll", "lobby fixture");
+        for (auto path : cd::client_startup_paths)
+            write(game / path, "startup fixture");
         cd::Settings settings;
         settings.game_path = cd::path_text(root / "missing");
         cd::save_settings(data / "launcher.json", settings);
@@ -240,7 +242,8 @@ int main() {
             }
             require(!ui.app->pending_identity.valid(), "Client inspection did not finish");
             auto identity = cd::json::parse(cd::read_text(fixture.data / "client-inspection.json"));
-            require(identity["files"].size() == 4 && identity["integration"]["available"] == false,
+            require(identity["files"].size() == 4 && identity["startup_files"].size() == 4 &&
+                        identity["integration"]["available"] == false && !ui.app->notice_error,
                     "Client inspection report is incomplete or grants launch");
             std::cout << "PASS asynchronous client inspection and report export\n";
             auto copied = fixture.root / "prepared-copy";
@@ -256,6 +259,8 @@ int main() {
                 receipt["bytes"] = receipt["bytes"].get<uint64_t>() + f["bytes"].get<uint64_t>();
                 receipt["binary_fingerprints"][path] = {{"sha256", f["sha256"]}, {"bytes", f["bytes"]}};
             }
+            for (auto path : cd::client_startup_paths)
+                write(copied / path, cd::read_text(fixture.game / path));
             write(copied / ".community-divers/preparation.json", receipt.dump());
             ui.type("##path", cd::path_text(copied));
             ui.click("Use folder");
@@ -272,6 +277,21 @@ int main() {
             identity = cd::json::parse(cd::read_text(fixture.data / "client-inspection.json"));
             require(identity["build_source"] == "preparation_receipt" && identity["integration"]["available"] == false,
                     "Prepared inspection provenance or readiness changed");
+            cd::fs::remove(copied / "bin/runtime.dll");
+            ui.click("Inspect client files");
+            inspection_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(4);
+            while (ui.app->pending_identity.valid() && std::chrono::steady_clock::now() < inspection_deadline) {
+                ui.frame();
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+            identity = cd::json::parse(cd::read_text(fixture.data / "client-inspection.json"));
+            require(!ui.app->pending_identity.valid() && ui.app->notice_error &&
+                        ui.app->game.build == "12345" &&
+                        identity["startup_files"][1].contains("error") &&
+                        identity["identity"]["known"] == false &&
+                        identity["integration"]["available"] == false,
+                    "Missing startup dependency was hidden by the launcher");
+            write(copied / "bin/runtime.dll", "startup fixture");
             ui.type("##path", cd::path_text(fixture.game));
             ui.click("Use folder");
             require(ui.app->identity_summary.empty() && ui.app->game.build == "12345",

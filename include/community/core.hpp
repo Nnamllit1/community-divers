@@ -32,13 +32,17 @@ std::vector<Installation> discover_steam(const std::vector<fs::path> &steam_root
 inline constexpr std::array<std::string_view, 4> client_binary_paths{
     "bin/helldivers2.exe", "data/game/game.dll", "bin/PartyWin.dll",
     "bin/PlayFabMultiplayerWin.dll"};
+inline constexpr std::array<std::string_view, 4> client_startup_paths{
+    "bin/preloader.dll", "bin/runtime.dll",
+    "bin/plugins/level_generation_pluginw64_release.dll",
+    "bin/plugins/wwise_pluginw64_release.dll"};
 struct FileFingerprint {
     std::string path, sha256, error;
     uint64_t bytes = 0;
 };
 struct ClientIdentity {
     Installation installation;
-    std::vector<FileFingerprint> files;
+    std::vector<FileFingerprint> files, startup_files;
     std::string build_source = "unknown", metadata_error;
 };
 json identity_report(const ClientIdentity &identity, const json &catalog);

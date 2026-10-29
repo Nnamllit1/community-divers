@@ -45,6 +45,8 @@ int wmain(int argc, wchar_t **argv) {
         }
         return !identity.metadata_error.empty() ||
                        std::any_of(identity.files.begin(), identity.files.end(),
+                                   [](const auto &f) { return !f.error.empty(); }) ||
+                       std::any_of(identity.startup_files.begin(), identity.startup_files.end(),
                                    [](const auto &f) { return !f.error.empty(); })
                    ? 1
                    : 0;

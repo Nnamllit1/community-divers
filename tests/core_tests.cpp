@@ -226,7 +226,7 @@ int main() {
             ClientIdentity identity;
             identity.installation.valid = true;
             identity.installation.build = "12345";
-            json files = json::object();
+            json files = json::object(), startup_files = json::object();
             for (auto path : client_binary_paths) {
                 FileFingerprint f;
                 f.path = std::string(path);
@@ -235,10 +235,16 @@ int main() {
                 identity.files.push_back(f);
                 files[f.path] = {{"sha256", f.sha256}, {"bytes", f.bytes}};
             }
+            for (auto path : client_startup_paths) {
+                FileFingerprint f{std::string(path), std::string(64, 'c'), {}, 20};
+                identity.startup_files.push_back(f);
+                startup_files[f.path] = {{"sha256", f.sha256}, {"bytes", f.bytes}};
+            }
             json catalog = {{"schema", 1},
                             {"profiles", json::array({{{"id", "test-build"},
                                                        {"steam_build", "12345"},
                                                        {"files", files},
+                                                       {"startup_files", startup_files},
                                                        {"integration_status", "supported"},
                                                        {"available", true}}})}};
             auto report = identity_report(identity, catalog);

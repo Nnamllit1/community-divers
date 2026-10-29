@@ -84,15 +84,66 @@ int main() {
         std::cout << "PASS receipt schema, duplicate keys, depth and size limits\n";
         identity.installation.build = prepared_identity_build(receipt.dump(), identity.files);
         identity.build_source = "preparation_receipt";
+        json startup_files = json::object();
+        for (auto path : client_startup_paths) {
+            identity.startup_files.push_back({std::string(path), std::string(64, 'c'), {}, 7});
+            startup_files[std::string(path)] = {{"sha256", std::string(64, 'c')}, {"bytes", 7}};
+        }
         json catalog{{"schema", 1},
                      {"profiles", json::array({{{"id", "fixture"},
                                                 {"steam_build", plan.build},
-                                                {"files", receipt["binary_fingerprints"]}}})}};
+                                                {"files", receipt["binary_fingerprints"]},
+                                                {"startup_files", startup_files}}})}};
         auto report = identity_report(identity, catalog);
         require(report["identity"]["known"] == true &&
                     report["build_source"] == "preparation_receipt" &&
                     report["integration"]["available"] == false,
                 "Prepared identity granted integration or lost provenance");
+        require(report["files"].size() == 4 && report["startup_files"].size() == 4 &&
+                    receipt["binary_fingerprints"].size() == 4 &&
+                    !receipt.contains("startup_files") &&
+                    prepared_identity_build(receipt.dump(), identity.files) == "12345",
+                "Startup inspection changed the four-file preparation receipt contract");
+        const auto unknown = [&](const ClientIdentity &candidate, const json &profiles) {
+            const auto value = identity_report(candidate, profiles);
+            return value["identity"]["known"] == false &&
+                   value["integration"]["available"] == false &&
+                   value["steam_build"] == "12345" &&
+                   value["build_source"] == "preparation_receipt";
+        };
+        for (size_t i = 0; i < client_startup_paths.size(); ++i) {
+            auto altered = identity;
+            altered.startup_files[i].sha256 = std::string(64, 'd');
+            require(unknown(altered, catalog), "Changed startup content matched an observed build");
+            altered = identity;
+            altered.startup_files[i].bytes++;
+            require(unknown(altered, catalog), "Changed startup size matched an observed build");
+            altered = identity;
+            altered.startup_files[i].error = "unreadable";
+            auto error_report = identity_report(altered, catalog);
+            require(unknown(altered, catalog) &&
+                        error_report["startup_files"][i]["error"] == "unreadable",
+                    "Unreadable startup module was hidden or accepted");
+            altered = identity;
+            altered.startup_files.erase(altered.startup_files.begin() + i);
+            require(unknown(altered, catalog), "Missing startup module matched an observed build");
+        }
+        auto altered = identity;
+        altered.startup_files[1] = altered.startup_files[0];
+        require(unknown(altered, catalog), "Duplicate startup paths matched an observed build");
+        altered = identity;
+        altered.startup_files[0].path = "bin/unrelated.dll";
+        require(unknown(altered, catalog), "An unrelated startup path matched an observed build");
+        altered = identity;
+        altered.startup_files[0].sha256 = std::string(64, 'C');
+        require(unknown(altered, catalog), "Malformed startup digest matched an observed build");
+        auto legacy_catalog = catalog;
+        legacy_catalog["profiles"][0].erase("startup_files");
+        require(unknown(identity, legacy_catalog), "Four-file catalog established startup identity");
+        auto partial_catalog = catalog;
+        partial_catalog["profiles"][0]["startup_files"].erase(std::string(client_startup_paths[0]));
+        require(unknown(identity, partial_catalog), "Partial startup catalog matched an observed build");
+        std::cout << "PASS startup dependency coverage and failures never grant readiness\n";
         identity.metadata_error = "Conflicting metadata";
         report = identity_report(identity, catalog);
         require(report["identity"]["known"] == false && report.contains("metadata_error"),

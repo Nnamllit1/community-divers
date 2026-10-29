@@ -169,8 +169,42 @@ int main() {
         auto copied_identity = inspect_client(destination);
         require(copied_identity.installation.build == "12345" &&
                     copied_identity.build_source == "preparation_receipt" &&
-                    copied_identity.metadata_error.empty(),
+                    copied_identity.metadata_error.empty() &&
+                    copied_identity.startup_files.size() == client_startup_paths.size(),
                 "Prepared copy lost its build without a Steam manifest");
+        for (const auto &file : copied_identity.startup_files)
+            require(!file.error.empty(), "Missing startup dependency was silently fingerprinted");
+        for (auto path : client_startup_paths)
+            write(destination / path, "abc");
+        copied_identity = inspect_client(destination);
+        json core_files = json::object(), startup_files = json::object();
+        for (const auto &file : copied_identity.files)
+            core_files[file.path] = {{"sha256", file.sha256}, {"bytes", file.bytes}};
+        for (const auto &file : copied_identity.startup_files) {
+            require(file.error.empty() && file.bytes == 3 &&
+                        file.sha256 == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+                    "Native startup fingerprint differs from the file content");
+            startup_files[file.path] = {{"sha256", file.sha256}, {"bytes", file.bytes}};
+        }
+        json catalog{{"schema", 1}, {"profiles", json::array({{{"id", "fixture"},
+            {"steam_build", "12345"}, {"files", core_files}, {"startup_files", startup_files}}})}};
+        require(identity_report(copied_identity, catalog)["identity"]["known"] == true,
+                "Complete native startup inspection did not match");
+        const auto startup_path = destination / from_utf8(std::string(client_startup_paths[0]));
+        auto writer = CreateFileW(startup_path.c_str(), GENERIC_WRITE, FILE_SHARE_READ,
+                                  nullptr, OPEN_EXISTING, 0, nullptr);
+        require(writer != INVALID_HANDLE_VALUE, "Cannot create the startup sharing control");
+        const auto unreadable = inspect_client(destination);
+        CloseHandle(writer);
+        require(!unreadable.startup_files[0].error.empty() &&
+                    unreadable.metadata_error.empty() && unreadable.installation.build == "12345" &&
+                    identity_report(unreadable, catalog)["identity"]["known"] == false &&
+                    identity_report(unreadable, catalog)["integration"]["available"] == false,
+                "An unreadable startup dependency matched or invalidated its legacy receipt");
+        for (auto path : client_startup_paths)
+            fs::remove(destination / path);
+        fs::remove(destination / "bin/plugins");
+        std::cout << "PASS native startup fingerprints and sharing errors preserve legacy receipts\n";
         const auto receipt_path = destination / ".community-divers/preparation.json";
         const auto original_receipt = read_text(receipt_path);
         write(receipt_path, "broken receipt");

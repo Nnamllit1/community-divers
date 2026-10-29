@@ -84,6 +84,8 @@ objective can stay stable while the roadmap evolves.
 ### 2. Isolated current-client integration - current priority
 
 - [x] Add read-only client fingerprint inspection and an observed-build catalog.
+  Inspection covers the four core client modules plus the preloader, runtime
+  and two stock engine plugins. Their exact identities do not establish startup.
 - [x] Provide native depot-based file-copy preparation and independent content verification.
   Copy preparation alone does not verify game startup, user data or network isolation.
 

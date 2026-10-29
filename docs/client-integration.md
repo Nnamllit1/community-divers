@@ -20,6 +20,14 @@ and calculates the SHA-256/byte size of:
 - `data/game/game.dll`
 - `bin/PartyWin.dll`
 - `bin/PlayFabMultiplayerWin.dll`
+- `bin/preloader.dll`
+- `bin/runtime.dll`
+- `bin/plugins/level_generation_pluginw64_release.dll`
+- `bin/plugins/wwise_pluginw64_release.dll`
+
+The report keeps the four core client modules in `files` and the four startup
+dependencies in `startup_files`. Missing or unreadable startup dependencies are
+reported individually and prevent an observed-build match.
 
 Hashes are calculated with Windows BCrypt. Read-only handles withhold write/delete
 sharing across the inspected file set for the whole pass. Steam build metadata is
@@ -29,7 +37,9 @@ paths and build metadata, without account identifiers or an installation path.
 
 For an independent copy, **Inspect client files** reads its preparation receipt and
 requires all four current binary fingerprints to match before using the recorded
-build. The report identifies `build_source` as `steam_manifest`,
+build. Existing preparation receipts retain that four-module format; startup
+dependencies are checked separately against the observed-build catalog. The
+report identifies `build_source` as `steam_manifest`,
 `preparation_receipt` or `unknown`; malformed, stale or conflicting metadata is
 reported as `metadata_error` and cannot match the catalog. Receipt inspection is
 not full-copy verification: use `--verify` to check every prepared asset. A matching
@@ -43,8 +53,11 @@ is pending discards that result.
 
 `compatibility/client-builds.json` records observed identities. A known identity
 requires the Steam build ID and all four byte sizes and SHA-256 values to match.
-A changed binary or partial inspection does not match. These four fingerprints
-identify the inspected client modules; they do not verify every installed asset.
+It also requires all four startup dependencies to match the profile's
+`startup_files` records. A changed binary, partial inspection or older catalog
+entry without those records does not match. These eight fingerprints identify
+the inspected modules; they do not verify every installed asset or establish
+the runtime's complete initialization contract.
 
 The initial record is Steam build `26088801`, observed on 26 October 2026. Its
 integration state is `not_implemented`. A catalog match is a diagnostic result,

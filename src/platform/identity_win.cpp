@@ -125,28 +125,37 @@ ClientIdentity inspect_client(const fs::path &path) {
         result.metadata_error =
             "Cannot read the preparation receipt. Verify the prepared copy again.";
     }
-    result.files.resize(client_binary_paths.size());
-    std::vector<std::unique_ptr<File>> guards(client_binary_paths.size());
-    for (size_t i = 0; i < client_binary_paths.size(); ++i) {
-        auto relative = std::string(client_binary_paths[i]);
-        result.files[i].path = relative;
-        try {
-            guards[i] = std::make_unique<File>(path / from_utf8(relative));
-        } catch (const std::exception &e) {
-            result.files[i].error = e.what();
+    std::vector<std::unique_ptr<File>> guards, startup_guards;
+    const auto open_files = [&](const auto &paths, auto &files, auto &handles) {
+        files.resize(paths.size());
+        handles.resize(paths.size());
+        for (size_t i = 0; i < paths.size(); ++i) {
+            files[i].path = std::string(paths[i]);
+            try {
+                handles[i] = std::make_unique<File>(path / from_utf8(files[i].path));
+            } catch (const std::exception &e) {
+                files[i].error = e.what();
+            }
         }
-    }
-    for (size_t i = 0; i < client_binary_paths.size(); ++i) {
-        if (guards[i])
-            result.files[i] = fingerprint_handle(reinterpret_cast<uintptr_t>(guards[i]->value),
-                                                 result.files[i].path);
-    }
+    };
+    const auto hash_files = [](auto &files, const auto &handles) {
+        for (size_t i = 0; i < files.size(); ++i)
+            if (handles[i])
+                files[i] = fingerprint_handle(reinterpret_cast<uintptr_t>(handles[i]->value),
+                                             files[i].path);
+    };
+    // Retain every successfully opened module until metadata and receipt checks finish.
+    open_files(client_binary_paths, result.files, guards);
+    open_files(client_startup_paths, result.startup_files, startup_guards);
+    hash_files(result.files, guards);
+    hash_files(result.startup_files, startup_guards);
     auto after = inspect_installation(path);
     if (after.build != result.installation.build || after.valid != result.installation.valid) {
-        for (auto &file : result.files)
-            if (file.error.empty())
-                file.error =
-                    "Installation metadata changed during inspection; run the check again.";
+        for (auto *files : {&result.files, &result.startup_files})
+            for (auto &file : *files)
+                if (file.error.empty())
+                    file.error =
+                        "Installation metadata changed during inspection; run the check again.";
     }
     if (receipt_guard && result.metadata_error.empty()) {
         try {

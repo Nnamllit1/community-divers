@@ -488,13 +488,15 @@ void App::tick() {
                 game = identity.installation;
                 bool errors = !identity.metadata_error.empty() ||
                               std::any_of(identity.files.begin(), identity.files.end(),
+                                          [](const auto &f) { return !f.error.empty(); }) ||
+                              std::any_of(identity.startup_files.begin(), identity.startup_files.end(),
                                           [](const auto &f) { return !f.error.empty(); });
                 identity_summary = !identity.metadata_error.empty() ? identity.metadata_error
                                    : errors ? "Inspection recorded missing or unreadable files."
                                    : report["identity"]["known"].get<bool>()
-                                       ? "Client fingerprints match an observed build. Game "
+                                       ? "Client and startup fingerprints match an observed build. Game "
                                          "integration is not implemented."
-                                       : "Client fingerprints recorded; this build is not in the "
+                                       : "Client and startup fingerprints recorded; this build is not in the "
                                          "identity catalog.";
                 if (!errors && identity.build_source == "preparation_receipt")
                     identity_summary = "Prepared copy / build " + game.build + ". " + identity_summary;

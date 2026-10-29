@@ -5,19 +5,34 @@
 #include <stdexcept>
 namespace cd {
 namespace {
-bool complete(const ClientIdentity &identity) {
-    if (!identity.metadata_error.empty() || !identity.installation.valid ||
-        identity.installation.build.empty() || identity.files.size() != client_binary_paths.size())
+template <size_t N>
+bool complete_files(const std::vector<FileFingerprint> &files,
+                    const std::array<std::string_view, N> &paths) {
+    if (files.size() != paths.size())
         return false;
     std::set<std::string> seen;
-    for (const auto &file : identity.files) {
+    for (const auto &file : files) {
         if (!file.error.empty() || file.sha256.size() != 64 ||
             file.sha256.find_first_not_of("0123456789abcdef") != std::string::npos ||
             !seen.insert(file.path).second ||
-            std::find(client_binary_paths.begin(), client_binary_paths.end(), file.path) ==
-                client_binary_paths.end())
+            std::find(paths.begin(), paths.end(), file.path) == paths.end())
             return false;
     }
+    return true;
+}
+bool complete(const ClientIdentity &identity) {
+    return identity.metadata_error.empty() && identity.installation.valid &&
+           !identity.installation.build.empty() &&
+           complete_files(identity.files, client_binary_paths) &&
+           complete_files(identity.startup_files, client_startup_paths);
+}
+bool same_files(const std::vector<FileFingerprint> &observed, const json &expected) {
+    if (!expected.is_object() || expected.size() != observed.size())
+        return false;
+    for (const auto &file : observed)
+        if (!expected.contains(file.path) || expected.at(file.path).at("sha256") != file.sha256 ||
+            expected.at(file.path).at("bytes") != file.bytes)
+            return false;
     return true;
 }
 std::string match(const ClientIdentity &identity, const json &catalog) {
@@ -30,18 +45,10 @@ std::string match(const ClientIdentity &identity, const json &catalog) {
     for (const auto &profile : catalog.at("profiles")) {
         if (profile.at("steam_build").get<std::string>() != identity.installation.build)
             continue;
-        const auto &files = profile.at("files");
-        if (!files.is_object() || files.size() != identity.files.size())
+        if (!profile.contains("startup_files"))
             continue;
-        bool equal = true;
-        for (const auto &file : identity.files) {
-            if (!files.contains(file.path) || files.at(file.path).at("sha256") != file.sha256 ||
-                files.at(file.path).at("bytes") != file.bytes) {
-                equal = false;
-                break;
-            }
-        }
-        if (equal) {
+        if (same_files(identity.files, profile.at("files")) &&
+            same_files(identity.startup_files, profile.at("startup_files"))) {
             if (!found.empty())
                 throw std::runtime_error("Ambiguous build catalog match");
             found = profile.at("id").get<std::string>();
@@ -58,17 +65,22 @@ json identity_report(const ClientIdentity &identity, const json &catalog) {
                 {"steam_build", identity.installation.build},
                 {"build_source", identity.build_source},
                 {"files", json::array()},
+                {"startup_files", json::array()},
                 {"integration",
                  {{"available", false},
                   {"state", "not_implemented"},
                   {"detail", "Native client startup, service routing and profile isolation have "
                              "not been verified."}}}};
-    for (const auto &file : identity.files) {
-        json item = {{"path", file.path}, {"bytes", file.bytes}, {"sha256", file.sha256}};
-        if (!file.error.empty())
-            item["error"] = file.error;
-        out["files"].push_back(std::move(item));
-    }
+    const auto append_files = [](json &target, const std::vector<FileFingerprint> &files) {
+        for (const auto &file : files) {
+            json item = {{"path", file.path}, {"bytes", file.bytes}, {"sha256", file.sha256}};
+            if (!file.error.empty())
+                item["error"] = file.error;
+            target.push_back(std::move(item));
+        }
+    };
+    append_files(out["files"], identity.files);
+    append_files(out["startup_files"], identity.startup_files);
     if (!identity.metadata_error.empty())
         out["metadata_error"] = identity.metadata_error;
     out["launcher_release"] = std::string(version::release_id);
