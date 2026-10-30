@@ -466,14 +466,24 @@ contains no native-call interceptors, instruction offsets, code writes or ETW
 observer. The controller runs without elevation; its targets use a fresh
 zero-capability AppContainer and an atomically assigned, owned job.
 
-All 26 metadata controls and six authored runtime cases pass. They cover an exit
+All 41 metadata controls and eight authored runtime cases pass. They cover an exit
 during TLS initialization before the supported `wmain` route, two generations of
 an owned DLL's load/unload, forwarded TLS/application breakpoints, handled and
 unhandled exceptions, a two-process timeout and a diagnostic failure immediately
-after real process creation. Independent checks join 189 continued events,
-seven original process lifetimes, 25 terminal thread capabilities and 129 image
-generations. The six profiles were removed and the 12 saved directory DACLs
+after real process creation. Two of these cases compare admission and rejection
+of an authored child with the same executable bytes but a distinct file identity.
+Independent checks join 279 continued events, 11 original process lifetimes,
+38 terminal thread capabilities and 193 image generations. The eight profiles
+were removed and the 16 saved directory DACLs
 restored. The low-integrity label on newly created diagnostic data is retained.
+
+The admitted child writes a verified 16-byte marker from its TLS callback. In the
+rejected case, its file identity, hash, path and actual load base are retained as
+observed metadata only. A successful owned-job stop request precedes the rejected
+creation event's first continuation; both original processes reach the requested
+cleanup status and the marker is absent. The whole-tree inventory is explicitly
+incomplete. These controls validate the observer's admission boundary, not game
+startup or protection behavior.
 
 Unload and process-exit boundaries close image generations separately; process
 exit does not invent per-DLL unload notifications. Missing file metadata,
@@ -483,7 +493,7 @@ Disk sections and image/RVA matches do not establish live code bytes, a
 terminating caller, engine initialization or ordinary startup behavior without
 a debugger.
 
-An unmodified build `26251122` comparison passes content checks for all 168
+An earlier comparison using unmodified build `26251122` passes content checks for all 168
 depot files before launch. All 1,139 pinned inputs remain unchanged afterward,
 and all 180 private-copy paths and DACLs match their original state. The capture
 records executable, preloader and runtime image loads, 46 successful debug-event
@@ -497,7 +507,32 @@ process identity is retained, but its image file identity, path, hash and base
 were not saved; a later child DLL-load event also lacks image metadata. The
 producer's complete recorded-map flag does not establish a complete tree
 inventory. It continued the rejected creation event before requesting cleanup,
-so child non-execution is unproved. The next diagnostic needs rejected-image
-metadata and a successful stop request before that continuation. This result
-does not identify the game's natural failure, a protection rejection or a
-working current-client integration.
+so child non-execution is unproved. These gaps prompted the revised observer and
+authored controls above. This earlier result does not identify the game's natural
+failure, a protection rejection or a working current-client integration.
+
+A revised comparison identifies the rejected child's executable image as the
+isolated copy's stock `bin/runtime.dll`. Its actual file ID and SHA-256 match the
+runtime input pinned before launch. The same file is also mapped in the root
+process. The successful owned-job stop request
+precedes that rejected creation event's first continuation. Its metadata and a
+subsequent `ntdll.dll` load are recorded as observed-only; neither receives
+execution admission.
+
+The revised capture joins 45 successful debug-event continuations, two terminal
+original process lifetimes, five terminal thread capabilities and 24 image
+generations. It forwards seven first-chance exceptions and records no second
+chance. Both process exits are the diagnostic's requested `0xCDD00002` cleanup
+status. Whole-tree inventory, natural exit and capture success remain false.
+The observer admits the root and children executing the root's pinned executable. It stopped
+a different pinned game image; this establishes the observer's stopping point,
+not a game protection rejection. Engine initialization and the runtime child's
+required behavior remain unverified.
+
+Both hash passes validate all 168 copied files against depot SHA-1 hashes and
+sizes. SHA-256 hashes for all 1,160 held inputs match before and after capture,
+and all 180 private-copy paths, owners, groups and DACLs are unchanged. The fresh
+diagnostic profile is
+removed, both saved directory DACLs are restored and no rule or loopback exemption
+matches its exact SID. This is diagnostic cleanup evidence, not verification of
+the eventual client's user-data, Cloud or official-service isolation.
