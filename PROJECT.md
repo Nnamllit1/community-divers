@@ -191,11 +191,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   exit frames to measured executable module/RVA candidates. Separate
   [early-image observation](docs/client-startup.md#early-image-load-observation)
   records executable, preloader and runtime image loads in unmodified build
-  `26251122`, then stops at a descendant-image admission guard. A revised capture
-  identifies the descendant's executable image as the pinned stock `runtime.dll`
-  and requests an owned-job stop before continuing its creation event. The game's
-  natural exit and engine startup remain unverified; the observed process exit
-  codes came from diagnostic cleanup. Victim exit context alone
+  `26251122`. After identifying the pinned stock `runtime.dll` as a child process
+  image, a further comparison admits that exact identity. Both processes remain
+  alive until the 15-second observation budget and are stopped with the
+  diagnostic's timeout status. The game's natural exit and engine startup remain
+  unverified; the recorded exits came from diagnostic cleanup. Victim exit context alone
   does not identify the terminating requester.
   Neither failure establishes a kernel-driver requirement or a protection
   rejection. Do not turn sandbox compatibility into
