@@ -193,9 +193,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   records executable, preloader and runtime image loads in unmodified build
   `26251122`. After identifying the pinned stock `runtime.dll` as a child process
   image, a further comparison admits that exact identity. Both processes remain
-  alive until the 15-second observation budget and are stopped with the
-  diagnostic's timeout status. The game's natural exit and engine startup remain
-  unverified; the recorded exits came from diagnostic cleanup. Victim exit context alone
+  alive until the 60-second observation budget and are stopped with the
+  diagnostic's timeout status. Original-handle CPU samples record activity but
+  do not identify the required bootstrap work or the reason for the wait. The
+  game's natural exit and engine startup remain unverified; the recorded exits
+  came from diagnostic cleanup. Victim exit context alone
   does not identify the terminating requester.
   Neither failure establishes a kernel-driver requirement or a protection
   rejection. Do not turn sandbox compatibility into

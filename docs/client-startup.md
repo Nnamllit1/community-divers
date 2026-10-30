@@ -475,15 +475,17 @@ checks before continuation. The implementation requires an eligibility matrix
 for all eight actual catalog images before creating the game target; only the
 main executable and runtime qualify as child executables.
 
-All 75 metadata and policy controls and eight authored runtime cases pass. They
+All 104 metadata and policy controls and nine authored runtime cases pass. They
 cover an exit during TLS initialization before the supported `wmain` route, two generations of
 an owned DLL's load/unload, forwarded TLS/application breakpoints, handled and
 unhandled exceptions, a two-process timeout and a diagnostic failure immediately
 after real process creation. Two of these cases compare admission and rejection
 of an authored child with the same executable bytes but a distinct file identity.
-Independent checks join 283 continued events, 11 original process lifetimes,
-38 terminal thread capabilities and 195 image generations. The eight profiles
-were removed and the 16 saved directory DACLs restored. The low-integrity label
+An additional CPU case stays alive beyond the earlier 15-second cutoff, then
+exits naturally with status 60 under a 20-second case budget.
+Independent checks join 312 continued events, 12 original process lifetimes,
+42 terminal thread capabilities and 216 image generations. The nine profiles
+were removed and the 18 saved directory DACLs restored. The low-integrity label
 on newly created diagnostic data is retained.
 
 The admitted child writes a verified 16-byte marker from its TLS callback. In the
@@ -493,6 +495,19 @@ creation event's first continuation; both original processes reach the requested
 cleanup status and the marker is absent. The whole-tree inventory is explicitly
 incomplete. These controls validate the observer's admission boundary, not game
 startup or protection behavior.
+
+CPU accounting uses the retained original process handles. Initial kernel/user
+counters come from the existing authenticated creation-time query before the
+first creation-event continuation; their journal emission occurs afterward.
+Nominal one-second per-process samples and a final sample after the original
+handle wait retain actual API results, errors and QPC bounds. Missing samples
+remain unavailable observations. Each series is capped at 128 samples, and CPU
+rows remain separate from debug-event continuations.
+
+The owned CPU case records 18 valid samples, including 16 periodic samples and a
+terminal sample. Its checked deltas total 203.125 ms of process CPU across a
+16.5486-second observation span. These counters do not identify initialization,
+useful work, a deadlock or semantic progress.
 
 Unload and process-exit boundaries close image generations separately; process
 exit does not invent per-DLL unload notifications. Missing file metadata,
@@ -512,9 +527,9 @@ the observer's admission policy; it did not identify a natural game failure or
 protection rejection. The current policy includes the exact stock runtime
 identity as described above.
 
-A 15-second comparison of unmodified build `26251122` admits that exact stock
-runtime child and records 73 successful debug-event continuations, two original
-process lifetimes, seven terminal thread capabilities and 47 image generations.
+A 60-second comparison of unmodified build `26251122` admits that exact stock
+runtime child and records 79 successful debug-event continuations, two original
+process lifetimes, ten terminal thread capabilities and 47 image generations.
 Both processes reach their validated initial loader breakpoints; seven other
 first-chance exceptions are forwarded, with no second-chance exception recorded.
 The capture records no rejected process creation or missing image metadata.
@@ -528,8 +543,15 @@ plugin, Party or PlayFab image load appears in this bounded capture. Engine
 initialization and the reason for the continued wait remain unverified; the
 timeout alone does not establish a game crash, hang or protection rejection.
 
+Each process has 61 valid CPU samples: creation metadata, 59 periodic samples
+and a terminal sample, with no unavailable or truncated observations. Across
+approximately 60.08 seconds, the main process accumulates 57.5 seconds of process
+CPU and the runtime child 0.078125 seconds. This accounting difference does not
+identify the executed functions, useful work or the reason for the wait. No
+window captions or dialog contents were collected.
+
 Both full-copy passes validate all 168 files against depot SHA-1 hashes and
-sizes. SHA-256 hashes for all 1,168 held inputs match before and after capture,
+sizes. SHA-256 hashes for all 1,174 held inputs match before and after capture,
 and all 180 copy paths, owners, groups and DACLs are unchanged. Cleanup removes
 the temporary profile and restores both saved directory DACLs, with no rule or
 loopback exemption matching its exact SID. These diagnostic checks do not
