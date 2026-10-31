@@ -606,3 +606,27 @@ and both saved directory DACLs are restored. No second-chance exception is
 recorded. Both processes remain
 alive until the imposed timeout. Engine initialization, mod loading, a natural
 game exit and a working bootstrap adaptation remain unverified.
+
+### File-event calibration
+
+A separate `Microsoft-Windows-Kernel-File` pilot has been tested against authored
+programs only. It observes the expected Create-event path for each of three
+unchanged file-open calls: an existing file, a missing leaf and a missing parent
+from a registered worker thread. Each observation matches the original process
+and thread generations and the call's measured time interval. An unregistered
+decoy's path is excluded. These are partial path observations; they do not
+validate completion status or establish a unique request identity.
+
+The pilot fails its mandatory status validation. Its bounded table retains
+8,192 selected records and drops another 13,876, leaving every completion
+association unavailable. Independently, the 106 owned Create records reuse just
+five IRP values. A model that assumes one operation per IRP value for the entire
+capture therefore cannot identify request lifetimes; increasing the table limit
+alone would not repair it. Successful trace cleanup and zero reported ETW loss
+do not restore the application-dropped evidence.
+
+This method has not produced an accepted game file trace. A path observation
+alone cannot classify a lookup as failed, identify a required dependency or
+explain the startup exception. Any narrower path observer still needs separate
+validation of process/thread registration before continuation, lifetime checks,
+bounded collection and cleanup before use with the game.
