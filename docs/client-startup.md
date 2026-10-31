@@ -6,6 +6,26 @@ collected on build **26088801** on 27-29 October 2026; they have not been valida
 on the newer binaries. This does not describe a playable community client. See
 the [game-version target policy](client-integration.md#game-version-target-policy).
 
+## Establish the ordinary launch baseline
+
+Before attributing a diagnostic failure to the adapter or protection runtime,
+record whether the unmodified installation reaches the menu through Steam.
+Windows application error `0xC0000142` is
+[`STATUS_DLL_INIT_FAILED`](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55).
+That status alone identifies neither the failing DLL nor a tamper rejection.
+Keep it separate from a game crash-report dialog and from first-chance exceptions
+observed under a debugger.
+
+[Arrowhead's launch-troubleshooting guide](https://arrowhead.zendesk.com/hc/en-us/articles/31212403173532-My-game-is-crashing-after-the-switch-to-EAC),
+updated on 31 October 2026, addresses this error after the EAC transition while
+a fuller fix is being developed. Its procedure includes removing residual mods
+and old GameGuard files, and using Windows **Restart**. File verification checks
+managed content; it does not establish that extra files are absent. A reinstall
+into an existing directory likewise needs a separate inventory of leftovers
+before being described as a clean baseline. Preserve user-owned files outside
+the installation when applying cleanup; the diagnostic tools do not perform
+these repairs automatically. Record a fresh ordinary-launch result afterward.
+
 ## Latest-build static inventory
 
 A separately prepared copy of build **26251122** passes full content verification
