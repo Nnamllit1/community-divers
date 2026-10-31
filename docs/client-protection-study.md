@@ -1,10 +1,12 @@
 # Driver-free current-client integration
 
-Assessment date: 29 October 2026. Examined client: Steam build **26088801**.
+Assessment updated: 31 October 2026. Detailed runtime investigation:
+Steam build **26088801**.
 No working protection-removal patch or current-game community startup is available.
 The newer installed Steam build **26251122** has different executable, engine and
-startup-module identities. These findings remain scoped to **26088801**; they have
-not been validated on the newer build. See the
+startup-module identities. The runtime findings remain scoped to **26088801**;
+the separate current-build preloader comparison below establishes only local
+static code relationships. See the
 [game-version target policy](client-integration.md#game-version-target-policy).
 
 ## Feasibility
@@ -23,7 +25,10 @@ community account authentication are independent requirements.
 ## Lua addons alongside the existing runtime
 
 [Boot Mod Loader](https://github.com/pat-pat-patrick/boot-mod-loader/tree/96ff9818c51c669d8f690e01db49198a44453297)
-provides an upstream Lua-only route whose checked-build list includes **26088801**.
+provides an upstream Lua-only route. The later
+[v0.13.4 release](https://github.com/pat-pat-patrick/boot-mod-loader/releases/tag/v0.13.4)
+explicitly adds **26251122** to its checked-build list after comparing the original
+boot-script bytes. This is an upstream claim, not a local startup test.
 Its boot replacement executes the original game boot, then starts addons after
 the original Lua `init` returns. It exposes callbacks and engine Lua APIs;
 its capabilities explicitly report `ffi=false` and `jit=false`. This is an
@@ -74,6 +79,16 @@ A legitimately signed engine plugin remains a candidate alongside the original
 runtime. Current-build acceptance, working callbacks and initialization early
 enough for community service routing are all unverified. No bridge was installed
 or executed in this assessment.
+
+A separate [firsthand loading report for build 25988413](https://github.com/CowboyBingus/BingusSharedLoader/issues/17)
+records native DLL loading returning error `577`, including after locally
+trusting a self-signed certificate. Follow-up testing identified a DLL load in
+the crash reporter rather than the game, and a commenter later withdrew their
+apparent self-signing success. The report discloses AI-assisted testing. These
+observations do not prove
+which component enforced the rejection, acceptance of a commercial certificate,
+or behavior on **26251122**. Finding `package.loadlib` exposed in Lua is therefore
+not sufficient evidence of a usable native entry point.
 
 The archived engine SDK distinguishes a native whole-settings reader from Lua's
 script-data accessor. Its `ApplicationApi` (ID 12) returns a const settings root;
@@ -228,6 +243,20 @@ what it prepares for each protected image, how it makes imports and exception
 handling usable, and what dependencies remain after startup. No protection
 checks were disabled, no game files were patched, and no new game launch was
 performed for this structural investigation.
+
+### Current-build preloader comparison
+
+A read-only comparison with **26251122** narrows the ordinary preloader changes.
+Its 11,264-byte `.text` section differs in only 14 bytes, all within two literal
+operands stored in the first 16 bytes of the shared initialization record. The
+remaining code, both cached forwarding wrappers, and the 18 API-assignment
+sites and declared import slots match. The two literal fields remain
+unclassified; their older values must not be carried forward unchanged.
+
+This supports the local static layout and assignment observations on the newer
+build. Other preloader data and the runtime changed. Identical assignment code
+does not establish identical runtime inputs, executed paths, protected-image
+preparation, enforcement behavior or a viable removal patch.
 
 ## Shared initialization record
 
