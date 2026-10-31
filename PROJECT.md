@@ -198,8 +198,10 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   do not identify the required bootstrap work or the reason for the wait. The
   [owned-window survey](docs/client-startup.md#owned-window-metadata) attributes a
   `Crash Report Handler` caption to the runtime child and records an earlier
-  first-chance access violation at `runtime.dll+0x0`. Its access parameters and
-  failing caller remain unresolved. The game's natural exit and engine startup
+  first-chance access violation at `runtime.dll+0x0`. A parameter-enabled
+  comparison records a reported DEP operation whose inaccessible address matches
+  that runtime load base. The failing caller and cause remain unresolved.
+  The game's natural exit and engine startup
   remain unverified; the recorded exits
   came from diagnostic cleanup. Victim exit context alone
   does not identify the terminating requester.

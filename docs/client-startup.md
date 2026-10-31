@@ -567,7 +567,7 @@ ownership changes discard the collected text. The observer retrieves no dialog
 bodies, invokes no UI Automation providers and performs no UI actions.
 Window-handle reuse within the same process/thread remains possible.
 
-The observer passes 104 core and 41 window-model controls, nine original runtime
+The observer passes 109 core and 41 window-model controls, nine original runtime
 cases and four additional GUI cases. These include Unicode, changed and empty
 captions, bounded truncation, a non-pumping owned child, unrelated-window
 exclusion, record limits and reader exit/deadline failures while target debug
@@ -578,7 +578,13 @@ resume; this is a diagnostic helper configuration,
 not a game requirement or a strong security boundary against hostile same-user
 processes.
 
-A later 60-second observation of unmodified build `26251122` records 12 window
+Exception metadata retains the debugger-supplied parameter count and up to 15
+inline unsigned 64-bit values, without dereferencing them. An owned software
+exception verifies exact delivery and persistence of four arguments, including
+`UINT64_MAX`; local models cover empty, full and over-capacity arrays.
+
+A 60-second observation of unmodified build `26251122` records 79 continued
+debug events, two original process lifetimes, 47 image generations, 12 window
 surveys and 33 metadata samples. Eleven samples identify the stock runtime
 child's `#32770` window with caption `Crash Report Handler` and
 `visible_style=true`. The other samples identify its IME support windows with
@@ -588,10 +594,15 @@ player; these records do not contain the dialog body.
 
 Before that child's creation event, the main process reports a first-chance
 `0xC0000005` whose exception address matches the loaded `runtime.dll` base
-(`runtime.dll+0x0`). The observer forwards it unchanged. This capture omits the
-exception parameters needed to classify the access and identify its fault
-address. Neither the address nor the reporter caption identifies the failing
-caller, a protection decision or a working adaptation.
+(`runtime.dll+0x0`). The observer forwards it unchanged. Its two inline
+parameters are `8` and the same runtime load base. In the documented
+[`EXCEPTION_RECORD` format](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record),
+these report a user-mode DEP operation and its inaccessible address. This
+classifies the reported record; it does not establish its hardware origin,
+live page permissions, failing caller, protection decision or cause.
 
-Both processes remain alive until the imposed timeout. Engine initialization,
-mod loading and a natural game exit remain unverified.
+Both full 168-file depot-content checks pass. The temporary profile is removed
+and both saved directory DACLs are restored. No second-chance exception is
+recorded. Both processes remain
+alive until the imposed timeout. Engine initialization, mod loading, a natural
+game exit and a working bootstrap adaptation remain unverified.
