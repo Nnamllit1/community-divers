@@ -253,8 +253,9 @@ was not used as independent confirmation of the x64 records.
 The native startup routines share a once-initialized runtime handoff. Static
 control flow identifies file/image preparation, address relocation and memory
 protection operations, followed by a call to the runtime's declared entrypoint
-with a shared initialization record. Later callbacks use the same cached runtime
-dispatch address. These are responsibilities that a compatible replacement would
+with a shared initialization record. Later callbacks read the same cached
+dispatch slot; this does not establish that its contents remain unchanged.
+These are responsibilities that a compatible replacement would
 need to account for; a successful return from a stub would not demonstrate them.
 
 The runtime entrypoint leads into code with repeated indirect control transfers.
@@ -283,6 +284,42 @@ This supports the local static layout and assignment observations on the newer
 build. Other preloader data and the runtime changed. Identical assignment code
 does not establish identical runtime inputs, executed paths, protected-image
 preparation, enforcement behavior or a viable removal patch.
+
+### Current-build callback forwarding
+
+Static inspection of the two ordinary forwarding wrappers on **26251122**
+establishes a partial callback contract. The preloader's DLL entrypoint and
+export ordinal 1 have distinct wrapper destinations in their exception metadata.
+The inspected executable, engine DLL and two stock engine plugins alias their
+TLS callback storage to the ordinal-1 import.
+
+| Forwarded value | DLL-entry wrapper | Ordinal-1 TLS wrapper |
+| --- | --- | --- |
+| Module/image pointer | Preserved | Preserved |
+| 32-bit notification reason | Preserved | High bit set unconditionally |
+| Reserved pointer | Preserved | Preserved |
+| Additional context | Shared initialization record | Same record |
+
+Both wrappers call the shared initializer before forwarding, then restore their
+stack and saved registers and tail-jump through the same dispatch slot. The
+reason is forwarded with zeroed upper register bits. The high-bit difference is
+an observed argument transformation; its meaning to the receiver is unresolved.
+It is not a measured integrity verdict. Register roles follow the
+[Windows x64 calling convention](https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170).
+
+Neither wrapper converts the callee's return value. If the callee returns
+normally, the original caller receives it: Windows interprets a false
+[`DllMain` process-attach result](https://learn.microsoft.com/en-us/windows/win32/dlls/dllmain)
+as initialization failure, whereas a
+[TLS callback](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#tls-callback-functions)
+has no return value. A return register alone therefore cannot explain failure
+on both paths.
+
+This covers 110 bytes of ordinary preloader code and the associated metadata,
+independently checked against the exact file. It does not establish live callback
+order, dispatch-target identity, a complete initialization-record layout or
+successful image preparation. No runtime return was captured, and this finding
+does not attribute the earlier startup error or provide a callable replacement.
 
 ### Retained unwind metadata
 

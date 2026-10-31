@@ -144,8 +144,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   identifies shared TLS/import slots and exception-metadata differences. This
   establishes concrete dependencies; it does not identify all runtime work.
   The [preloader handoff](docs/client-protection-study.md#preloader-to-runtime-handoff)
-  now explains its exception-mediated entry and cached runtime dispatch. The
-  runtime's image preparation and continuing dependencies remain unresolved.
+  explains its exception-mediated entry and cached dispatch slot. The
+  [current callback contract](docs/client-protection-study.md#current-build-callback-forwarding)
+  distinguishes DLL-entry and TLS forwarding arguments and return semantics;
+  it does not establish the callee's behavior. The runtime's image preparation
+  and continuing dependencies remain unresolved.
   Both examined stock engine plugins also import the preloader; their required
   startup preparation and role in the working client remain unverified.
   A [fresh static inventory](docs/client-startup.md#latest-build-static-inventory)
