@@ -258,6 +258,21 @@ build. Other preloader data and the runtime changed. Identical assignment code
 does not establish identical runtime inputs, executed paths, protected-image
 preparation, enforcement behavior or a viable removal patch.
 
+### Retained unwind metadata
+
+On **26251122**, the raw `.pdata` sections in the executable, engine DLL and both
+stock engine plugins are not ready-made ordinary x64 function tables. Checking
+every DWORD-aligned starting position finds no contiguous pair of records whose
+function ranges and unwind offsets even satisfy image bounds and sorted starts.
+The preloader's declared table satisfies those same checks for all 13 records.
+These are weak necessary conditions, not complete validation of unwind semantics.
+
+Repointing the exception directories at those retained sections would therefore
+not restore ordinary unwind tables. A replacement still needs to identify where
+valid metadata comes from or how the runtime supplies exception handling. This
+does not establish encryption, a registration mechanism, or the absence of
+tables elsewhere or at runtime. No header patch was applied or launched.
+
 ## Shared initialization record
 
 The preloader copies **18 Windows API pointers** into the record passed to the

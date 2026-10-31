@@ -150,6 +150,10 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   confirms those import/TLS dependencies on build `26251122`, with changed entry
   points and runtime exception-table contents. It does not validate the older
   instruction addresses or establish startup on the newer build.
+  The [retained unwind-data check](docs/client-protection-study.md#retained-unwind-metadata)
+  also rules out restoring ordinary exception handling by simply pointing the
+  exception directories at the raw `.pdata` sections. Their runtime preparation
+  remains unresolved.
   [Bounded runtime observation](docs/client-protection-study.md#initial-runtime-state-dependency)
   follows thread/process-state access and CPU initialization without running the
   game. The [shared record](docs/client-protection-study.md#shared-initialization-record)
