@@ -196,7 +196,11 @@ document that dependency rather than claiming that an on-disk patch is sufficien
   alive until the 60-second observation budget and are stopped with the
   diagnostic's timeout status. Original-handle CPU samples record activity but
   do not identify the required bootstrap work or the reason for the wait. The
-  game's natural exit and engine startup remain unverified; the recorded exits
+  [owned-window survey](docs/client-startup.md#owned-window-metadata) attributes a
+  `Crash Report Handler` caption to the runtime child and records an earlier
+  first-chance access violation at `runtime.dll+0x0`. Its access parameters and
+  failing caller remain unresolved. The game's natural exit and engine startup
+  remain unverified; the recorded exits
   came from diagnostic cleanup. Victim exit context alone
   does not identify the terminating requester.
   Neither failure establishes a kernel-driver requirement or a protection

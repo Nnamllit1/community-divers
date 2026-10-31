@@ -527,8 +527,8 @@ the observer's admission policy; it did not identify a natural game failure or
 protection rejection. The current policy includes the exact stock runtime
 identity as described above.
 
-A 60-second comparison of unmodified build `26251122` admits that exact stock
-runtime child and records 79 successful debug-event continuations, two original
+An earlier 60-second comparison of unmodified build `26251122` admits that exact
+stock runtime child and records 79 successful debug-event continuations, two original
 process lifetimes, ten terminal thread capabilities and 47 image generations.
 Both processes reach their validated initial loader breakpoints; seven other
 first-chance exceptions are forwarded, with no second-chance exception recorded.
@@ -547,8 +547,8 @@ Each process has 61 valid CPU samples: creation metadata, 59 periodic samples
 and a terminal sample, with no unavailable or truncated observations. Across
 approximately 60.08 seconds, the main process accumulates 57.5 seconds of process
 CPU and the runtime child 0.078125 seconds. This accounting difference does not
-identify the executed functions, useful work or the reason for the wait. No
-window captions or dialog contents were collected.
+identify the executed functions, useful work or the reason for the wait. That
+comparison collected no window captions or dialog contents.
 
 Both full-copy passes validate all 168 files against depot SHA-1 hashes and
 sizes. SHA-256 hashes for all 1,174 held inputs match before and after capture,
@@ -556,3 +556,42 @@ and all 180 copy paths, owners, groups and DACLs are unchanged. Cleanup removes
 the temporary profile and restores both saved directory DACLs, with no rule or
 loopback exemption matching its exact SID. These diagnostic checks do not
 establish the eventual client's user-data, Cloud or official-service isolation.
+
+### Owned-window metadata
+
+A separate normal-user reader collects bounded top-level captions, class names
+and visibility-style observations. Before and after retrieval, it checks the
+original admitted process and thread handles, creation times, selected image,
+job and exact profile SID. Unrelated windows are excluded before text retrieval;
+ownership changes discard the collected text. The observer retrieves no dialog
+bodies, invokes no UI Automation providers and performs no UI actions.
+Window-handle reuse within the same process/thread remains possible.
+
+The observer passes 104 core and 41 window-model controls, nine original runtime
+cases and four additional GUI cases. These include Unicode, changed and empty
+captions, bounded truncation, a non-pumping owned child, unrelated-window
+exclusion, record limits and reader exit/deadline failures while target debug
+events continue to drain. Reader launch requires an existing controller console
+and requests ordinary console inheritance, with an explicit inherited-handle
+list and a separate owned job. Its child-creation policy is read back before
+resume; this is a diagnostic helper configuration,
+not a game requirement or a strong security boundary against hostile same-user
+processes.
+
+A later 60-second observation of unmodified build `26251122` records 12 window
+surveys and 33 metadata samples. Eleven samples identify the stock runtime
+child's `#32770` window with caption `Crash Report Handler` and
+`visible_style=true`. The other samples identify its IME support windows with
+visibility style false. Visibility style does not establish that a window was
+unobscured or seen by a
+player; these records do not contain the dialog body.
+
+Before that child's creation event, the main process reports a first-chance
+`0xC0000005` whose exception address matches the loaded `runtime.dll` base
+(`runtime.dll+0x0`). The observer forwards it unchanged. This capture omits the
+exception parameters needed to classify the access and identify its fault
+address. Neither the address nor the reporter caption identifies the failing
+caller, a protection decision or a working adaptation.
+
+Both processes remain alive until the imposed timeout. Engine initialization,
+mod loading and a natural game exit remain unverified.
