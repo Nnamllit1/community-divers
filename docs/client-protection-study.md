@@ -6,7 +6,8 @@ No working protection-removal patch or current-game community startup is availab
 The newer installed Steam build **26251122** has different executable, engine and
 startup-module identities. The runtime findings remain scoped to **26088801**;
 the separate current-build preloader comparison below establishes only local
-static code relationships. See the
+static code relationships. A separate Windows policy observation below covers
+one running retail **26251122** process. See the
 [game-version target policy](client-integration.md#game-version-target-policy).
 
 ## Feasibility
@@ -112,6 +113,28 @@ backend initialization barrier. The
 [implemented order](https://github.com/pat-pat-patrick/boot-mod-loader/blob/96ff9818c51c669d8f690e01db49198a44453297/src/boot_mod_loader.lua#L2136-L2201)
 therefore does not establish a hook early enough for community service routing.
 
+## Measured Windows image-signature policy
+
+On one Windows build **26300** system, a normally launched retail **26251122**
+process was reported at the ship. A read-only
+[`GetProcessMitigationPolicy`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocessmitigationpolicy)
+query for `ProcessSignaturePolicy` returned `Flags = 0x00000000`: all five
+documented fields were clear, including `MitigationOptIn`. The PowerShell
+`Get-ProcessMitigation` result exposed four fields and omitted that fifth field.
+Microsoft documents [`MitigationOptIn`](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-process_mitigation_binary_signature_policy)
+as a separate restriction involving Microsoft, Store and WHQL signatures.
+
+The native query used a retained `PROCESS_QUERY_INFORMATION` handle, checked
+creation time against the process descriptor at microsecond precision, and
+matched the process lifetime before and after the observation. An own-process
+control also completed. The query did not read or write target memory, attach a
+debugger, inject code or change policy.
+
+This establishes the returned Windows process-signature policy at one running
+snapshot. It does not test native DLL loading, identify the source of the older
+build's reported error `577`, or establish the complete image-admission policy.
+Native-plugin acceptance and community routing remain unverified.
+
 ## What historical research establishes
 
 The January 2024 [THE FINALS analysis by Reversing Thread](https://reversingthread.info/index.php/2024/01/10/the-finals-defeating-theia-packer/)
@@ -133,10 +156,13 @@ remain valid in a new disk image or process.
 
 Read-only inspection identifies `preloader.dll` as an import of both the main
 executable and `data/game/game.dll`. Both have TLS initialization callbacks. The
-contained launch also observes `runtime.dll` as a mapped image and a separate
-child process. These observations establish several bootstrap dependencies;
-they do not identify the complete protection configuration or prove the same
-decryption design as the older THE FINALS build.
+contained launch also observes `runtime.dll` as a mapped image and, in a failing
+diagnostic, a separate child process. The later child-window observation records
+`Crash Report Handler`; a required separate bootstrap worker has not been
+established. The [normal retail comparison](client-startup.md#normal-retail-comparison)
+keeps that child observation separate from continuing runtime image requirements.
+These observations do not identify the complete protection configuration or
+prove the same decryption design as the older THE FINALS build.
 
 The [startup investigation](client-startup.md) identified and corrected an
 isolated-environment error: missing `ALLUSERSPROFILE` caused a literal variable

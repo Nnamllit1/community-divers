@@ -101,8 +101,10 @@ objective can stay stable while the roadmap evolves.
 - [ ] Establish an exact-build integration contract and compatibility manifest.
 - [ ] Create and verify an isolated current-game installation and user data.
 - [ ] Establish current-client startup and native integration for community use.
-  [Bootstrap investigation](docs/client-startup.md) identified a separate runtime
-  process; engine startup remains unverified.
+  [Bootstrap investigation](docs/client-startup.md) observed a runtime child in a
+  failing diagnostic. A [normal retail comparison](docs/client-startup.md#normal-retail-comparison)
+  has reported ship entry; startup of the independent community client remains
+  unverified. The child has not been established as a required bootstrap worker.
   [Driver-free integration study](docs/client-protection-study.md) distinguishes
   historical protection research from evidence for the supported game build.
 - [ ] Verify the client integration on a second machine without custom drivers,

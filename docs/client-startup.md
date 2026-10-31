@@ -1,9 +1,10 @@
 # Current-client startup investigation
 
 The current client adapter is unfinished. Steam build **26251122** has a fresh
-static bootstrap inventory. The live startup observations on this page were
-collected on build **26088801** on 27-29 October 2026; they have not been validated
-on the newer binaries. This does not describe a playable community client. See
+static bootstrap inventory and a separate normal-retail comparison below.
+Initial contained startup observations were collected on build **26088801** on
+27-29 October 2026; later comparisons identify their target build explicitly.
+This does not describe a playable community client. See
 the [game-version target policy](client-integration.md#game-version-target-policy).
 
 ## Establish the ordinary launch baseline
@@ -61,6 +62,22 @@ A literal comparison of the top-level `data/settings.ini` changes only its build
 and audio-version lines. This does not locate native settings consumers or
 establish a community-backend configuration route.
 
+## Normal retail comparison
+
+A normal Windows/Steam launch of **26251122** was reported at the ship on
+Windows build **26300**. The eight inspected source-module identities match the
+build catalog. This is an unmodified retail reference case; it does not establish
+startup of the prepared copy, native-plugin acceptance or community integration.
+
+A process-metadata snapshot at that stage found one direct `crs-handler.exe`
+child and no process named `runtime.dll`. The earlier failing diagnostic's
+runtime child must therefore be kept separate from an assumed normal-bootstrap
+worker. In that diagnostic, a first-chance fault at the mapped runtime base
+preceded the child's creation, and the child later displayed `Crash Report Handler`.
+The snapshot does not enumerate mapped DLLs, transient earlier children or all
+service/IPC dependencies. Runtime image preparation remains unresolved. See the
+separate [Windows signature-policy observation](client-protection-study.md#measured-windows-image-signature-policy).
+
 ## Bootstrap dependencies
 
 For build **26088801**, read-only PE inspection and a contained startup probe of
@@ -68,12 +85,13 @@ the independently prepared copy found:
 
 - `bin/helldivers2.exe` imports `preloader.dll` and has TLS initialization callbacks.
 - `data/game/game.dll` also imports the preloader and has TLS callbacks.
-- The preloader starts `runtime.dll` as a **separate process** during initialization.
-  The `.dll` filename must not be taken to mean it loads only into the game process.
+- `runtime.dll` was observed as a mapped image and, in a failing diagnostic,
+  as a separate child process image.
 
-The last point was observed in the contained process tree, where the child process
-reported `runtime.dll` as its main module. The executable, preloader, runtime and
-engine are separate integration dependencies. Lua support or unchanged networking
+The child's main-module identity establishes that the `.dll` can also be used as
+a process image. It does not identify a required normal-bootstrap worker or
+attribute its creation to the preloader. The executable, preloader, runtime and
+engine remain distinct image dependencies. Lua support or unchanged networking
 SDK binaries do not establish a working native bootstrap.
 
 ## Offline probe conditions
@@ -373,14 +391,16 @@ access rules remained, and all 180 access descriptors, copy paths and five
 bootstrap hashes were unchanged. The cache denial's cause and relevance to
 startup remain unproved; it does not establish an integrity rejection.
 
-This establishes a bootstrap process dependency, **not successful unprotected
-startup**. AppContainer restrictions can themselves affect initialization. The
+These comparisons establish runtime image involvement and a failure-associated
+child, rather than a proven separate bootstrap worker or successful unprotected
+startup. AppContainer restrictions can themselves affect initialization. The
 remaining runtime dependency or failure must be identified before selecting an
 integration strategy; the observed wait does not establish EAC/Theia rejection,
 prove that startup is impossible, or justify enabling the launch button.
 
-Further work needs to identify the runtime child's initialization state, reach
-engine startup, then verify separate profile/Cloud data and explicit routing to
+Further work needs to identify the main process's initialization failure and
+required image preparation, reach engine startup in the independent copy, then
+verify separate profile/Cloud data and explicit routing to
 the community backend. The [adapter acceptance gates](client-integration.md#adapter-acceptance-gates)
 remain unchanged. Ordinary native stack walking may not unwind protected or
 manually mapped frames reliably; unrecognized frames are not function evidence.
